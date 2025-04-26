@@ -1,5 +1,4 @@
 from django.shortcuts import render, redirect
-from .forms import UserForm, IndividuForm, PerusahaanForm
 from .models import Klien
 
 def login_register(request):
