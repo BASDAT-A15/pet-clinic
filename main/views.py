@@ -1,3 +1,9 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
+from .forms import UserForm, IndividuForm, PerusahaanForm
+from .models import Klien
 
-# Create your views here.
+def login_register(request):
+    return render(request, 'login_register.html')
+
+def register(request):
+    return render(request, 'register.html')
