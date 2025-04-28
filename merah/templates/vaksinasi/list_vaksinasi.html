@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block meta %}
+<title>List Vaccination</title>
+{% endblock meta %}
+{% block content %}
+<div class="container mx-auto px-4">
+    <h2 class="text-3xl font-bold mb-8">List Vaccination</h2>
+    
+    <style>
+        .btn-primary {
+            background-color: #0B1120;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.25rem;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        .btn-primary:hover {
+            background-color: #1F2937;
+        }
+        .btn-warning, .btn-danger {
+            background-color: #0B1120;
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.25rem;
+            font-weight: bold;
+            font-size: 0.875rem;
+            transition: background-color 0.3s;
+            display: inline-block;
+            width: 80px;
+            text-align: center;
+        }
+        .btn-warning:hover {
+            background-color: #1F2937;
+        }
+        .btn-danger {
+            background-color: #DC2626;
+            width: 80px;
+        }
+        .btn-danger:hover {
+            background-color: #B91C1C;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            max-width: 500px;
+            width: 100%;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #E5E7EB;
+            padding: 0.5rem 1rem;
+            text-align: center;
+        }
+        th {
+            background-color: #F3F4F6;
+        }
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+        }
+    </style>
+    
+    <div class="mb-4 flex justify-end">
+        <a href="{% url 'merah:add_vaksinasi' %}" class="btn-primary">
+            + Create New Vaccination
+        </a>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table>
+            <thead>
+                <tr>
+                    <th>No</th>
+                    <th>Kunjungan</th>
+                    <th>Tanggal Kunjungan</th>
+                    <th>Vaksin</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for v in vaksinasi_list %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ v.id_kunjungan }}</td>
+                    <td>{{ v.tanggal }}</td>
+                    <td>{{ v.kode_vaksin }} - {{ v.nama_vaksin }}</td>
+                    <td class="space-x-2">
+                        <a href="{% url 'merah:update_vaksinasi' v.id_kunjungan %}" class="btn-warning">
+                            Update
+                        </a>
+                        <button onclick="showDeleteModal('{{ v.id_kunjungan }}', '{{ v.kode_vaksin }}')" class="btn-danger">
+                            Delete
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="modal">
+        <div class="modal-content">
+            <h3 class="text-xl font-bold mb-4">Delete Vaccination</h3>
+            <p id="modalText" class="mb-6">Apakah kamu yakin untuk menghapus Vaksinasi untuk Kunjungan 
+                <strong id="kunjunganId" class="text-red-600"></strong> dengan Vaksin 
+                <strong id="vaksinKode" class="text-red-600"></strong>?
+            </p>            <div class="flex justify-end space-x-4">
+                <button onclick="hideDeleteModal()" class="px-4 py-2 border border-gray-300 rounded">Cancel</button>
+                <form id="deleteForm" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded">Confirm Deletion</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showDeleteModal(kunjunganId, vaksinKode) {
+            document.getElementById('kunjunganId').textContent = kunjunganId;
+            document.getElementById('vaksinKode').textContent = vaksinKode;
+            document.getElementById('deleteForm').action = "{% url 'merah:delete_vaksinasi' '0' %}".replace('0', kunjunganId);
+            document.getElementById('deleteModal').style.display = 'flex';
+        }
+
+        function hideDeleteModal() {
+            document.getElementById('deleteModal').style.display = 'none';
+        }
+    </script>
+</div>
+{% endblock %}
