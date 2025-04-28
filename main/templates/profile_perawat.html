@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block meta %}
+<title>Profile Perawat</title>
+{% endblock meta %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="bg-white rounded-lg shadow p-6 max-w-3xl mx-auto">
+        <!-- Header with buttons -->
+        <div class="flex flex-wrap justify-between items-center mb-6">
+            <h1 class="text-2xl font-bold">Profile Perawat</h1>
+            <div class="space-x-3 mt-3 sm:mt-0">
+                <button class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-md transition-colors">
+                    Update Password
+                </button>
+                <button class="px-4 py-2 bg-[#0B1120] hover:bg-gray-900 text-white rounded-md transition-colors">
+                    Update Profile
+                </button>
+            </div>
+        </div>
+
+        <!-- Profile Information -->
+        <div class="space-y-4 mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
+                <div class="font-medium">Nomor Identitas</div>
+                <div class="col-span-2">1845ad38-ef76-49cd-b46e-350ba3f0ef59</div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
+                <div class="font-medium">Nomor Izin Praktik</div>
+                <div class="col-span-2">SIP-PERAWAT-12345</div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
+                <div class="font-medium">Email</div>
+                <div class="col-span-2">sandy.permata@petclinic.com</div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
+                <div class="font-medium">Tanggal Diterima</div>
+                <div class="col-span-2">24 Januari 2025</div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
+                <div class="font-medium">Tanggal Akhir Kerja</div>
+                <div class="col-span-2">-</div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
+                <div class="font-medium">Alamat</div>
+                <div class="col-span-2">Jl. Melati Indah No. 24, Kel. Sukamaju, Kec. Cibinong, Kab. Bogor, Jawa Barat, 16914</div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
+                <div class="font-medium">Nomor Telepon</div>
+                <div class="col-span-2">081234567894</div>
+            </div>
+        </div>
+
+        <!-- Certificate Section -->
+        <div class="mb-6">
+            <h2 class="text-xl font-bold mb-4">Daftar Sertifikat</h2>
+            <div class="overflow-x-auto">
+                <table class="min-w-full border border-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="py-2 px-4 border text-left">No</th>
+                            <th class="py-2 px-4 border text-left">Nomor Sertifikat</th>
+                            <th class="py-2 px-4 border text-left">Nama Sertifikat</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="py-2 px-4 border">1</td>
+                            <td class="py-2 px-4 border">123/PH/456</td>
+                            <td class="py-2 px-4 border">Paraprofesional Kedokteran Hewan</td>
+                        </tr>
+                        <tr>
+                            <td class="py-2 px-4 border">2</td>
+                            <td class="py-2 px-4 border">456/PH/456</td>
+                            <td class="py-2 px-4 border">Keperawatan Hewan Profesional</td>
+                        </tr>
+                        <tr>
+                            <td class="py-2 px-4 border">3</td>
+                            <td class="py-2 px-4 border">789/PH/789</td>
+                            <td class="py-2 px-4 border">Sertifikat Organisasi Profesi</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
