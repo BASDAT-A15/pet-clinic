@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block title %}Update Vaccine{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Update Vaccine</h1>
+    
+    <form method="POST" action="{% url 'merah:update_vaksin' vaksin.kode_vaksin %}">
+        {% csrf_token %}
+        
+        <div class="mb-3">
+            <label for="kode_vaksin" class="form-label">ID Vaksin</label>
+            <input type="text" class="form-control bg-light" id="kode_vaksin" value="{{ vaksin.kode_vaksin }}" readonly>
+        </div>
+        
+        <div class="mb-3">
+            <label for="nama_vaksin" class="form-label">Nama Vaksin</label>
+            <input type="text" class="form-control" id="nama_vaksin" name="nama_vaksin" value="{{ vaksin.nama_vaksin }}" required>
+        </div>
+        
+        <div class="mb-3">
+            <label for="harga" class="form-label">Harga</label>
+            <input type="number" class="form-control" id="harga" name="harga" min="0" value="{{ vaksin.harga }}" required>
+        </div>
+        
+        <div class="text-end">
+            <a href="{% url 'merah:list_vaksin' %}" class="btn btn-secondary me-2">Cancel</a>
+            <button type="submit" class="btn btn-primary">Update</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

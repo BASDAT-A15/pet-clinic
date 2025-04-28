@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from django.shortcuts import get_object_or_404, redirect
 from django.contrib import messages
+
 # Data Dummy
 DUMMY_VACCINATIONS = [
     {
@@ -27,18 +28,18 @@ DUMMY_VACCINATIONS = [
 ]
 
 DUMMY_VACCINES = [
-    {'kode': 'VAC001', 'nama': 'Feline Panleukopenia', 'stok': 100},
-    {'kode': 'VAC002', 'nama': 'Canine Parvovirus', 'stok': 200},
-    {'kode': 'VAC003', 'nama': 'Canine Adenovirus', 'stok': 300}
+    {'kode_vaksin': 'VAC001', 'nama_vaksin': 'Feline Panleukopenia', 'harga': 100000, 'stok': 100, 'used': False},
+    {'kode_vaksin': 'VAC002', 'nama_vaksin': 'Canine Parvovirus', 'harga': 150000, 'stok': 200, 'used': False},
+    {'kode_vaksin': 'VAC003', 'nama_vaksin': 'Canine Adenovirus', 'harga': 180000, 'stok': 300, 'used': True}
 ]
 
 def list_vaksinasi(request):
-    return render(request, 'vaksinasi/list_vaksinasi.html', {
+    return render(request, 'klinik/list_vaksinasi.html', {
         'vaksinasi_list': DUMMY_VACCINATIONS
     })
 
 def add_vaksinasi(request):
-    return render(request, 'vaksinasi/add_vaksinasi.html', {
+    return render(request, 'klinik/add_vaksinasi.html', {
         'kunjungan_options': DUMMY_VACCINATIONS,
         'vaksin_options': DUMMY_VACCINES
     })
@@ -48,7 +49,7 @@ def update_vaksinasi(request, id_kunjungan):
         (v for v in DUMMY_VACCINATIONS if v['id_kunjungan'] == id_kunjungan), 
         None
     )
-    return render(request, 'vaksinasi/update_vaksinasi.html', {
+    return render(request, 'klinik/update_vaksinasi.html', {
         'kunjungan': selected_vaccination,
         'vaksin_options': DUMMY_VACCINES
     })
@@ -66,13 +67,11 @@ def delete_vaksinasi(request, id_kunjungan):
                 break
         
         if vaksinasi_dihapus:
-            # Hapus dari list dummy
             DUMMY_VACCINATIONS = [v for v in DUMMY_VACCINATIONS if v['id_kunjungan'] != id_kunjungan]
             
-            # Update stok vaksin (optional)
             for vaksin in DUMMY_VACCINES:
                 if vaksin['kode'] == vaksinasi_dihapus['kode_vaksin']:
-                    vaksin['stok'] += 1  # atau logika penambahan stok sesuai kebutuhan
+                    vaksin['stok'] += 1  
                     break
             
             messages.success(request, f'Vaksinasi {id_kunjungan} berhasil dihapus!')
@@ -81,5 +80,58 @@ def delete_vaksinasi(request, id_kunjungan):
         
         return redirect('merah:list_vaksinasi')
     
-    # Jika bukan method POST, redirect ke list
     return redirect('merah:list_vaksinasi')
+
+def list_vaksin(request):
+    for vaksin in DUMMY_VACCINES:
+        vaksin['can_delete'] = not vaksin['used']
+    return render(request, 'klinik/list_vaksin.html', {
+        'vaksin_list': DUMMY_VACCINES
+    })
+
+def add_vaksin(request):
+    if request.method == 'POST':
+        new_vaksin = {
+            'kode_vaksin': f"VAC{len(DUMMY_VACCINES)+1:03d}",
+            'nama_vaksin': request.POST.get('nama_vaksin'),
+            'harga': int(request.POST.get('harga')),
+            'stok': int(request.POST.get('stok')),
+            'used': False
+        }
+        DUMMY_VACCINES.append(new_vaksin)
+        return redirect('merah:list_vaksin')
+    return render(request, 'klinik/add_vaksin.html')
+
+def update_vaksin(request, kode_vaksin):
+    vaksin = next((v for v in DUMMY_VACCINES if v['kode_vaksin'] == kode_vaksin), None)
+    
+    if request.method == 'POST':
+        if vaksin:
+            vaksin['nama_vaksin'] = request.POST.get('nama_vaksin')
+            vaksin['harga'] = int(request.POST.get('harga'))
+        return redirect('merah:list_vaksin')
+    
+    return render(request, 'klinik/update_vaksin.html', {'vaksin': vaksin})
+
+def update_stok_vaksin(request, kode_vaksin):
+    vaksin = next((v for v in DUMMY_VACCINES if v['kode_vaksin'] == kode_vaksin), None)
+    
+    if request.method == 'POST':
+        if vaksin:
+            vaksin['stok'] = int(request.POST.get('stok'))
+        return redirect('merah:list_vaksin')
+    
+    return render(request, 'klinik/update_stock.html', {'vaksin': vaksin})
+
+def delete_vaksin(request, kode_vaksin):
+    if request.method == 'POST':  
+        global DUMMY_VACCINES
+        vaksin = next((v for v in DUMMY_VACCINES if v['kode_vaksin'] == kode_vaksin), None)
+        
+        if vaksin and not vaksin['used']:
+            DUMMY_VACCINES = [v for v in DUMMY_VACCINES if v['kode_vaksin'] != kode_vaksin]
+            messages.success(request, f'Vaksin {kode_vaksin} berhasil dihapus!')
+        else:
+            messages.error(request, f'Vaksin {kode_vaksin} tidak dapat dihapus!')
+    
+    return redirect('merah:list_vaksin')

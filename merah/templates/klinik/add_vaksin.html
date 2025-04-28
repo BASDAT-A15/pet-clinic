@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block title %}Create New Vaccine{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Create New Vaccine</h1>
+    
+    <form method="POST" action="{% url 'merah:add_vaksin' %}">
+        {% csrf_token %}
+        
+        <div class="mb-3">
+            <label for="nama_vaksin" class="form-label">Nama</label>
+            <input type="text" class="form-control" id="nama_vaksin" name="nama_vaksin" required>
+        </div>
+        
+        <div class="mb-3">
+            <label for="harga" class="form-label">Harga</label>
+            <input type="number" class="form-control" id="harga" name="harga" min="0" required>
+        </div>
+        
+        <div class="mb-3">
+            <label for="stok" class="form-label">Stok Awal</label>
+            <input type="number" class="form-control" id="stok" name="stok" min="0" required>
+        </div>
+        
+        <div class="text-end">
+            <a href="{% url 'merah:list_vaksin' %}" class="btn btn-secondary me-2">Cancel</a>
+            <button type="submit" class="btn btn-primary">Create</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
