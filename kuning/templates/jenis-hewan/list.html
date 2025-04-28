@@ -1,0 +1,252 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block meta %}
+<title>List Jenis Hewan - Pet Clinic</title>
+<style>
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+    .modal-content {
+        background-color: white;
+        padding: 2rem;
+        border-radius: 0.5rem;
+        max-width: 500px;
+        width: 100%;
+    }
+</style>
+{% endblock meta %}
+
+{% block content %}
+<div class="p-6 bg-white rounded-lg shadow-md">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold">List Jenis Hewan</h1>
+        <button id="createButton" class="bg-[#0B1120] text-white py-2 px-4 rounded-md flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+            Create New Animal Type
+        </button>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="min-w-full border border-gray-200">
+            <thead>
+                <tr>
+                    <th class="w-16 px-4 py-3 border-b border-r text-left">No</th>
+                    <th class="px-4 py-3 border-b border-r text-left">ID Jenis</th>
+                    <th class="px-4 py-3 border-b border-r text-left">Nama Jenis</th>
+                    <th class="px-4 py-3 border-b text-center">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for hewan in jenis_hewan %}
+                <tr>
+                    <td class="px-4 py-3 border-b border-r">{{ hewan.no }}</td>
+                    <td class="px-4 py-3 border-b border-r">{{ hewan.id_jenis }}</td>
+                    <td class="px-4 py-3 border-b border-r">{{ hewan.nama_jenis }}</td>
+                    <td class="px-4 py-3 border-b">
+                        <div class="flex justify-center gap-2">
+                            <button 
+                                onclick="openUpdateModal('{{ hewan.id_jenis }}', '{{ hewan.nama_jenis }}')"
+                                class="bg-[#0B1120] text-white py-2 px-6 rounded-md"
+                            >
+                                Update
+                            </button>
+                            <button 
+                                onclick="openDeleteModal('{{ hewan.id_jenis }}', '{{ hewan.nama_jenis }}')"
+                                class="bg-red-500 hover:bg-red-600 text-white py-2 px-6 rounded-md"
+                            >
+                                Delete
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Create Jenis Hewan Modal -->
+<div id="createModal" class="modal">
+    <div class="modal-content">
+        <h1 class="text-3xl font-bold mb-6">Create New Animal Type</h1>
+        
+        <form id="createForm">
+            <div class="mb-6">
+                <label for="namaJenis" class="block text-gray-700 mb-2">Nama Jenis</label>
+                <input 
+                    type="text" 
+                    id="namaJenis" 
+                    name="namaJenis" 
+                    placeholder="Nama Jenis" 
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                >
+            </div>
+            
+            <div class="flex justify-end gap-3">
+                <button 
+                    type="button"
+                    onclick="hideCreateModal()" 
+                    class="px-6 py-2 border border-gray-300 rounded-md bg-white text-gray-700 hover:bg-gray-100"
+                >
+                    Cancel
+                </button>
+                <button 
+                    type="submit" 
+                    class="px-6 py-2 bg-[#0B1120] text-white rounded-md hover:bg-gray-800"
+                >
+                    Create
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Update Jenis Hewan Modal -->
+<div id="updateModal" class="modal">
+    <div class="modal-content">
+        <h1 class="text-3xl font-bold mb-6">Update Animal Type</h1>
+        
+        <form id="updateForm">
+            <div class="mb-4">
+                <label for="updateIdJenis" class="block text-gray-700 mb-2">ID Jenis Hewan</label>
+                <input 
+                    type="text" 
+                    id="updateIdJenis" 
+                    name="updateIdJenis" 
+                    class="w-full px-3 py-2 bg-gray-200 border border-gray-300 rounded-md"
+                    readonly
+                >
+            </div>
+            
+            <div class="mb-6">
+                <label for="updateNamaJenis" class="block text-gray-700 mb-2">Nama Jenis</label>
+                <input 
+                    type="text" 
+                    id="updateNamaJenis" 
+                    name="updateNamaJenis" 
+                    placeholder="Nama Jenis" 
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                >
+            </div>
+            
+            <div class="flex justify-end gap-3">
+                <button 
+                    type="button"
+                    onclick="hideUpdateModal()" 
+                    class="px-6 py-2 border border-gray-300 rounded-md bg-white text-gray-700 hover:bg-gray-100"
+                >
+                    Cancel
+                </button>
+                <button 
+                    type="submit" 
+                    class="px-6 py-2 bg-[#0B1120] text-white rounded-md hover:bg-gray-800"
+                >
+                    Update
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Delete Jenis Hewan Modal -->
+<div id="deleteModal" class="modal">
+    <div class="modal-content">
+        <h1 class="text-3xl font-bold mb-6 text-red-500">Delete Animal Type</h1>
+        
+        <p class="mb-6 text-lg">
+            Apakah kamu yakin untuk menghapus Jenis Hewan 
+            <span id="deleteNamaJenis" class="text-red-500 font-medium"></span> 
+            dengan kode 
+            <span id="deleteIdJenis" class="text-red-500 font-medium"></span>?
+        </p>
+        
+        <div class="flex justify-end gap-3">
+            <button 
+                type="button"
+                onclick="hideDeleteModal()" 
+                class="px-6 py-2 border border-gray-300 rounded-md bg-white text-gray-700 hover:bg-gray-100"
+            >
+                Cancel
+            </button>
+            <button 
+                type="button"
+                onclick="confirmDelete()" 
+                class="px-6 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
+            >
+                Confirm Deletion
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('createButton').addEventListener('click', function() {
+        document.getElementById('createModal').style.display = 'flex';
+    });
+    
+    function hideCreateModal() {
+        document.getElementById('createModal').style.display = 'none';
+    }
+    
+    document.getElementById('createForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        hideCreateModal();
+    });
+    
+    function openUpdateModal(idJenis, namaJenis) {
+        document.getElementById('updateIdJenis').value = idJenis;
+        document.getElementById('updateNamaJenis').value = namaJenis;
+        
+        document.getElementById('updateModal').style.display = 'flex';
+    }
+    
+    function hideUpdateModal() {
+        document.getElementById('updateModal').style.display = 'none';
+    }
+    
+    document.getElementById('updateForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        hideUpdateModal();
+    });
+    
+
+    let currentDeleteId = null;
+    
+    function openDeleteModal(idJenis, namaJenis) {
+        currentDeleteId = idJenis;
+        
+        document.getElementById('deleteIdJenis').textContent = idJenis;
+        document.getElementById('deleteNamaJenis').textContent = namaJenis;
+        
+        document.getElementById('deleteModal').style.display = 'flex';
+    }
+    
+    function hideDeleteModal() {
+        document.getElementById('deleteModal').style.display = 'none';
+    }
+    
+    function confirmDelete() {
+        console.log(`Deleting animal type with ID: ${currentDeleteId}`);
+        
+        hideDeleteModal();
+        
+
+        console.log('Item deleted successfully');
+    }
+    
+</script>
+{% endblock content %}
