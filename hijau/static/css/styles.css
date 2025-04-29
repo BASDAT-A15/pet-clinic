@@ -1,0 +1,217 @@
+/* Menyusun layout tabel */
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    font-family: Arial, sans-serif;
+}
+
+.table th, .table td {
+    padding: 10px 15px;
+    text-align: center;
+    border: 1px solid #ddd;
+}
+
+.table th {
+    background-color: #f4f4f4;
+    color: #333;
+    font-weight: bold;
+}
+
+.table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.table tr:hover {
+    background-color: #e9ecef;
+}
+
+.table td {
+    background-color: #ffffff;
+    color: #555;
+}
+
+/* Tombol-tombol aksi */
+.btn {
+    padding: 8px 15px;
+    text-decoration: none;
+    color: white;
+    border-radius: 5px;
+    font-size: 14px;
+    display: inline-block;
+    margin: 5px;
+    text-align: center;
+}
+
+.btn-primary {
+    background-color: #000000; /* Tombol Update: Hitam */
+}
+
+.btn-success {
+    background-color: #000000; /* Tombol Create: Hitam */
+}
+
+.btn-danger {
+    background-color: #dc3545; /* Tombol Delete: Merah */
+}
+
+.btn:hover {
+    opacity: 0.8;
+}
+
+/* Tombol Create New Treatment */
+.btn-success {
+    float: right;
+    margin-bottom: 20px;
+}
+
+/* Atur jarak antar elemen */
+.container {
+    padding: 30px;
+    margin: 20px;
+}
+
+/* Styling untuk form */
+.container {
+    padding: 30px;
+    margin: 20px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px;
+    margin: 5px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.btn {
+    padding: 10px 20px;
+    text-decoration: none;
+    border-radius: 5px;
+    font-size: 14px;
+    display: inline-block;
+    margin: 10px 5px;
+}
+
+.btn-success {
+    background-color: #000000;
+    color: white;
+}
+
+.btn-dark {
+    background-color: #343a40;
+    color: white;
+}
+
+.btn:hover {
+    opacity: 0.8;
+}
+
+
+/* Styling untuk form */
+.container {
+    padding: 30px;
+    margin: 20px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px;
+    margin: 5px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+/* Tombol-tombol aksi */
+.btn {
+    padding: 10px 20px;
+    text-decoration: none;
+    border-radius: 5px;
+    font-size: 14px;
+    display: inline-block;
+    margin: 10px 5px;
+}
+
+.btn-primary {
+    background-color: #000000; /* Tombol Update: Hitam */
+    color: white; /* Warna teks tombol */
+}
+
+.btn-light {
+    background-color: #ffffff; /* Tombol Cancel: Putih */
+    color: #000000; /* Warna teks tombol */
+    border: 1px solid #ddd; /* Border tombol putih */
+}
+
+.btn:hover {
+    opacity: 0.8;
+}
+
+/* Modal Popup Styling */
+.modal {
+    display: none;  /* Sembunyikan modal secara default */
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgb(0,0,0); /* Black w/ opacity */
+    background-color: rgba(0,0,0,0.4);
+    padding-top: 60px;
+}
+
+/* Modal Content */
+.modal-dialog {
+    margin: auto;
+    padding: 20px;
+    background-color: white;
+    border-radius: 8px;
+    width: 50%;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Modal Header */
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Modal Footer */
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+}
+
+/* Styling for Confirm and Cancel Buttons */
+.btn-light {
+    background-color: #f8f9fa;
+    border: 1px solid #ced4da;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+}
+
+.btn-light, .btn-danger {
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+.btn-light:hover, .btn-danger:hover {
+    opacity: 0.8;
+}
