@@ -1,0 +1,482 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block meta %}
+<title>List Hewan Peliharaan</title>
+<style>
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+    .modal-content {
+        background-color: white;
+        padding: 2rem;
+        border-radius: 0.5rem;
+        max-width: 500px;
+        width: 100%;
+    }
+    .dropdown-menu {
+        display: none;
+        position: absolute;
+        background-color: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 0.375rem;
+        width: 100%;
+        z-index: 10;
+    }
+    .dropdown-item {
+        padding: 0.75rem 1rem;
+        cursor: pointer;
+    }
+    .dropdown-item:hover {
+        background-color: #f3f4f6;
+    }
+</style>
+{% endblock meta %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-bold">List Hewan Peliharaan</h1>
+            <button id="createButton" class="bg-[#0B1120] hover:bg-gray-900 text-white px-4 py-2 rounded-md flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+                Create New Pet
+            </button>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="min-w-full border border-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="py-3 px-4 border text-left">No</th>
+                        <th class="py-3 px-4 border text-left">Pemilik</th>
+                        <th class="py-3 px-4 border text-left">Jenis Hewan</th>
+                        <th class="py-3 px-4 border text-left">Nama Hewan</th>
+                        <th class="py-3 px-4 border text-left">Tanggal Lahir</th>
+                        <th class="py-3 px-4 border text-center">Foto</th>
+                        <th class="py-3 px-4 border text-center">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for hewan in daftar_hewan %}
+                    <tr>
+                        <td class="py-3 px-4 border">{{ forloop.counter }}</td>
+                        <td class="py-3 px-4 border">{{ hewan.pemilik }}</td>
+                        <td class="py-3 px-4 border">{{ hewan.jenis_hewan }}</td>
+                        <td class="py-3 px-4 border">{{ hewan.nama }}</td>
+                        <td class="py-3 px-4 border">{{ hewan.tanggal_lahir }}</td>
+                        <td class="py-3 px-4 border text-center">
+                            <img src="{{ hewan.foto|default:'' }}" alt="{{ hewan.nama }}" class="h-20 w-auto mx-auto object-cover">
+                        </td>
+                        <td class="py-3 px-4 border">
+                            <div class="flex justify-center gap-2">
+                                <button 
+                                    class="bg-[#0B1120] hover:bg-gray-800 text-white px-4 py-1 rounded text-sm update-btn"
+                                    data-id="{{ hewan.id }}"
+                                    data-owner="{{ hewan.pemilik }}"
+                                    data-type="{{ hewan.jenis_hewan }}"
+                                    data-name="{{ hewan.nama }}"
+                                    data-birthdate="{{ hewan.tanggal_lahir_formatted }}"
+                                    data-photourl="{{ hewan.url_foto|default:'' }}"
+                                >
+                                    Update
+                                </button>
+                                <button 
+                                    class="bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded text-sm delete-btn"
+                                    data-id="{{ hewan.id }}"
+                                    data-name="{{ hewan.nama }}"
+                                    data-owner="{{ hewan.pemilik }}"
+                                >
+                                    Delete
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Create Hewan Modal -->
+<div id="createHewanModal" class="modal">
+    <div class="modal-content">
+        <h1 class="text-3xl font-bold mb-6">Create New Pet</h1>
+        
+        <form id="createHewanForm" method="post">
+            {% csrf_token %}
+            
+            <div class="mb-4">
+                <label for="pemilik" class="block text-gray-700 mb-2">Pemilik</label>
+                <div class="relative">
+                    <div id="pemilikDropdown" class="w-full px-3 py-2 border border-gray-300 rounded-md flex justify-between items-center cursor-pointer">
+                        <span id="pemilikSelected">Pilih pemilik</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                        </svg>
+                    </div>
+                    <input type="hidden" id="pemilik" name="pemilik">
+                    <div id="pemilikOptions" class="dropdown-menu">
+                        <div class="dropdown-item" data-value="John Doe">John Doe</div>
+                        <div class="dropdown-item" data-value="PT Pecinta Kucing">PT Pecinta Kucing</div>
+                        <div class="dropdown-item" data-value="PT Aku Sayang Hewan">PT Aku Sayang Hewan</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mb-4">
+                <label for="jenisHewan" class="block text-gray-700 mb-2">Jenis Hewan</label>
+                <div class="relative">
+                    <div id="jenisHewanDropdown" class="w-full px-3 py-2 border border-gray-300 rounded-md flex justify-between items-center cursor-pointer">
+                        <span id="jenisHewanSelected">Pilih jenis hewan</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                        </svg>
+                    </div>
+                    <input type="hidden" id="jenisHewan" name="jenisHewan">
+                    <div id="jenisHewanOptions" class="dropdown-menu">
+                        <div class="dropdown-item" data-value="Kucing">Kucing</div>
+                        <div class="dropdown-item" data-value="Anjing">Anjing</div>
+                        <div class="dropdown-item" data-value="Hamster">Hamster</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mb-4">
+                <label for="namaHewan" class="block text-gray-700 mb-2">Nama Hewan Peliharaan</label>
+                <input 
+                    type="text" 
+                    id="namaHewan" 
+                    name="namaHewan" 
+                    placeholder="Nama Hewan" 
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                >
+            </div>
+            
+            <div class="mb-4">
+                <label for="tanggalLahir" class="block text-gray-700 mb-2">Tanggal Lahir Hewan</label>
+                <input 
+                    type="text" 
+                    id="tanggalLahir" 
+                    name="tanggalLahir" 
+                    placeholder="DD-MM-YYYY" 
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                >
+            </div>
+            
+            <div class="mb-6">
+                <label for="urlFoto" class="block text-gray-700 mb-2">URL Foto Hewan</label>
+                <input 
+                    type="url" 
+                    id="urlFoto" 
+                    name="urlFoto" 
+                    placeholder="https://example.com" 
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                >
+            </div>
+            
+            <div class="flex justify-end gap-3">
+                <button 
+                    type="button"
+                    onclick="hideCreateModal()" 
+                    class="px-6 py-2 border border-gray-300 rounded-md bg-white text-gray-700 hover:bg-gray-100"
+                >
+                    Cancel
+                </button>
+                <button 
+                    type="submit" 
+                    class="px-6 py-2 bg-[#0B1120] text-white rounded-md hover:bg-gray-800"
+                >
+                    Create
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Delete Hewan Modal -->
+<div id="deleteHewanModal" class="modal">
+    <div class="modal-content">
+        <h1 class="text-3xl font-bold mb-6 text-red-500">Delete Pet</h1>
+        
+        <p class="text-lg mb-6">
+            Apakah kamu yakin untuk menghapus Hewan Peliharaan 
+            <span id="deleteHewanName" class="text-red-500 font-semibold"></span> 
+            milik 
+            <span id="deleteHewanOwner" class="text-red-500 font-semibold"></span>?
+        </p>
+        
+        <form id="deleteHewanForm" method="post" action="">
+            {% csrf_token %}
+            <input type="hidden" name="hewan_id" id="deleteHewanId">
+            
+            <div class="flex justify-end gap-3">
+                <button 
+                    type="button"
+                    onclick="hideDeleteModal()" 
+                    class="px-6 py-2 border border-gray-300 rounded-md bg-white text-gray-700 hover:bg-gray-100"
+                >
+                    Cancel
+                </button>
+                <button 
+                    type="submit" 
+                    class="px-6 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
+                >
+                    Confirm Deletion
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Update Hewan Modal -->
+<div id="updateHewanModal" class="modal">
+    <div class="modal-content">
+        <h1 class="text-3xl font-bold mb-6">Update Pet</h1>
+        
+        <form id="updateHewanForm" method="post">
+            {% csrf_token %}
+            <input type="hidden" name="hewan_id" id="updateHewanId">
+            
+            <div class="mb-4">
+                <label for="updatePemilik" class="block text-gray-700 mb-2">Pemilik</label>
+                <div class="relative">
+                    <div id="updatePemilikDropdown" class="w-full px-3 py-2 border border-gray-300 rounded-md flex justify-between items-center cursor-pointer">
+                        <span id="updatePemilikSelected">John Doe</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                        </svg>
+                    </div>
+                    <input type="hidden" id="updatePemilik" name="pemilik">
+                    <div id="updatePemilikOptions" class="dropdown-menu">
+                        <div class="dropdown-item" data-value="John Doe">John Doe</div>
+                        <div class="dropdown-item" data-value="PT Pecinta Kucing">PT Pecinta Kucing</div>
+                        <div class="dropdown-item" data-value="PT Aku Sayang Hewan">PT Aku Sayang Hewan</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mb-4">
+                <label for="updateJenisHewan" class="block text-gray-700 mb-2">Jenis Hewan</label>
+                <div class="relative">
+                    <div id="updateJenisHewanDropdown" class="w-full px-3 py-2 border border-gray-300 rounded-md flex justify-between items-center cursor-pointer">
+                        <span id="updateJenisHewanSelected">Kucing</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                        </svg>
+                    </div>
+                    <input type="hidden" id="updateJenisHewan" name="jenisHewan">
+                    <div id="updateJenisHewanOptions" class="dropdown-menu">
+                        <div class="dropdown-item" data-value="Kucing">Kucing</div>
+                        <div class="dropdown-item" data-value="Anjing">Anjing</div>
+                        <div class="dropdown-item" data-value="Hamster">Hamster</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mb-4">
+                <label for="updateNamaHewan" class="block text-gray-700 mb-2">Nama Hewan</label>
+                <input 
+                    type="text" 
+                    id="updateNamaHewan" 
+                    name="namaHewan" 
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                >
+            </div>
+            
+            <div class="mb-4">
+                <label for="updateTanggalLahir" class="block text-gray-700 mb-2">Tanggal Lahir Hewan</label>
+                <input 
+                    type="text" 
+                    id="updateTanggalLahir" 
+                    name="tanggalLahir" 
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                >
+            </div>
+            
+            <div class="mb-6">
+                <label for="updateUrlFoto" class="block text-gray-700 mb-2">URL Foto Hewan</label>
+                <input 
+                    type="url" 
+                    id="updateUrlFoto" 
+                    name="urlFoto" 
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                >
+            </div>
+            
+            <div class="flex justify-end gap-3">
+                <button 
+                    type="button"
+                    onclick="hideUpdateModal()" 
+                    class="px-6 py-2 border border-gray-300 rounded-md bg-white text-gray-700 hover:bg-gray-100"
+                >
+                    Cancel
+                </button>
+                <button 
+                    type="submit" 
+                    class="px-6 py-2 bg-[#0B1120] text-white rounded-md hover:bg-gray-800"
+                >
+                    Update
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.getElementById('createButton').addEventListener('click', function() {
+        document.getElementById('createHewanModal').style.display = 'flex';
+    });
+    
+    function hideCreateModal() {
+        document.getElementById('createHewanModal').style.display = 'none';
+    }
+    
+    document.getElementById('createHewanForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        hideCreateModal();
+    });
+    
+    function showDeleteModal(id, name, owner) {
+        document.getElementById('deleteHewanId').value = id;
+        document.getElementById('deleteHewanName').textContent = name;
+        document.getElementById('deleteHewanOwner').textContent = owner;
+        document.getElementById('deleteHewanModal').style.display = 'flex';
+    }
+    
+    function hideDeleteModal() {
+        document.getElementById('deleteHewanModal').style.display = 'none';
+    }
+    
+    document.querySelectorAll('.delete-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const id = this.dataset.id;
+            const name = this.dataset.name;
+            const owner = this.dataset.owner;
+            showDeleteModal(id, name, owner);
+        });
+    });
+    
+    function showUpdateModal(id, pemilik, jenisHewan, nama, tanggalLahir, urlFoto) {
+        document.getElementById('updateHewanId').value = id;
+        document.getElementById('updatePemilik').value = pemilik;
+        document.getElementById('updatePemilikSelected').textContent = pemilik;
+        document.getElementById('updateJenisHewan').value = jenisHewan;
+        document.getElementById('updateJenisHewanSelected').textContent = jenisHewan;
+        document.getElementById('updateNamaHewan').value = nama;
+        document.getElementById('updateTanggalLahir').value = tanggalLahir;
+        document.getElementById('updateUrlFoto').value = urlFoto;
+        document.getElementById('updateHewanModal').style.display = 'flex';
+    }
+    
+    function hideUpdateModal() {
+        document.getElementById('updateHewanModal').style.display = 'none';
+    }
+    
+    document.getElementById('updateHewanForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        hideUpdateModal();
+    });
+    
+    document.querySelectorAll('.update-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const id = this.dataset.id;
+            const pemilik = this.dataset.owner;
+            const jenisHewan = this.dataset.type;
+            const nama = this.dataset.name;
+            const tanggalLahir = this.dataset.birthdate;
+            const urlFoto = this.dataset.photourl;
+            showUpdateModal(id, pemilik, jenisHewan, nama, tanggalLahir, urlFoto);
+        });
+    });
+    
+    document.getElementById('pemilikDropdown').addEventListener('click', function() {
+        const options = document.getElementById('pemilikOptions');
+        options.style.display = options.style.display === 'block' ? 'none' : 'block';
+    });
+    
+    document.getElementById('jenisHewanDropdown').addEventListener('click', function() {
+        const options = document.getElementById('jenisHewanOptions');
+        options.style.display = options.style.display === 'block' ? 'none' : 'block';
+    });
+    
+    document.getElementById('updatePemilikDropdown').addEventListener('click', function() {
+        const options = document.getElementById('updatePemilikOptions');
+        options.style.display = options.style.display === 'block' ? 'none' : 'block';
+    });
+    
+    document.getElementById('updateJenisHewanDropdown').addEventListener('click', function() {
+        const options = document.getElementById('updateJenisHewanOptions');
+        options.style.display = options.style.display === 'block' ? 'none' : 'block';
+    });
+    
+    document.querySelectorAll('#pemilikOptions .dropdown-item').forEach(item => {
+        item.addEventListener('click', function() {
+            const value = this.dataset.value;
+            document.getElementById('pemilik').value = value;
+            document.getElementById('pemilikSelected').textContent = value;
+            document.getElementById('pemilikOptions').style.display = 'none';
+        });
+    });
+    
+    document.querySelectorAll('#jenisHewanOptions .dropdown-item').forEach(item => {
+        item.addEventListener('click', function() {
+            const value = this.dataset.value;
+            document.getElementById('jenisHewan').value = value;
+            document.getElementById('jenisHewanSelected').textContent = value;
+            document.getElementById('jenisHewanOptions').style.display = 'none';
+        });
+    });
+    
+    document.querySelectorAll('#updatePemilikOptions .dropdown-item').forEach(item => {
+        item.addEventListener('click', function() {
+            const value = this.dataset.value;
+            document.getElementById('updatePemilik').value = value;
+            document.getElementById('updatePemilikSelected').textContent = value;
+            document.getElementById('updatePemilikOptions').style.display = 'none';
+        });
+    });
+    
+    document.querySelectorAll('#updateJenisHewanOptions .dropdown-item').forEach(item => {
+        item.addEventListener('click', function() {
+            const value = this.dataset.value;
+            document.getElementById('updateJenisHewan').value = value;
+            document.getElementById('updateJenisHewanSelected').textContent = value;
+            document.getElementById('updateJenisHewanOptions').style.display = 'none';
+        });
+    });
+    
+    document.addEventListener('click', function(event) {
+        if (!event.target.closest('#pemilikDropdown') && !event.target.closest('#pemilikOptions')) {
+            document.getElementById('pemilikOptions').style.display = 'none';
+        }
+        if (!event.target.closest('#jenisHewanDropdown') && !event.target.closest('#jenisHewanOptions')) {
+            document.getElementById('jenisHewanOptions').style.display = 'none';
+        }
+        if (!event.target.closest('#updatePemilikDropdown') && !event.target.closest('#updatePemilikOptions')) {
+            document.getElementById('updatePemilikOptions').style.display = 'none';
+        }
+        if (!event.target.closest('#updateJenisHewanDropdown') && !event.target.closest('#updateJenisHewanOptions')) {
+            document.getElementById('updateJenisHewanOptions').style.display = 'none';
+        }
+    });
+</script>
+{% endblock content %}
