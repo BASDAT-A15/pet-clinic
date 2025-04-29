@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update Kunjungan</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body>
+    <div class="container">
+        <h1>Update Kunjungan</h1>
+        <form action="/update" method="POST">
+            <!-- ID Klien -->
+            <label for="clientId">ID Klien</label>
+            <select id="clientId" name="clientId">
+                <option value="FD0123" selected>FD0123</option>
+                <option value="KII123">KII123</option>
+                <option value="PKE123">PKE123</option>
+            </select>
+
+            <!-- Nama Hewan -->
+            <label for="animalName">Nama Hewan</label>
+            <select id="animalName" name="animalName">
+                <option value="Snowy" selected>Snowy</option>
+                <option value="Blacky">Blacky</option>
+                <option value="Hamsung">Hamsung</option>
+            </select>
+
+            <!-- Dokter Hewan -->
+            <label for="doctor">Dokter Hewan</label>
+            <select id="doctor" name="doctor">
+                <option value="Dr. Rizki" selected>Dr. Rizki</option>
+                <option value="Dr. Saffira">Dr. Saffira</option>
+                <option value="Dr. Nanu">Dr. Nanu</option>
+            </select>
+
+            <!-- Perawat Hewan -->
+            <label for="nurse">Perawat Hewan</label>
+            <select id="nurse" name="nurse">
+                <option value="Tina" selected>Tina</option>
+                <option value="Tini">Tini</option>
+                <option value="Tono">Tono</option>
+            </select>
+
+            <!-- Metode Kunjungan -->
+            <label for="visitMethod">Metode Kunjungan</label>
+            <select id="visitMethod" name="visitMethod">
+                <option value="Janji Temu" selected>Janji Temu</option>
+                <option value="Walk-In">Walk-In</option>
+                <option value="Darurat">Darurat</option>
+            </select>
+
+            <!-- Waktu Mulai Penanganan -->
+            <label for="startTime">Waktu Mulai Penanganan</label>
+            <input type="datetime-local" id="startTime" name="startTime" value="2025-04-03T14:30:13">
+
+            <!-- Waktu Selesai Penanganan -->
+            <label for="endTime">Waktu Selesai Penanganan</label>
+            <input type="datetime-local" id="endTime" name="endTime" value="2025-04-03T16:30:16">
+
+            <div>
+                <button type="button" onclick="window.history.back();">Cancel</button>
+                <button type="submit">Update</button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>
