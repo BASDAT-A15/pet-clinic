@@ -30,12 +30,14 @@
 <div class="p-6 bg-white rounded-lg shadow-md">
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-3xl font-bold">List Jenis Hewan</h1>
+        {% if role == 'frontdesk' %}
         <button id="createButton" class="bg-[#0B1120] text-white py-2 px-4 rounded-md flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
             </svg>
             Create New Animal Type
         </button>
+        {% endif %}
     </div>
 
     <div class="overflow-x-auto">
@@ -45,7 +47,9 @@
                     <th class="w-16 px-4 py-3 border-b border-r text-left">No</th>
                     <th class="px-4 py-3 border-b border-r text-left">ID Jenis</th>
                     <th class="px-4 py-3 border-b border-r text-left">Nama Jenis</th>
+                    {% if role == 'frontdesk' %}
                     <th class="px-4 py-3 border-b text-center">Action</th>
+                    {% endif %}
                 </tr>
             </thead>
             <tbody>
@@ -54,6 +58,7 @@
                     <td class="px-4 py-3 border-b border-r">{{ hewan.no }}</td>
                     <td class="px-4 py-3 border-b border-r">{{ hewan.id_jenis }}</td>
                     <td class="px-4 py-3 border-b border-r">{{ hewan.nama_jenis }}</td>
+                    {% if role == 'frontdesk' %}
                     <td class="px-4 py-3 border-b">
                         <div class="flex justify-center gap-2">
                             <button 
@@ -70,6 +75,7 @@
                             </button>
                         </div>
                     </td>
+                    {% endif %}
                 </tr>
                 {% endfor %}
             </tbody>
@@ -77,6 +83,7 @@
     </div>
 </div>
 
+{% if role == 'frontdesk' %}
 <!-- Create Jenis Hewan Modal -->
 <div id="createModal" class="modal">
     <div class="modal-content">
@@ -223,7 +230,6 @@
         hideUpdateModal();
     });
     
-
     let currentDeleteId = null;
     
     function openDeleteModal(idJenis, namaJenis) {
@@ -244,9 +250,8 @@
         
         hideDeleteModal();
         
-
         console.log('Item deleted successfully');
     }
-    
 </script>
+{% endif %}
 {% endblock content %}
