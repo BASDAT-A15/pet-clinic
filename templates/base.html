@@ -17,7 +17,7 @@
             color: #000000; 
             margin: 0;
             padding: 0;
-            padding-top: 3rem; 
+            padding-top: 4rem; 
         }
         h1, h2, h5 {
             font-family: 'Playfair Display';
@@ -27,11 +27,28 @@
 </head>
 
 <body class="font-raleway">
-    {% include 'navbar_guest.html' %}
+    {% if request.path == '/login/' or request.path == '/register/' or request.path == '/login_register/' or request.path == '/' %}
+        {% include 'navbar_guest.html' %}
+    {% endif %}
 
+    {% if request.path == '/hewan/' or request.path == '/profile-klien/' %}
+        {% include 'navbar_klien.html' %}
+    {% endif %}
+
+    {% if 'profile-frontdesk' in request.path or 'hewan/jenis-hewan' in request.path or 'klinik/klien' in request.path %}
+        {% include 'navbar_front_desk.html' %}
+    {% endif %}
+
+    {% if request.path == '/profile-dokter/' or request.path == '/hewan/jenis-hewan/' or request.path == '/klinik/vaksinasi/' %}
+        {% include 'navbar_dokter.html' %}
+    {% endif %}
+
+    {% if request.path == '/profile-perawat/' or request.path == '/klinik/vaksin/' %}
+        {% include 'navbar_perawat.html' %}
+    {% endif %}
     <div class="container mx-auto mt-4">
         {% block content %} {% endblock content %}
-    </div>
+    </div> 
 </body>
 
 </html>

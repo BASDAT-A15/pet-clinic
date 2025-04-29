@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect
+from django.contrib.auth import logout
 from .forms import (
     IndividuRegistrationForm, 
     PerusahaanRegistrationForm, 
@@ -57,3 +58,7 @@ def profile_perawat(request):
 
 def update_password(request):
     return render(request, 'update_password.html')
+
+def logout_view(request):
+    logout(request)
+    return redirect('main:login')

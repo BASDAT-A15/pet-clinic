@@ -8,7 +8,7 @@
 {% block content %}
 <div class="container mx-auto px-4 py-8">
     <h1 class="text-2xl font-bold mb-6">List Client</h1>
-    
+
     <style>
         table {
             border-collapse: collapse;
@@ -27,18 +27,22 @@
         }
     </style>
 
-    <!-- Search Box -->
-    <div class="mb-4">
-        <form method="get">
+    <!-- Search Bar -->
+    <div class="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <form method="get" class="flex w-full md:w-1/2">
             <input type="text" 
                    name="search" 
-                   placeholder="Search Client Name" 
+                   placeholder="Search Client Name"
                    value="{{ search_query|default:'' }}"
-                   class="border p-2 rounded w-full md:w-1/3 focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <button type="submit" class="hidden">Search</button>
+                   class="w-full px-4 py-2 border border-gray-300 rounded-l focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <button type="submit" class="bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded-r">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 105 11a6 6 0 0012 0z" />
+                </svg>
+            </button>
         </form>
     </div>
-    
+
     <!-- Client Table -->
     <div class="overflow-x-auto bg-white rounded-lg shadow">
         <table class="min-w-full">
@@ -60,7 +64,7 @@
                     <td class="py-3 px-4 border">{{ client.jenis }}</td>
                     <td class="py-3 px-4 border">
                         <a href="{% url 'merah:detail_klien' client.id %}" 
-                           class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm transition">
+                           class="bg-[#0B1120] hover:bg-gray-900 text-white px-3 py-1 rounded text-sm transition">
                             Detail
                         </a>
                     </td>
@@ -75,21 +79,22 @@
     </div>
 </div>
 
+<!-- Optional JS: local search (if needed on top of server-side filter) -->
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const searchInput = document.querySelector('input[name="search"]');
-        
+
         if (searchInput) {
-            searchInput.addEventListener('input', function() {
+            searchInput.addEventListener('input', function () {
                 const searchValue = this.value.toLowerCase().trim();
                 const rows = document.querySelectorAll('tbody tr');
-                
+
                 rows.forEach(row => {
-                    if (row.querySelector('td')) { // Skip empty row
+                    if (row.querySelector('td')) {
                         const clientName = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
                         const clientEmail = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
-                        row.style.display = (clientName.includes(searchValue) || clientEmail.includes(searchValue)) 
-                            ? '' 
+                        row.style.display = (clientName.includes(searchValue) || clientEmail.includes(searchValue))
+                            ? ''
                             : 'none';
                     }
                 });
