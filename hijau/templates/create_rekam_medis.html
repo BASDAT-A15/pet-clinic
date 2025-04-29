@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Rekam Medis</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body>
+    <div class="container">
+        <h1>Create Rekam Medis</h1>
+        <form action="/create_rekam_medis" method="POST">
+            <!-- Suhu Tubuh -->
+            <label for="temperature">Suhu Tubuh Pasien (°C)</label>
+            <input type="number" id="temperature" name="temperature" step="0.1" required>
+
+            <!-- Berat Badan -->
+            <label for="weight">Berat Badan Pasien (kg)</label>
+            <input type="number" id="weight" name="weight" step="0.1" required>
+
+            <!-- Catatan -->
+            <label for="notes">Catatan Medis</label>
+            <textarea id="notes" name="notes" rows="4" required></textarea>
+
+            <div>
+                <button type="button" onclick="window.history.back();">Cancel</button>
+                <button type="submit">Create</button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

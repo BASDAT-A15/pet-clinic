@@ -215,3 +215,550 @@
 .btn-light:hover, .btn-danger:hover {
     opacity: 0.8;
 }
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f9f9f9;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    width: 80%;
+    margin: 0 auto;
+    padding-top: 2rem;
+}
+
+h2 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background-color: white;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.table th, .table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.table th {
+    background-color: #0B1120;
+    color: white;
+}
+
+.table tr:hover {
+    background-color: #f1f1f1;
+}
+
+.btn {
+    padding: 8px 16px;
+    text-decoration: none;
+    color: white;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+}
+
+.btn-info {
+    background-color: #17a2b8;
+}
+
+.btn-info:hover {
+    background-color: #138496;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+}
+
+.btn-danger:hover {
+    background-color: #c82333;
+}
+
+/* General body styles */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+/* Main form container */
+form {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 600px;
+}
+
+/* Form header */
+h1 {
+    text-align: center;
+    color: #333;
+}
+
+/* Label styling */
+label {
+    font-size: 14px;
+    color: #555;
+    margin-bottom: 8px;
+    display: block;
+}
+
+/* Select and input fields */
+select, input[type="datetime-local"] {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 16px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+/* Button container */
+div {
+    display: flex;
+    justify-content: space-between;
+}
+
+/* Button styling */
+button {
+    padding: 10px 20px;
+    font-size: 14px;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+/* Button hover effects */
+button:hover {
+    background-color: #0056b3;
+}
+
+button[type="button"] {
+    background-color: #f44336;
+}
+
+button[type="button"]:hover {
+    background-color: #d32f2f;
+}
+
+/* Styling for Cancel button */
+button[type="button"] {
+    background-color: #f44336;
+}
+
+/* Styling for Create button */
+button[type="submit"] {
+    background-color: #4CAF50;
+}
+
+button[type="submit"]:hover {
+    background-color: #45a049;
+}
+
+/* Spacing and margin for the form fields */
+form select, form input[type="datetime-local"] {
+    margin-bottom: 16px;
+}
+
+/* Margin for buttons */
+div button {
+    width: 48%;
+}
+
+/* Reset some default styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Body styling */
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f9f9f9;
+    padding: 20px;
+}
+
+/* Main container for the form */
+.container {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Title for the form */
+h1 {
+    text-align: center;
+    color: #333;
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+/* Label styling */
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+    color: #555;
+}
+
+/* Styling for select and input elements */
+select, input[type="datetime-local"] {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 20px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+    background-color: #f9f9f9;
+}
+
+/* Input field on focus */
+select:focus, input[type="datetime-local"]:focus {
+    border-color: #4CAF50;
+    outline: none;
+    background-color: #fff;
+}
+
+/* Button styles for Cancel and Create */
+button {
+    padding: 12px 20px;
+    font-size: 16px;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button[type="button"] {
+    background-color: #f44336; /* Red for Cancel */
+}
+
+button[type="submit"] {
+    background-color: #4CAF50; /* Green for Create */
+}
+
+/* Button hover effect */
+button:hover {
+    opacity: 0.9;
+}
+
+/* Button layout */
+button[type="button"] {
+    margin-right: 10px;
+}
+
+/* Button container (to align buttons side by side) */
+button-container {
+    display: flex;
+    justify-content: space-between;
+}
+
+/* Responsive design */
+@media (max-width: 600px) {
+    .container {
+        padding: 10px;
+    }
+
+    button {
+        width: 100%;
+        margin-top: 10px;
+    }
+}
+
+
+/* Reset some default styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Body styling */
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f4f4f4;
+    padding: 20px;
+}
+
+/* Main container for the form */
+.container {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Title for the form */
+h1 {
+    text-align: center;
+    color: #333;
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+/* Label styling */
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+    color: #555;
+}
+
+/* Styling for select and input elements */
+select, input[type="datetime-local"] {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 20px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+    background-color: #f9f9f9;
+}
+
+/* Input field on focus */
+select:focus, input[type="datetime-local"]:focus {
+    border-color: #4CAF50;
+    outline: none;
+    background-color: #fff;
+}
+
+/* Button styles for Cancel and Update */
+button {
+    padding: 12px 20px;
+    font-size: 16px;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button[type="button"] {
+    background-color: #f44336; /* Red for Cancel */
+}
+
+button[type="submit"] {
+    background-color: #4CAF50; /* Green for Update */
+}
+
+/* Button hover effect */
+button:hover {
+    opacity: 0.9;
+}
+
+/* Button layout */
+button[type="button"] {
+    margin-right: 10px;
+}
+
+/* Button container (to align buttons side by side) */
+div {
+    display: flex;
+    justify-content: space-between;
+}
+
+/* Responsive design */
+@media (max-width: 600px) {
+    .container {
+        padding: 10px;
+    }
+
+    button {
+        width: 100%;
+        margin-top: 10px;
+    }
+}
+
+
+/* General styling for the page */
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #f4f4f4;
+}
+
+/* Modal Styling */
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Black background with transparency */
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background-color: white;
+    padding: 30px;
+    border-radius: 8px;
+    width: 400px;
+    text-align: center;
+}
+
+h2 {
+    color: #E53935; /* Red color for title */
+    font-size: 24px;
+}
+
+p {
+    color: #333;
+    font-size: 16px;
+    margin-bottom: 20px;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: space-around;
+}
+
+button {
+    padding: 10px 20px;
+    font-size: 14px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.cancel-btn {
+    background-color: #ccc;
+    color: white;
+}
+
+.cancel-btn:hover {
+    background-color: #bbb;
+}
+
+.confirm-btn {
+    background-color: #E53935;
+    color: white;
+}
+
+.confirm-btn:hover {
+    background-color: #D32F2F;
+}
+
+/* Styling for Delete button to trigger the modal */
+.delete-btn {
+    background-color: #E53935;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.delete-btn:hover {
+    background-color: #D32F2F;
+}
+
+/* General body styles */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+/* Modal styling */
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background-color: white;
+    padding: 30px;
+    border-radius: 8px;
+    width: 400px;
+    text-align: center;
+}
+
+h2 {
+    color: #E53935; /* Red color for the title */
+    font-size: 24px;
+}
+
+p {
+    color: #333;
+    font-size: 16px;
+    margin-bottom: 20px;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: space-between;
+}
+
+/* Button styling */
+button {
+    padding: 10px 20px;
+    font-size: 14px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+/* Styling for Create button */
+.create-btn {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.create-btn:hover {
+    background-color: #45a049;
+}
+
+/* Styling for OK button */
+.ok-btn {
+    background-color: #2196F3;
+    color: white;
+}
+
+.ok-btn:hover {
+    background-color: #1976D2;
+}

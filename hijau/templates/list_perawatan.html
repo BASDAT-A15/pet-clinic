@@ -1,32 +1,5 @@
-
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>List Perawatan</title>
-    {% load static %}
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> <!-- jQuery -->
-    <script>
-        // Fungsi untuk menampilkan modal konfirmasi delete
-        function showDeleteModal(id_kunjungan, jenis_perawatan) {
-            // Set data ke modal
-            $('#modal_kunjungan').text(id_kunjungan);
-            $('#modal_jenis_perawatan').text(jenis_perawatan);
-            // Set hidden input untuk ID Kunjungan yang akan dihapus
-            $('#kunjungan_delete').val(id_kunjungan);
-            // Menampilkan modal dengan overlay
-            $('#deleteModal').fadeIn();
-        }
 
-        // Fungsi untuk menutup modal
-        function closeModal() {
-            $('#deleteModal').fadeOut();
-        }
-    </script>
-</head>
-<body>
     <div class="container">
         <h2>List Perawatan Hewan</h2>
 
@@ -63,7 +36,7 @@
                     <td>Oke</td>
                     <td>
                         <a href="#" class="btn btn-primary">Update</a>
-                        <a href="#" class="btn btn-danger" onclick="showDeleteModal('KJN001', 'TRM001 - Dental Care')">Delete</a>
+                        <a href="#" class="btn btn-danger">Delete</a>
                     </td>
                 </tr>
                 <tr>
@@ -78,7 +51,7 @@
                     <td>Sudah Baik</td>
                     <td>
                         <a href="#" class="btn btn-primary">Update</a>
-                        <a href="#" class="btn btn-danger" onclick="showDeleteModal('KJN002', 'TRM002 - Parasite Control')">Delete</a>
+                        <a href="#" class="btn btn-danger">Delete</a>
                     </td>
                 </tr>
                 <tr>
@@ -93,39 +66,11 @@
                     <td>Sehat</td>
                     <td>
                         <a href="#" class="btn btn-primary">Update</a>
-                        <a href="#" class="btn btn-danger" onclick="showDeleteModal('KJN003', 'TRM003 - Flea Treatment')">Delete</a>
+                        <a href="#" class="btn btn-danger">Delete</a>
                     </td>
                 </tr>
             </tbody>
         </table>
     </div>
-
-    <!-- Modal untuk konfirmasi penghapusan -->
-    <div id="deleteModal" class="modal" tabindex="-1" role="dialog" style="display: none;">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" style="color: #dc3545; font-size: 20px; font-weight: bold;">Delete Treatment</h5>
-                    <button type="button" class="close" aria-label="Close" onclick="closeModal()">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <p>Apakah kamu yakin untuk menghapus Perawatan untuk Kunjungan <strong id="modal_kunjungan"></strong> dengan Perawatan <strong id="modal_jenis_perawatan"></strong>?</p>
-                </div>
-                <div class="modal-footer">
-                    <form method="POST" action="{% url 'delete_perawatan' %}">
-                        {% csrf_token %}
-                        <input type="hidden" id="kunjungan_delete" name="kunjungan_delete">
-                        <button type="submit" class="btn btn-danger">Confirm Deletion</button>
-                    </form>
-                    <button type="button" class="btn btn-light" onclick="closeModal()">Cancel</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Bootstrap Modal JS -->
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
 </body>
 </html>

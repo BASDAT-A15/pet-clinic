@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rekam Medis Tidak Tersedia</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body>
+    <!-- Modal -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <h2>Rekam Medis tidak Tersedia</h2>
+            <p>Maaf, sepertinya belum ada rekam medis yang dibuat untuk kunjungan ini.</p>
+            <div class="modal-actions">
+                <button class="create-btn" onclick="window.location.href='/create-rekam-medis'">Create</button>
+                <button class="ok-btn" onclick="closeModal()">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Modal close function
+        function closeModal() {
+            document.getElementById('modal').style.display = 'none';
+        }
+
+        // Optionally, you can show the modal on page load (or based on a condition)
+        window.onload = function() {
+            document.getElementById('modal').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
