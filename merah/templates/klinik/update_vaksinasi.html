@@ -99,8 +99,8 @@
             <select name="kode_vaksin" class="form-select" required>
                 <option value="" disabled selected hidden>Vaksin</option> 
                 {% for v in vaksin_options %}
-                <option value="{{ v.kode }}">
-                    {{ v.kode }} - {{ v.nama }} [{{ v.stok }}]
+                <option value="{{ v.kode_vaksin }}">
+                    {{ v.kode_vaksin }} - {{ v.nama_vaksin }} [{{ v.stok }}]
                 </option>
                 {% endfor %}
             </select>
