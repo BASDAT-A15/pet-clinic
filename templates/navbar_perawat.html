@@ -9,17 +9,17 @@
             <!-- Desktop Navigation Links -->
             <div class="hidden md:flex flex-1 items-center justify-between ml-8">
                 <div class="flex items-center space-x-6">
-                <a href="{% url 'main:profile_klien' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm font-medium transition duration-200 flex items-center">
-                    Dashboard
-                </a>
-                
-                <a href="{% url 'kuning:list_hewan' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm font-medium transition duration-200 flex items-center">
-                    Kelola Hewan Peliharaan
-                </a>
-                
-                <a href="{% url 'kuning:list_hewan' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm font-medium transition duration-200 flex items-center">
-                    Daftar Kunjungan
-                </a>
+                    <a href="{% url 'main:profile_perawat' %}" class="text-white hover:text-gray-300 px-3 py-2 text-base font-medium transition duration-200 flex items-center">
+                        Dashboard
+                    </a>
+                    
+                    <a href="{% url 'merah:list_vaksin' %}" class="text-white hover:text-gray-300 px-3 py-2 text-base font-medium transition duration-200 flex items-center">
+                        Manajemen Vaksin
+                    </a>
+                    
+                    <a href="{% url 'merah:list_klien' %}" class="text-white hover:text-gray-300 px-3 py-2 text-base font-medium transition duration-200 flex items-center">
+                        Kelola Perawatan
+                    </a>
                 </div>
                 
                 <div class="flex items-center">
@@ -46,16 +46,16 @@
         <!-- Mobile menu -->
         <div id="mobile-menu" class="hidden md:hidden pb-4 bg-[#0B1120]">
             <div class="flex flex-col space-y-3 pt-2">
-                <a href="{% url 'main:profile_klien' %}" class="text-white hover:bg-gray-800 px-3 py-2 rounded-md text-base font-medium flex items-center">
+                <a href="{% url 'main:profile_perawat' %}" class="text-white hover:text-gray-300 px-3 py-2 text-base font-medium transition duration-200 flex items-center">
                     Dashboard
                 </a>
                 
-                <a href="{% url 'kuning:list_hewan' %}" class="text-white hover:bg-gray-800 px-3 py-2 rounded-md text-base font-medium flex items-center">
-                    Kelola Hewan Peliharaan
+                <a href="{% url 'merah:list_vaksin' %}" class="text-white hover:text-gray-300 px-3 py-2 text-base font-medium transition duration-200 flex items-center">
+                    Manajemen Vaksin
                 </a>
                 
-                <a href="{% url 'kuning:list_hewan' %}" class="text-white hover:bg-gray-800 px-3 py-2 rounded-md text-base font-medium flex items-center">
-                    Daftar Kunjungan
+                <a href="{% url 'merah:list_klien' %}" class="text-white hover:text-gray-300 px-3 py-2 text-base font-medium transition duration-200 flex items-center">
+                    Kelola Perawatan
                 </a>
                 
                 <form method="post" action="{% url 'main:logout' %}" class="inline">
