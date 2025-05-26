@@ -1,32 +1,49 @@
 {% extends 'base.html' %}
 
-{% block title %}Update Vaccine{% endblock %}
+{% block meta %}
+<title>Update Vaccine</title>
+{% endblock meta %}
 
 {% block content %}
-<div class="container mt-4">
-    <h1>Update Vaccine</h1>
-    
+<div class="container mx-auto max-w-md px-6 py-10 border rounded-md shadow bg-white">
+    <h1 class="text-2xl font-bold mb-6">Update Vaccine</h1>
+
     <form method="POST" action="{% url 'merah:update_vaksin' vaksin.kode_vaksin %}">
         {% csrf_token %}
         
-        <div class="mb-3">
-            <label for="kode_vaksin" class="form-label">ID Vaksin</label>
-            <input type="text" class="form-control bg-light" id="kode_vaksin" value="{{ vaksin.kode_vaksin }}" readonly>
+        <!-- ID Vaksin -->
+        <div class="mb-4">
+            <label for="kode_vaksin" class="block text-gray-700 font-medium mb-2">ID Vaksin</label>
+            <input type="text" id="kode_vaksin" name="kode_vaksin" value="{{ vaksin.kode_vaksin }}" readonly
+                   class="w-full px-4 py-2 border border-gray-300 rounded bg-gray-200 text-gray-800 cursor-not-allowed" />
         </div>
-        
-        <div class="mb-3">
-            <label for="nama_vaksin" class="form-label">Nama Vaksin</label>
-            <input type="text" class="form-control" id="nama_vaksin" name="nama_vaksin" value="{{ vaksin.nama_vaksin }}" required>
+
+        <!-- Nama Vaksin -->
+        <div class="mb-4">
+            <label for="nama_vaksin" class="block text-gray-700 font-medium mb-2">Nama Vaksin</label>
+            <input type="text" id="nama_vaksin" name="nama_vaksin" value="{{ vaksin.nama_vaksin }}" required
+                   class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-gray-800"
+                   placeholder="Nama Vaksin" />
         </div>
-        
-        <div class="mb-3">
-            <label for="harga" class="form-label">Harga</label>
-            <input type="number" class="form-control" id="harga" name="harga" min="0" value="{{ vaksin.harga }}" required>
+
+        <!-- Harga -->
+        <div class="mb-6">
+            <label for="harga" class="block text-gray-700 font-medium mb-2">Harga</label>
+            <input type="number" id="harga" name="harga" value="{{ vaksin.harga }}" min="0" required
+                   class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-gray-800"
+                   placeholder="Harga" />
         </div>
-        
-        <div class="text-end">
-            <a href="{% url 'merah:list_vaksin' %}" class="btn btn-secondary me-2">Cancel</a>
-            <button type="submit" class="btn btn-primary">Update</button>
+
+        <!-- Buttons -->
+        <div class="flex justify-end space-x-3">
+            <a href="{% url 'merah:list_vaksin' %}" 
+               class="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-100">
+                Cancel
+            </a>
+            <button type="submit" 
+                    class="px-4 py-2 bg-gray-900 text-white rounded hover:bg-black transition">
+                Update
+            </button>
         </div>
     </form>
 </div>

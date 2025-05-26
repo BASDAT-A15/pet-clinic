@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delete Kunjungan</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body>
+    <!-- Main Content (can be a button or another trigger for the modal) -->
+    <button id="deleteButton" class="delete-btn">Delete Kunjungan</button>
+
+    <!-- Modal -->
+    <div id="deleteModal" class="modal">
+        <div class="modal-content">
+            <h2>Delete Kunjungan</h2>
+            <p>Apakah kamu yakin untuk menghapus KUNJUNGAN dengan ID <strong>KJN001</strong>?</p>
+            <div class="modal-actions">
+                <button class="cancel-btn" onclick="closeModal()">Cancel</button>
+                <button class="confirm-btn" onclick="confirmDeletion()">Confirm Deletion</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Get modal and delete button
+        const modal = document.getElementById("deleteModal");
+        const deleteButton = document.getElementById("deleteButton");
+
+        // Show modal when Delete button is clicked
+        deleteButton.onclick = function() {
+            modal.style.display = "block";
+        };
+
+        // Close modal
+        function closeModal() {
+            modal.style.display = "none";
+        }
+
+        // Confirm deletion logic (you can replace this with actual deletion logic)
+        function confirmDeletion() {
+            alert("Kunjungan deleted!");
+            modal.style.display = "none";
+        }
+    </script>
+</body>
+</html>

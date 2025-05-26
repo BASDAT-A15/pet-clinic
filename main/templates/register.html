@@ -16,7 +16,7 @@
       font-weight: 600;
       text-decoration: none;
       transition: background-color 0.3s;
-      width: 200px; /* Fixed width for all buttons */
+      width: 200px; 
       text-align: center;
     }
     .btn-role:hover {
@@ -38,34 +38,30 @@
         background-color: #000;
         margin: 0 2rem;
     }
+</style>
 
-    .content-wrapper {
-        margin-right: 200px;
-    }
-  </style>
-
-  <div class="register-container">
-    <div class="content-wrapper">
-        <h2 class="text-3xl font-bold mb-8" >REGISTRASI AKUN</h2>
-    </div>
-    
-    <div class="flex justify-center items-start">
-        <div class="text-center">
-            <h3 class="text-lg font-bold mb-4">Pegawai</h3>
-            <div class="flex flex-col gap-4 items-center">
-                <a href="{% url 'main:register' %}" class="btn-role">Front-Desk Officer</a>
-                <a href="{% url 'main:register' %}" class="btn-role">Dokter Hewan</a>
-                <a href="{% url 'main:register' %}" class="btn-role">Perawat Hewan</a>
+<div class="flex justify-center items-center min-h-screen px-4">
+    <div class="register-container">
+        <h2 class="text-2xl font-bold mb-6 text-center">REGISTRASI AKUN</h2>
+        
+        <div class="flex justify-center items-start">
+            <div class="text-center">
+                <h3 class="text-lg font-bold mb-4">Pegawai</h3>
+                <div class="flex flex-col gap-4 items-center">
+                    <a href="{% url 'main:register' %}?role=front_desk_officer" class="btn-role">Front-Desk Officer</a>
+                    <a href="{% url 'main:register' %}?role=dokter_hewan" class="btn-role">Dokter Hewan</a>
+                    <a href="{% url 'main:register' %}?role=perawat_hewan" class="btn-role">Perawat Hewan</a>
+                </div>
             </div>
-        </div>
 
-        <div class="divider" style="height: 30px;"></div>
+            <div class="divider" style="height: 30px;"></div>
 
-        <div class="text-center">
-            <h3 class="text-lg font-bold mb-4">Klien</h3>
-            <div class="flex flex-col gap-4 items-center">
-                <a href="{% url 'main:register' %}" class="btn-role">Individu</a>
-                <a href="{% url 'main:register' %}" class="btn-role">Perusahaan</a>
+            <div class="text-center">
+                <h3 class="text-lg font-bold mb-4">Klien</h3>
+                <div class="flex flex-col gap-4 items-center">
+                    <a href="{% url 'main:register' %}?role=individu" class="btn-role">Individu</a>
+                    <a href="{% url 'main:register' %}?role=perusahaan" class="btn-role">Perusahaan</a>
+                </div>
             </div>
         </div>
     </div>

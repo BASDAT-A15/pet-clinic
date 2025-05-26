@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Update Treatment</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body>
+    <div class="container">
+        <h2>Update Treatment</h2>
+        <form method="POST">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label for="kunjungan">Kunjungan</label>
+                <!-- ID Kunjungan hanya ditampilkan, tidak bisa diubah -->
+                <input type="text" id="kunjungan" name="kunjungan" class="form-control" value="{{ id_kunjungan }}" readonly>
+            </div>
+
+            <div class="form-group">
+                <label for="jenis_perawatan">Jenis Perawatan</label>
+                <select id="jenis_perawatan" name="jenis_perawatan" class="form-control">
+                    <option value="">Jenis Perawatan</option>
+                    <option value="TRM001" {% if jenis_perawatan == "TRM001" %}selected{% endif %}>TRM001 - Dental Care</option>
+                    <option value="TRM002" {% if jenis_perawatan == "TRM002" %}selected{% endif %}>TRM002 - Parasite Control</option>
+                    <option value="TRM003" {% if jenis_perawatan == "TRM003" %}selected{% endif %}>TRM003 - Flea Treatment</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="catatan_medis">Catatan Medis</label>
+                <textarea id="catatan_medis" name="catatan_medis" class="form-control" rows="4">{{ catatan_medis }}</textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Update</button>
+            <a href="#" class="btn btn-light">Cancel</a>
+        </form>
+    </div>
+</body>
+</html>

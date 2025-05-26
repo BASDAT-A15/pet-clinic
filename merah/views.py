@@ -33,6 +33,57 @@ DUMMY_VACCINES = [
     {'kode_vaksin': 'VAC003', 'nama_vaksin': 'Canine Adenovirus', 'harga': 180000, 'stok': 300, 'used': True}
 ]
 
+DUMMY_CLIENTS = [
+    {
+        'id': 1,
+        'email': 'client1@example.com',
+        'nama': 'Client 1',
+        'jenis': 'Individu',
+        'nomor_identitas': '5f4dcc3b5aa765d61d8327deb882cf99',
+        'nama_lengkap': 'Rizki Maulana',
+        'nama_perusahaan': '',
+        'alamat': 'Jl. Melati Indah No. 23, Kel. Sukamaju, Kec. Cibinong, Kab. Bogor, Jawa Barat, 16914',
+        'telepon': '081234567890',
+        'tanggal_registrasi': '2023-01-15',
+        'pets': [
+            {'id': 1, 'nama': 'Luna', 'jenis': 'Kucing', 'tanggal_lahir': '2022-05-14'},
+            {'id': 2, 'nama': 'Max', 'jenis': 'Anjing', 'tanggal_lahir': '2021-11-03'},
+            {'id': 3, 'nama': 'Coco', 'jenis': 'Kelinci', 'tanggal_lahir': '2023-01-27'}
+        ]
+    },
+    {
+        'id': 2,
+        'email': 'client2@example.com',
+        'nama': 'Client 2',
+        'jenis': 'Perusahaan',
+        'nomor_identitas': 'e10adc3949ba59abbe56e057f20f883e',
+        'nama_lengkap': '',
+        'nama_perusahaan': 'PT Hewan Perkasa',
+        'alamat': 'Jl. Anggrek No. 45, Kel. Sukamaju, Kec. Cibinong, Kab. Bogor, Jawa Barat, 16914',
+        'telepon': '089876543210',
+        'tanggal_registrasi': '2023-02-20',
+        'pets': [
+            {'id': 4, 'nama': 'Bella', 'jenis': 'Kucing', 'tanggal_lahir': '2021-08-10'},
+            {'id': 5, 'nama': 'Charlie', 'jenis': 'Anjing', 'tanggal_lahir': '2020-12-25'}
+        ]
+    },
+    {
+        'id': 3,
+        'email': 'client3@example.com',
+        'nama': 'Client 3',
+        'jenis': 'Individu',
+        'nomor_identitas': '52b4bc65d8a4eac1b977305205e9330e',
+        'nama_lengkap': 'Siti Nurhaliza',
+        'nama_perusahaan': '',
+        'alamat': 'Jl. Mawar No. 12, Kel. Sukamaju, Kec. Cibinong, Kab. Bogor, Jawa Barat, 16914',
+        'telepon': '087654321098',
+        'tanggal_registrasi': '2023-03-10',
+        'pets': [
+            {'id': 6, 'nama': 'Milo', 'jenis': 'Anjing', 'tanggal_lahir': '2022-07-30'}
+        ]
+    }
+]
+
 def list_vaksinasi(request):
     return render(request, 'klinik/list_vaksinasi.html', {
         'vaksinasi_list': DUMMY_VACCINATIONS
@@ -135,3 +186,38 @@ def delete_vaksin(request, kode_vaksin):
             messages.error(request, f'Vaksin {kode_vaksin} tidak dapat dihapus!')
     
     return redirect('merah:list_vaksin')
+
+def list_klien(request):
+    search_query = request.GET.get('search', '')
+    
+    if search_query:
+        filtered_clients = [
+            client for client in DUMMY_CLIENTS 
+            if search_query.lower() in client['nama'].lower() or 
+               search_query.lower() in client['email'].lower()
+        ]
+    else:
+        filtered_clients = DUMMY_CLIENTS
+    
+    clients_list = [
+        {
+            'id': client['id'],
+            'email': client['email'],
+            'nama': client['nama'],
+            'jenis': client['jenis']
+        }
+        for client in filtered_clients
+    ]
+    
+    return render(request, 'klinik/list_klien.html', {
+        'clients': clients_list,
+        'search_query': search_query
+    })
+
+def detail_klien(request, client_id):
+    client = next((c for c in DUMMY_CLIENTS if c['id'] == client_id), None)
+    
+    return render(request, 'klinik/detail_klien.html', {
+        'client': client,
+        'pets': client['pets']
+    })
