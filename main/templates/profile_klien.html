@@ -2,55 +2,57 @@
 {% load static %}
 
 {% block meta %}
-<title>Profile Klien</title>
+  <title>Profile Klien</title>
 {% endblock meta %}
 
 {% block content %}
 <div class="container mx-auto px-4 py-8">
-    <div class="bg-white rounded-lg shadow p-6 max-w-3xl mx-auto">
-        <div class="flex flex-wrap justify-between items-center mb-6">
-            <h1 class="text-2xl font-bold">Profile Klien</h1>
-            <div class="space-x-3 mt-3 sm:mt-0">
-                <button class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-md transition-colors">
-                    Update Password
-                </button>
-                <button class="px-4 py-2 bg-[#0B1120] hover:bg-gray-900 text-white rounded-md transition-colors">
-                    Update Profile
-                </button>
-            </div>
-        </div>
-
-        <div class="space-y-4">
-            <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
-                <div class="font-medium">Nomor Identitas</div>
-                <div class="col-span-2">95af4880-90c7-4749-9f94-05afbe92a196</div>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
-                <div class="font-medium">Email</div>
-                <div class="col-span-2">klien_individu_1@gmail.com</div>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
-                <div class="font-medium">Nama</div>
-                <div class="col-span-2">Amanda Zahra</div>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
-                <div class="font-medium">Tanggal Pendaftaran</div>
-                <div class="col-span-2">26 Januari 2025</div>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
-                <div class="font-medium">Alamat</div>
-                <div class="col-span-2">Jl. Melati Indah No. 26, Kel. Sukamaju, Kec. Cibinong, Kab. Bogor, Jawa Barat, 16914</div>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
-                <div class="font-medium">Nomor Telepon</div>
-                <div class="col-span-2">081234567896</div>
-            </div>
-        </div>
+  <div class="bg-white rounded-lg shadow p-6 max-w-3xl mx-auto">
+    <div class="flex flex-wrap justify-between items-center mb-6">
+      <h1 class="text-2xl font-bold">Profile Klien</h1>
+      <div class="space-x-3 mt-3 sm:mt-0">
+        <a href="{% url 'main:update_password' %}?email={{ email }}" 
+           class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-md transition-colors">
+          Update Password
+        </a>
+        <a href="{% url 'main:update_profile_klien' %}" 
+           class="px-4 py-2 bg-[#0B1120] hover:bg-gray-900 text-white rounded-md transition-colors">
+          Update Profile
+        </a>
+      </div>
     </div>
+
+    <div class="space-y-4">
+      <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
+        <div class="font-medium">Nomor Identitas</div>
+        <div class="col-span-2">{{ no_identitas }}</div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
+        <div class="font-medium">Email</div>
+        <div class="col-span-2">{{ email }}</div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
+        <div class="font-medium">Nama</div>
+        <div class="col-span-2">{{ full_name }}</div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
+        <div class="font-medium">Tanggal Pendaftaran</div>
+        <div class="col-span-2">{{ tanggal_registrasi }}</div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
+        <div class="font-medium">Alamat</div>
+        <div class="col-span-2">{{ alamat }}</div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
+        <div class="font-medium">Nomor Telepon</div>
+        <div class="col-span-2">{{ nomor_telepon }}</div>
+      </div>
+    </div>
+  </div>
 </div>
 {% endblock content %}

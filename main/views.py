@@ -159,14 +159,225 @@ def register(request):
             conn.close()
         print("DEBUG: Database connection closed")
             
+@require_http_methods(['GET', 'POST'])
 def login(request):
-    return render(request, 'login.html')
+    if request.method == 'GET':
+        return render(request, 'login.html')
 
+    email = request.POST.get('email', '').strip()
+    password = request.POST.get('password', '').strip()
+
+    if not email or not password:
+        messages.error(request, 'Email dan password wajib diisi.')
+        return redirect('main:login')
+
+    conn = None
+    try:
+        conn = get_db_connection()
+        cur  = conn.cursor()
+
+        # 1) Autentikasi
+        cur.execute(
+            'SELECT email FROM "USER" WHERE email=%s AND password=%s',
+            (email, password)
+        )
+        if not cur.fetchone():
+            messages.error(request, 'Email atau password salah.')
+            return redirect('main:login')
+
+        # 2) Cek di KLIEN → INDIVIDU / PERUSAHAAN
+        cur.execute('SELECT no_identitas, tanggal_registrasi FROM KLIEN WHERE email=%s', (email,))
+        kli = cur.fetchone()
+        if kli:
+            no_identitas, tgl_reg = kli
+
+            # tentukan tipe klien
+            cur.execute('SELECT 1 FROM INDIVIDU WHERE no_identitas_klien=%s', (no_identitas,))
+            if cur.fetchone():
+                role = 'individu'
+            else:
+                role = 'perusahaan'
+
+            # simpan session & redirect
+            request.session['email']        = email
+            request.session['role']         = role
+            request.session['no_identitas'] = str(no_identitas)
+            return redirect('main:profile_klien')
+
+        # 3) Kalau bukan klien, cek PEGAWAI
+        cur.execute(
+            '''SELECT no_pegawai, tanggal_mulai_kerja, tanggal_akhir_kerja
+               FROM PEGAWAI WHERE email_user=%s
+               ORDER BY tanggal_mulai_kerja DESC LIMIT 1''',
+            (email,)
+        )
+        peg = cur.fetchone()
+        if not peg:
+            messages.error(request, 'Akun tidak terdaftar sebagai klien atau pegawai.')
+            return redirect('main:login')
+
+        no_pegawai, t_mulai, t_akhir = peg
+
+        # 4) tentukan tipe pegawai
+        # Front-Desk?
+        cur.execute('SELECT 1 FROM FRONT_DESK WHERE no_front_desk=%s', (no_pegawai,))
+        if cur.fetchone():
+            role = 'front_desk'
+            profile_url = 'main:profile_frontdesk'
+        else:
+            # Tenaga Medis → Dokter / Perawat
+            cur.execute('SELECT no_izin_praktik FROM TENAGA_MEDIS WHERE no_tenaga_medis=%s', (no_pegawai,))
+            medis = cur.fetchone()
+            if not medis:
+                messages.error(request, 'Data tenaga medis tidak lengkap.')
+                return redirect('main:login')
+
+            # Dokter vs Perawat
+            cur.execute('SELECT 1 FROM DOKTER_HEWAN WHERE no_dokter_hewan=%s', (no_pegawai,))
+            if cur.fetchone():
+                role = 'dokter_hewan'
+                profile_url = 'main:profile_dokter'
+            else:
+                role = 'perawat_hewan'
+                profile_url = 'main:profile_perawat'
+
+        # 5) simpan session & redirect
+        request.session['email']      = email
+        request.session['role']       = role
+        request.session['no_pegawai'] = str(no_pegawai)
+        return redirect(profile_url)
+
+    except psycopg2.Error as e:
+        print("Login DB error:", e)
+        messages.error(request, 'Terjadi kesalahan server.')
+        return redirect('main:login')
+
+    finally:
+        if conn:
+            cur.close()
+            conn.close()
+
+@require_http_methods(['GET'])
 def profile_klien(request):
-    return render(request, 'profile_klien.html')
+    # 1) Pastikan sudah login
+    email = request.session.get('email')
+    if not email:
+        return redirect('main:login')
 
+    conn = None
+    try:
+        conn = get_db_connection()
+        cur  = conn.cursor()
+
+        # 2) Ambil data USER
+        cur.execute(
+            'SELECT alamat, nomor_telepon FROM "USER" WHERE email = %s',
+            (email,)
+        )
+        user_row = cur.fetchone()
+        alamat, nomor_telepon = user_row
+
+        # 3) Ambil data KLIEN
+        cur.execute(
+            'SELECT no_identitas, tanggal_registrasi FROM KLIEN WHERE email = %s',
+            (email,)
+        )
+        kli_row = cur.fetchone()
+        no_identitas, tanggal_reg = kli_row
+
+        # 4) Cek apakah ini Individu atau Perusahaan
+        #    Kita coba INDIVIDU dulu; kalau tidak ada, ambil PERUSAHAAN
+        cur.execute(
+            'SELECT nama_depan, nama_tengah, nama_belakang FROM INDIVIDU WHERE no_identitas_klien = %s',
+            (no_identitas,)
+        )
+        indiv = cur.fetchone()
+        if indiv:
+            # bentuk full name
+            nama_depan, nama_tengah, nama_belakang = indiv
+            if nama_tengah:
+                full_name = f"{nama_depan} {nama_tengah} {nama_belakang}"
+            else:
+                full_name = f"{nama_depan} {nama_belakang}"
+        else:
+            # Perusahaan
+            cur.execute(
+                'SELECT nama_perusahaan FROM PERUSAHAAN WHERE no_identitas_klien = %s',
+                (no_identitas,)
+            )
+            nama_perusahaan = cur.fetchone()[0]
+            full_name = nama_perusahaan
+
+        # 5) Format tanggal (misal "26 Januari 2025")
+        tanggal_str = tanggal_reg.strftime('%d %B %Y')
+
+        context = {
+            'no_identitas':    no_identitas,
+            'email':           email,
+            'full_name':       full_name,
+            'tanggal_registrasi': tanggal_str,
+            'alamat':          alamat,
+            'nomor_telepon':   nomor_telepon,
+        }
+        return render(request, 'profile_klien.html', context)
+
+    except Exception:
+        # kalau ada error, redirect atau tampilkan pesan sesuai kebijakan
+        return redirect('main:login')
+
+    finally:
+        if conn:
+            cur.close()
+            conn.close()
+
+@require_http_methods(['GET'])
 def profile_frontdesk(request):
-    return render(request, 'profile_frontdesk.html')
+    # 1) Cek session login
+    email = request.session.get('email')
+    if not email:
+        return redirect('main:login')
+
+    conn = None
+    try:
+        conn = get_db_connection()
+        cur  = conn.cursor()
+
+        # 2) Ambil data USER (alamat & nomor_telepon)
+        cur.execute(
+            'SELECT alamat, nomor_telepon FROM "USER" WHERE email = %s',
+            (email,)
+        )
+        alamat, nomor_telepon = cur.fetchone()
+
+        # 3) Ambil data PEGAWAI
+        cur.execute(
+            '''SELECT no_pegawai, tanggal_mulai_kerja, tanggal_akhir_kerja
+               FROM PEGAWAI
+               WHERE email_user = %s
+               ORDER BY tanggal_mulai_kerja DESC
+               LIMIT 1''',
+            (email,)
+        )
+        no_pegawai, t_mulai, t_akhir = cur.fetchone()
+
+        # 4) Format tanggal
+        t_mulai_str  = t_mulai.strftime('%d %B %Y')
+        t_akhir_str  = t_akhir.strftime('%d %B %Y') if t_akhir else '-'
+
+        context = {
+            'no_identitas':      no_pegawai,
+            'email':             email,
+            'tanggal_mulai':     t_mulai_str,
+            'tanggal_akhir':     t_akhir_str,
+            'alamat':            alamat,
+            'nomor_telepon':     nomor_telepon,
+        }
+        return render(request, 'profile_front_desk.html', context)
+
+    finally:
+        if conn:
+            cur.close()
+            conn.close()
 
 def profile_dokter(request):
     return render(request, 'profile_dokter.html')
