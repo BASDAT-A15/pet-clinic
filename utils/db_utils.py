@@ -1,21 +1,20 @@
-import psycopg2
 import os
+import psycopg2
+from dotenv import load_dotenv
+
+load_dotenv()  
 
 def get_db_connection():
-    # Get database credentials from environment variables
-    db_name = os.environ.get("DB_NAME")
-    db_user = os.environ.get("DB_USER")
-    db_password = os.environ.get("DB_PASSWORD")
-    db_host = os.environ.get("DB_HOST")
-    db_port = os.environ.get("DB_PORT")
-
-    # Establish a connection to the database
-    connection = psycopg2.connect(
-        dbname=db_name,
-        user=db_user,
-        password=db_password,
-        host=db_host,
-        port=db_port
+    conn = psycopg2.connect(
+        dbname=os.getenv("dbname"),
+        user=os.getenv("user"),
+        password=os.getenv("password"),
+        host=os.getenv("host"),
+        port=os.getenv("port"),
+        sslmode=os.getenv("require")
     )
 
-    return connection
+    with conn.cursor() as cur:
+        cur.execute("SET search_path TO %s", (os.getenv("schema"),))
+    conn.commit()
+    return conn
