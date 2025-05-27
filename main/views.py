@@ -1,12 +1,13 @@
 import re
 import psycopg2
-from datetime import date
+from datetime import date, datetime
 from utils.db_utils import get_db_connection
 from django.http import HttpResponse
 from django.contrib import messages
 from django.views.decorators.http import require_http_methods
 from django.shortcuts import render, redirect
 from django.contrib.auth import logout
+import uuid
 
 def login_register(request):
     return render(request, 'login_register.html')
@@ -96,46 +97,73 @@ def register(request):
         conn = get_db_connection()
         cur = conn.cursor()
 
-        print(f"DEBUG: Attempting to insert user with email: {email}")
+        uuid = uuid.uuid4()
+
         
         # 1) Insert ke USER table
         cur.execute(
             'INSERT INTO "USER"(email, password, alamat, nomor_telepon) VALUES (%s, %s, %s, %s)',
             (email, pwd, alamat, telepon)
         )
-        print("DEBUG: User inserted successfully")
 
-        # 2) Insert PEGAWAI untuk front_desk
+        if role == "individu":
+            nama_depan = data.get('nama_depan','').strip()
+            nama_tengah = data.get('nama_tengah','').strip()
+            nama_belakang = data.get('nama_belakang','').strip()
+
+            cur.execute(
+                'INSERT INTO KLIEN(no_identitas, tanggal_registrasi, email)'
+                'VALUES (%s, %s, %s)', (uuid, datetime.today().date(), email)
+            )
+
+            cur.execute(
+                'INSERT INTO INDIVIDU(no_identitas_klien, nama_depan, nama_tengah, nama_belakang )'
+                'VALUES (%s, %s, %s, %s)',
+                (uuid, nama_depan, nama_tengah, nama_belakang)
+            )
+
+        if role == "perusahaan":
+            nama_perusahaan = data.get('nama_perusahaan','').strip()
+
+            cur.execute(
+                'INSERT INTO KLIEN(no_identitas, tanggal_registrasi, email)'
+                'VALUES (%s, %s, %s) RETURNING no_identitas', (uuid, datetime.today().date(), email)
+            )
+
+            cur.execute(
+                'INSERT INTO PERUSAHAAN(no_identitas_klien, nama_perusahaan) VALUES (%s, %s)',
+                (uuid, nama_perusahaan)
+            )
+
         if role == 'front_desk':
             tanggal_mulai = data.get('tanggal_mulai_kerja','').strip()
-            print(f"DEBUG: Inserting PEGAWAI with tanggal_mulai_kerja: {tanggal_mulai}, email: {email}")
             
             cur.execute(
-                'INSERT INTO PEGAWAI(tanggal_mulai_kerja, tanggal_akhir_kerja, email_user) '
-                'VALUES (%s, NULL, %s)', 
-                (tanggal_mulai, email)
+                'INSERT INTO PEGAWAI(no_pegawai, tanggal_mulai_kerja, tanggal_akhir_kerja, email_user) '
+                'VALUES (%s, %s, NULL, %s) ', (uuid, tanggal_mulai, email)
             )
-            print("DEBUG: PEGAWAI inserted successfully")
             
-            # Ambil no_pegawai yang baru saja diinsert
-            cur.execute(
-                'SELECT no_pegawai FROM PEGAWAI WHERE email_user = %s ORDER BY tanggal_mulai_kerja DESC LIMIT 1',
-                (email,)
-            )
-            result = cur.fetchone()
-            if not result:
-                raise Exception("Failed to retrieve no_pegawai after insertion")
-            
-            no_pegawai = result[0]
-            print(f"DEBUG: Retrieved no_pegawai: {no_pegawai}")
 
-            # Insert ke FRONT_DESK
-            cur.execute('INSERT INTO FRONT_DESK(no_front_desk) VALUES (%s)', (no_pegawai,))
-            print("DEBUG: FRONT_DESK inserted successfully")
+            cur.execute('INSERT INTO FRONT_DESK(no_front_desk) VALUES (%s)', (uuid))
         
-        # Commit transaction
+        if role == 'perawat_hewan':
+            tanggal_mulai = data.get('tanggal_mulai_kerja','').strip()
+            
+            cur.execute(
+                'INSERT INTO PEGAWAI(no_pegawai, tanggal_mulai_kerja, tanggal_akhir_kerja, email_user) '
+                'VALUES (%s, %s, NULL, %s)', 
+                (uuid, tanggal_mulai, email)
+            )
+
+            no_izin_praktik = data.get('no_izin_praktik','').strip()
+
+            cur.execute('INSERT INTO TENAGA_MEDIS(no_tenaga_medis, no_izin_praktik)'
+                        'VALUES (%s, %s)', (uuid, no_izin_praktik))
+            
+            cur.execute('INSERT INTO PERAWAT_HEWAN(no_perawat_hewan) VALUES (%s)', (uuid))
+        
+            
         conn.commit()
-        print("DEBUG: Transaction committed successfully")
         
         messages.success(request, 'Registrasi berhasil! Silakan login.')
         return redirect('main:login_register')
@@ -157,7 +185,6 @@ def register(request):
             cur.close()
         if conn:
             conn.close()
-        print("DEBUG: Database connection closed")
             
 @require_http_methods(['GET', 'POST'])
 def login(request):
