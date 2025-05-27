@@ -2,58 +2,144 @@
 {% load static %}
 
 {% block meta %}
-<title>Profile Front-Desk Officer</title>
+  <title>Profile Front-Desk Officer</title>
 {% endblock meta %}
 
 {% block content %}
 <div class="container mx-auto px-4 py-8">
-    <div class="bg-white rounded-lg shadow p-6 max-w-3xl mx-auto">
-        <div class="flex flex-wrap justify-between items-center mb-6">
-            <h1 class="text-2xl font-bold">
-                Profile<br>
-                Front-Desk Officer
-            </h1>
-            <div class="space-x-3 mt-3 sm:mt-0">
-                <button class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-md transition-colors">
-                    Update Password
-                </button>
-                <button class="px-4 py-2 bg-[#0B1120] hover:bg-gray-900 text-white rounded-md transition-colors">
-                    Update Profile
-                </button>
-            </div>
+  <div class="bg-white rounded-lg shadow p-6 max-w-3xl mx-auto">
+    <div class="flex flex-wrap justify-between items-center mb-6">
+      <h1 class="text-2xl font-bold">
+        Profile<br>
+        Front-Desk Officer
+      </h1>
+      <div class="space-x-3 mt-3 sm:mt-0">
+        <a href="{% url 'main:update_password' %}?email={{ email }}"
+           class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-md transition-colors">
+          Update Password
+        </a>
+        {% if not edit_mode %}
+        <a href="{% url 'main:update_profile' %}"
+           class="px-4 py-2 bg-[#0B1120] hover:bg-gray-900 text-white rounded-md transition-colors">
+          Update Profile
+        </a>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if edit_mode %}
+    <form method="POST" action="{% url 'main:update_profile' %}">
+      {% csrf_token %}
+      <div class="space-y-4">
+        <!-- Nomor Identitas (read-only) -->
+        <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
+          <div class="font-medium">Nomor Identitas</div>
+          <div class="col-span-2">{{ data.no_pegawai }}</div>
+        </div>
+        
+        <!-- Email (read-only) -->
+        <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
+          <div class="font-medium">Email</div>
+          <div class="col-span-2">{{ data.email }}</div>
         </div>
 
-        <div class="space-y-4">
-            <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
-                <div class="font-medium">Nomor Identitas</div>
-                <div class="col-span-2">aacbdde1-feaf-454b-bc7d-0eed3a345907</div>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
-                <div class="font-medium">Email</div>
-                <div class="col-span-2">amalia.putri@petclinic.com</div>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
-                <div class="font-medium">Tanggal Diterima</div>
-                <div class="col-span-2">25 Januari 2025</div>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
-                <div class="font-medium">Tanggal Akhir Kerja</div>
-                <div class="col-span-2">-</div>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
-                <div class="font-medium">Alamat</div>
-                <div class="col-span-2">Jl. Melati Indah No. 25, Kel. Sukamaju, Kec. Cibinong, Kab. Bogor, Jawa Barat, 16914</div>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
-                <div class="font-medium">Nomor Telepon</div>
-                <div class="col-span-2">081234567895</div>
-            </div>
+        <!-- Tanggal Diterima (read-only) -->
+        <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
+          <div class="font-medium">Tanggal Diterima</div>
+          <div class="col-span-2">{{ data.tanggal_mulai|date:'d F Y' }}</div>
         </div>
+
+        <!-- Tanggal Akhir Kerja (editable) -->
+        <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
+          <div class="font-medium">Tanggal Akhir Kerja</div>
+          <div class="col-span-2">
+            <input
+              type="date"
+              name="tanggal_akhir_kerja"
+              value="{{ data.tanggal_akhir|date:'Y-m-d'|default:'' }}"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md"
+            >
+            {% if errors.tanggal_akhir_kerja %}<p class="text-red-500 text-sm mt-1">{{ errors.tanggal_akhir_kerja }}</p>{% endif %}
+          </div>
+        </div>
+
+        <!-- Alamat (editable) -->
+        <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
+          <div class="font-medium">Alamat</div>
+          <div class="col-span-2">
+            <textarea
+              name="alamat"
+              rows="3"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md"
+            >{{ data.alamat }}</textarea>
+            {% if errors.alamat %}<p class="text-red-500 text-sm mt-1">{{ errors.alamat }}</p>{% endif %}
+          </div>
+        </div>
+
+        <!-- Nomor Telepon (editable) -->
+        <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
+          <div class="font-medium">Nomor Telepon</div>
+          <div class="col-span-2">
+            <input
+              type="text"
+              name="nomor_telepon"
+              value="{{ data.nomor_telepon }}"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md"
+            >
+            {% if errors.nomor_telepon %}<p class="text-red-500 text-sm mt-1">{{ errors.nomor_telepon }}</p>{% endif %}
+          </div>
+        </div>
+
+        <!-- Submit -->
+        <div class="pt-4">
+          <button
+            type="submit"
+            class="px-4 py-2 bg-[#0B1120] hover:bg-gray-900 text-white rounded-md transition-colors"
+          >
+            Simpan Perubahan
+          </button>
+          <a href="{% url 'main:profile_frontdesk' %}"
+             class="ml-2 px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-md">
+            Batal
+          </a>
+        </div>
+      </div>
+    </form>
+
+    {% else %}
+    <div class="space-y-4">
+      <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
+        <div class="font-medium">Nomor Identitas</div>
+        <div class="col-span-2">{{ no_pegawai }}</div>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
+        <div class="font-medium">Email</div>
+        <div class="col-span-2">{{ email }}</div>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
+        <div class="font-medium">Tanggal Diterima</div>
+        <div class="col-span-2">{{ tanggal_mulai }}</div>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
+        <div class="font-medium">Tanggal Akhir Kerja</div>
+        <div class="col-span-2">{{ tanggal_akhir }}</div>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
+        <div class="font-medium">Alamat</div>
+        <div class="col-span-2">{{ alamat }}</div>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
+        <div class="font-medium">Nomor Telepon</div>
+        <div class="col-span-2">{{ nomor_telepon }}</div>
+      </div>
     </div>
+    {% endif %}
+
+  </div>
 </div>
 {% endblock content %}
