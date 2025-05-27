@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block meta %}
+  <title>FORM REGISTER — Klien - Perusahaan</title>
+{% endblock %}
+
+{% block content %}
+<style>
+  .register-container {
+    padding: 3rem;
+    border-radius: .5rem;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    background: #fff;
+    max-width: 400px;
+    margin: auto;
+  }
+  .form-register-heading { font-size:2rem; font-weight:bold; margin-bottom:1rem; }
+  .form-title { font-size:1.25rem; margin-bottom:2rem; color:#333; }
+  .form-group { margin-bottom:1rem; }
+  .form-group label { display:block; font-weight:600; margin-bottom:.25rem; }
+  .form-group input,
+  .form-group textarea {
+    width:100%; padding:.75rem; border:1px solid #CBD5E0; border-radius:.375rem;
+    font-size:1rem; box-sizing:border-box;
+  }
+  .errors { color:#E53E3E; font-size:.875rem; margin-top:.25rem; }
+  .btn-submit {
+    width:100%; padding:.75rem; background:#0B1120; color:#fff; font-weight:600;
+    border:none; border-radius:.375rem; cursor:pointer; margin-top:1rem;
+  }
+  .btn-submit:hover { background:#1F2937; }
+</style>
+
+<div class="register-container">
+  <h1 class="form-register-heading">FORM REGISTER</h1>
+  <div class="form-title">Klien - Perusahaan</div>
+
+  <form method="POST">
+    {% csrf_token %}
+
+    <div class="form-group">
+      <label for="email">Email *</label>
+      <input id="email" type="email" name="email" placeholder="Email"
+             value="{{ data.email|default:'' }}">
+      {% if errors.email %}<div class="errors">{{ errors.email }}</div>{% endif %}
+    </div>
+
+    <div class="form-group">
+      <label for="nama_perusahaan">Nama Perusahaan *</label>
+      <input id="nama_perusahaan" type="text" name="nama_perusahaan" placeholder="Nama Perusahaan"
+             value="{{ data.nama_perusahaan|default:'' }}">
+      {% if errors.nama_perusahaan %}<div class="errors">{{ errors.nama_perusahaan }}</div>{% endif %}
+    </div>
+
+    <div class="form-group">
+      <label for="password">Password *</label>
+      <input id="password" type="password" name="password" placeholder="Password">
+      {% if errors.password %}<div class="errors">{{ errors.password }}</div>{% endif %}
+    </div>
+
+    <div class="form-group">
+      <label for="nomor_telepon">Nomor Telepon *</label>
+      <input id="nomor_telepon" type="text" name="nomor_telepon" placeholder="Nomor Telepon"
+             value="{{ data.nomor_telepon|default:'' }}">
+      {% if errors.nomor_telepon %}<div class="errors">{{ errors.nomor_telepon }}</div>{% endif %}
+    </div>
+
+    <div class="form-group">
+      <label for="alamat">Alamat *</label>
+      <textarea id="alamat" name="alamat" rows="3" placeholder="Alamat">{{ data.alamat|default:'' }}</textarea>
+      {% if errors.alamat %}<div class="errors">{{ errors.alamat }}</div>{% endif %}
+    </div>
+
+    <button type="submit" class="btn-submit">Register</button>
+    {% if non_field %}<div class="errors">{{ non_field }}</div>{% endif %}
+  </form>
+</div>
+{% endblock %}

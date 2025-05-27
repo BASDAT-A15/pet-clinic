@@ -6,6 +6,7 @@ app_name = 'main'
 urlpatterns = [
     path('', login_register, name='login_register'),
     path('register/', register, name='register'),
+    path('register/<str:role>/', register, name='register_with_role'),
     path('login/', login, name='login'),
     path('profile-klien/', profile_klien, name='profile_klien'),
     path('profile-frontdesk/', profile_frontdesk, name='profile_frontdesk'),
