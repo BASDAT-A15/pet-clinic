@@ -29,7 +29,6 @@
     width:100%; padding:.75rem; border:1px solid #CBD5E0; border-radius:.375rem;
     font-size:1rem; box-sizing:border-box;
   }
-  .form-group input[type="date"]::-webkit-calendar-picker-indicator { cursor:pointer; }
   .errors { color:#E53E3E; font-size:.875rem; margin-top:.25rem; }
   .add-btn {
     display:inline-block; background:#0B1120; color:#fff; border:none;
@@ -42,6 +41,18 @@
     border:none; border-radius:.375rem; cursor:pointer; margin-top:1rem;
   }
   .btn-submit:hover { background:#1F2937; }
+  .sched-list {
+    margin-bottom: 1rem;
+  }
+  .sched-item {
+    border: 1px solid #CBD5E0;
+    border-radius: .375rem;
+    padding: .75rem;
+    margin-bottom: .5rem;
+  }
+  .sched-item .form-group {
+    margin-bottom: .5rem;
+  }
 </style>
 
 <div class="register-container">
@@ -52,41 +63,31 @@
     {% csrf_token %}
 
     <div class="section-title">Informasi Umum</div>
-
     <div class="form-group">
       <label for="no_izin_praktik">Nomor Izin Praktik *</label>
-      <input id="no_izin_praktik" name="no_izin_praktik" placeholder="Nomor Izin Praktik"
-             value="{{ data.no_izin_praktik|default:'' }}">
+      <input id="no_izin_praktik" name="no_izin_praktik" placeholder="Nomor Izin Praktik" value="{{ data.no_izin_praktik|default:'' }}">
       {% if errors.no_izin_praktik %}<div class="errors">{{ errors.no_izin_praktik }}</div>{% endif %}
     </div>
-
     <div class="form-group">
       <label for="email">Email *</label>
-      <input id="email" type="email" name="email" placeholder="Email"
-             value="{{ data.email|default:'' }}">
+      <input id="email" type="email" name="email" placeholder="Email" value="{{ data.email|default:'' }}">
       {% if errors.email %}<div class="errors">{{ errors.email }}</div>{% endif %}
     </div>
-
     <div class="form-group">
       <label for="password">Password *</label>
       <input id="password" type="password" name="password" placeholder="Password">
       {% if errors.password %}<div class="errors">{{ errors.password }}</div>{% endif %}
     </div>
-
     <div class="form-group">
       <label for="nomor_telepon">Nomor Telepon *</label>
-      <input id="nomor_telepon" name="nomor_telepon" placeholder="Nomor Telepon"
-             value="{{ data.nomor_telepon|default:'' }}">
+      <input id="nomor_telepon" name="nomor_telepon" placeholder="Nomor Telepon" value="{{ data.nomor_telepon|default:'' }}">
       {% if errors.nomor_telepon %}<div class="errors">{{ errors.nomor_telepon }}</div>{% endif %}
     </div>
-
     <div class="form-group">
       <label for="tanggal_mulai_kerja">Tanggal Diterima *</label>
-      <input id="tanggal_mulai_kerja" type="date" name="tanggal_mulai_kerja"
-             value="{{ data.tanggal_mulai_kerja|default:'' }}">
+      <input id="tanggal_mulai_kerja" type="date" name="tanggal_mulai_kerja" value="{{ data.tanggal_mulai_kerja|default:'' }}">
       {% if errors.tanggal_mulai_kerja %}<div class="errors">{{ errors.tanggal_mulai_kerja }}</div>{% endif %}
     </div>
-
     <div class="form-group">
       <label for="alamat">Alamat *</label>
       <textarea id="alamat" name="alamat" rows="3" placeholder="Alamat">{{ data.alamat|default:'' }}</textarea>
@@ -94,45 +95,45 @@
     </div>
 
     <div class="section-title">Kompetensi</div>
-
     <div id="cert-list">
       {% for error in errors.sertifikat %}
         <div class="errors">{{ error }}</div>
       {% endfor %}
-    <div class="cert-item">
+      <div class="cert-item">
         <div class="form-group">
-        <label for="no_sertifikat_kompetensi">Nomor Sertifikat *</label>
-        <input id="no_sertifikat_kompetensi" name="no_sertifikat_kompetensi" placeholder="Nomor Sertifikat">
+          <label for="no_sertifikat_kompetensi">Nomor Sertifikat *</label>
+          <input id="no_sertifikat_kompetensi" name="no_sertifikat_kompetensi" placeholder="Nomor Sertifikat">
         </div>
         <div class="form-group">
-        <label for="nama_sertifikat">Nama Sertifikat *</label>
-        <input id="nama_sertifikat" name="nama_sertifikat" placeholder="Nama Sertifikat">
+          <label for="nama_sertifikat">Nama Sertifikat *</label>
+          <input id="nama_sertifikat" name="nama_sertifikat" placeholder="Nama Sertifikat">
         </div>
+      </div>
     </div>
-    </div>
-
-<button type="button" class="add-btn" onclick="addCert()">+ Tambah Sertifikat</button>
-
+    <button type="button" class="add-btn" onclick="addCert()">+ Tambah Sertifikat</button>
 
     <div class="section-title">Jadwal Praktik</div>
-
-    <div class="form-group">
-      
-      <label>Hari *</label>
-      <select name="hari">
-        <option value="">Pilih Hari</option>
-        <option>Senin</option><option>Selasa</option><option>Rabu</option>
-        <option>Kamis</option><option>Jumat</option><option>Sabtu</option><option>Minggu</option>
-      </select>
+    <div id="sched-list" class="sched-list">
+      <div class="sched-item">
+        <div class="form-group">
+          <label>Hari *</label>
+          <select name="hari">
+            <option value="">Pilih Hari</option>
+            <option>Senin</option>
+            <option>Selasa</option>
+            <option>Rabu</option>
+            <option>Kamis</option>
+            <option>Jumat</option>
+            <option>Sabtu</option>
+            <option>Minggu</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Jam *</label>
+          <input name="jam" placeholder="Jam">
+        </div>
+      </div>
     </div>
-
-    <div class="form-group">
-      <label>Jam *</label>
-      <input name="jam" placeholder="Jam">
-    </div>
-    {% for error in errors.jadwal %}
-      <div class="errors">{{ error }}</div>
-    {% endfor %}
     <button type="button" class="add-btn" onclick="addSched()">+ Tambah Jadwal</button>
 
     <button type="submit" class="btn-submit">Register</button>
@@ -148,12 +149,10 @@
     document.getElementById('cert-list').appendChild(clone);
   }
   function addSched() {
-    const parent = document.querySelector('select[name="hari"]').parentNode;
-    const dayClone = parent.cloneNode(true);
-    parent.parentNode.insertBefore(dayClone, document.querySelector('button[onclick="addSched()"]'));
-    // clone time field as well
-    const timeParent = document.querySelector('input[name="jam"]').parentNode.cloneNode(true);
-    parent.parentNode.insertBefore(timeParent, document.querySelector('button[onclick="addSched()"]'));
+    const template = document.querySelector('.sched-item');
+    const clone = template.cloneNode(true);
+    clone.querySelectorAll('select, input').forEach(el => el.value = '');
+    document.getElementById('sched-list').appendChild(clone);
   }
 </script>
 {% endblock %}

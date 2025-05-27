@@ -97,7 +97,7 @@ def register(request):
         conn = get_db_connection()
         cur = conn.cursor()
 
-        uuid = uuid.uuid4()
+        no_uuid = uuid.uuid4()
 
         
         # 1) Insert ke USER table
@@ -113,13 +113,13 @@ def register(request):
 
             cur.execute(
                 'INSERT INTO KLIEN(no_identitas, tanggal_registrasi, email)'
-                'VALUES (%s, %s, %s)', (uuid, datetime.today().date(), email)
+                'VALUES (%s, %s, %s)', (no_uuid, datetime.today().date(), email)
             )
 
             cur.execute(
                 'INSERT INTO INDIVIDU(no_identitas_klien, nama_depan, nama_tengah, nama_belakang )'
                 'VALUES (%s, %s, %s, %s)',
-                (uuid, nama_depan, nama_tengah, nama_belakang)
+                (no_uuid, nama_depan, nama_tengah, nama_belakang)
             )
 
         if role == "perusahaan":
@@ -127,12 +127,12 @@ def register(request):
 
             cur.execute(
                 'INSERT INTO KLIEN(no_identitas, tanggal_registrasi, email)'
-                'VALUES (%s, %s, %s) RETURNING no_identitas', (uuid, datetime.today().date(), email)
+                'VALUES (%s, %s, %s) RETURNING no_identitas', (no_uuid, datetime.today().date(), email)
             )
 
             cur.execute(
                 'INSERT INTO PERUSAHAAN(no_identitas_klien, nama_perusahaan) VALUES (%s, %s)',
-                (uuid, nama_perusahaan)
+                (no_uuid, nama_perusahaan)
             )
 
         if role == 'front_desk':
@@ -140,29 +140,79 @@ def register(request):
             
             cur.execute(
                 'INSERT INTO PEGAWAI(no_pegawai, tanggal_mulai_kerja, tanggal_akhir_kerja, email_user) '
-                'VALUES (%s, %s, NULL, %s) ', (uuid, tanggal_mulai, email)
+                'VALUES (%s, %s, NULL, %s) ', (no_uuid, tanggal_mulai, email)
             )
             
 
-            cur.execute('INSERT INTO FRONT_DESK(no_front_desk) VALUES (%s)', (uuid))
+            cur.execute('INSERT INTO FRONT_DESK(no_front_desk) VALUES (%s)', (no_uuid,))
         
         if role == 'perawat_hewan':
             tanggal_mulai = data.get('tanggal_mulai_kerja','').strip()
             
+            nama_sertifikat = data.get('nama_sertifikat','').strip()
+            no_sertifikat_kompetensi = data.get('no_sertifikat_kompetensi','').strip()
+
             cur.execute(
                 'INSERT INTO PEGAWAI(no_pegawai, tanggal_mulai_kerja, tanggal_akhir_kerja, email_user) '
                 'VALUES (%s, %s, NULL, %s)', 
-                (uuid, tanggal_mulai, email)
+                (no_uuid, tanggal_mulai, email)
             )
 
             no_izin_praktik = data.get('no_izin_praktik','').strip()
 
             cur.execute('INSERT INTO TENAGA_MEDIS(no_tenaga_medis, no_izin_praktik)'
-                        'VALUES (%s, %s)', (uuid, no_izin_praktik))
+                        'VALUES (%s, %s)', (no_uuid, no_izin_praktik))
             
-            cur.execute('INSERT INTO PERAWAT_HEWAN(no_perawat_hewan) VALUES (%s)', (uuid))
-        
+            cur.execute('INSERT INTO PERAWAT_HEWAN(no_perawat_hewan) VALUES (%s)', (no_uuid,))
+
+            no_sertifikat_kompetensi = request.POST.getlist('no_sertifikat_kompetensi')
+            nama_sertifikat = request.POST.getlist('nama_sertifikat')
+            for no_sertifikat_kompetensi, nama_sertifikat in zip(no_sertifikat_kompetensi, nama_sertifikat):
+                if no_sertifikat_kompetensi.strip() and nama_sertifikat.strip():
+                    cur.execute(
+                        'INSERT INTO SERTIFIKAT_KOMPETENSI(no_sertifikat_kompetensi, no_tenaga_medis, nama_sertifikat) '
+                        'VALUES (%s, %s, %s)',
+                        (no_sertifikat_kompetensi, no_uuid, nama_sertifikat)
+                    )
+
+        if role == 'dokter_hewan':
+            tanggal_mulai = data.get('tanggal_mulai_kerja','').strip()
             
+            nama_sertifikat = data.get('nama_sertifikat','').strip()
+            no_sertifikat_kompetensi = data.get('no_sertifikat_kompetensi','').strip()
+
+            cur.execute(
+                'INSERT INTO PEGAWAI(no_pegawai, tanggal_mulai_kerja, tanggal_akhir_kerja, email_user) '
+                'VALUES (%s, %s, NULL, %s)', 
+                (no_uuid, tanggal_mulai, email)
+            )
+
+            no_izin_praktik = data.get('no_izin_praktik','').strip()
+
+            cur.execute('INSERT INTO TENAGA_MEDIS(no_tenaga_medis, no_izin_praktik)'
+                        'VALUES (%s, %s)', (no_uuid, no_izin_praktik))
+            
+            cur.execute('INSERT INTO DOKTER_HEWAN(no_dokter_hewan) VALUES (%s)', (no_uuid,))
+
+            no_sertifikat_kompetensi = request.POST.getlist('no_sertifikat_kompetensi')
+            nama_sertifikat = request.POST.getlist('nama_sertifikat')
+            for no_sertifikat_kompetensi, nama_sertifikat in zip(no_sertifikat_kompetensi, nama_sertifikat):
+                if no_sertifikat_kompetensi.strip() and nama_sertifikat.strip():
+                    cur.execute(
+                        'INSERT INTO SERTIFIKAT_KOMPETENSI(no_sertifikat_kompetensi, no_tenaga_medis, nama_sertifikat) '
+                        'VALUES (%s, %s, %s)',
+                        (no_sertifikat_kompetensi, no_uuid, nama_sertifikat)
+                    )
+
+            hari_list = request.POST.getlist('hari')
+            jam_list = request.POST.getlist('jam')
+            for hari, jam in zip(hari_list, jam_list):
+                if hari.strip() and jam.strip():
+                    cur.execute(
+                        'INSERT INTO JADWAL_PRAKTIK(no_dokter_hewan, hari, jam) VALUES (%s, %s, %s)',
+                        (no_uuid, hari, jam)
+                    )
+
         conn.commit()
         
         messages.success(request, 'Registrasi berhasil! Silakan login.')
