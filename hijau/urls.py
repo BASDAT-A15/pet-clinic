@@ -6,6 +6,7 @@ app_name = 'hijau'
 urlpatterns = [
     path('list_perawatan/', views.list_perawatan, name='list_perawatan'),
     path('create_perawatan/', views.create_perawatan, name='create_perawatan'),
+    path('api/kunjungan/<str:kunjungan_id>/', views.get_kunjungan_details, name='get_kunjungan_details'),
     path('update_perawatan/<str:id_kunjungan>/', views.update_perawatan, name='update_perawatan'),
     path('delete_perawatan/', views.delete_perawatan, name='delete_perawatan'),
     path('list_kunjungan/', views.list_kunjungan, name='list_kunjungan'),

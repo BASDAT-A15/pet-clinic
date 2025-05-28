@@ -1,48 +1,311 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create New Treatment</title>
-    {% load static %}
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <title>Create New Treatment - Pet Clinic</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f8f9fa;
+            padding: 40px 20px;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+        }
+
+        .header {
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            font-weight: 600;
+            color: #333;
+            margin: 0;
+        }
+
+        .form-group {
+            margin-bottom: 30px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 16px;
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 8px;
+        }        .form-select, .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            font-size: 16px;
+            background-color: white;
+            transition: border-color 0.2s ease;
+            font-family: inherit;
+        }
+
+        .form-control[rows] {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-select:focus, .form-control:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+
+        .form-select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 12px center;
+            background-repeat: no-repeat;
+            background-size: 16px;
+            padding-right: 40px;
+        }
+
+        .kunjungan-details {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 20px;
+            margin-top: 15px;
+            font-size: 14px;
+            line-height: 1.8;
+            color: #495057;
+        }
+
+        .kunjungan-details .detail-item {
+            margin-bottom: 8px;
+        }
+
+        .kunjungan-details .detail-item:last-child {
+            margin-bottom: 0;
+        }        .kunjungan-details .detail-label {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            min-width: 80px;
+        }
+
+        .btn-primary {
+            background-color: #1a1a1a;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #333;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #545b62;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Alert styles */
+        .alert {
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
-        <h2>Create New Treatment</h2>
+        <div class="header">
+            <h1>Create New Treatment</h1>
+        </div>        <!-- Alert messages -->
+        <div id="alert-container">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{% if message.tags == 'error' %}error{% else %}success{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        </div>
 
-        <!-- Formulir untuk membuat perawatan baru -->
-        <form method="POST">
+        <form id="treatmentForm" method="POST">
             {% csrf_token %}
-            
             <div class="form-group">
-                <label for="kunjungan">Kunjungan</label>
-                <select id="kunjungan" name="kunjungan" class="form-control">
-                    <option value="">Kunjungan</option>
-                    <option value="KJN001">KJN001</option>
-                    <option value="KJN002">KJN002</option>
-                    <option value="KJN003">KJN003</option>
+                <label class="form-label" for="kunjungan">Kunjungan</label>
+                <select id="kunjungan" name="kunjungan" class="form-select" onchange="loadKunjunganDetails()" required>
+                    <option value="">-- Pilih Kunjungan --</option>
+                    {% for kunjungan in kunjungan_list %}
+                    <option value="{{ kunjungan.id }}" 
+                            data-id="{{ kunjungan.id }}" 
+                            data-hewan="{{ kunjungan.nama_hewan }}" 
+                            data-klien="{{ kunjungan.nama_klien }}" 
+                            data-front-desk="{{ kunjungan.front_desk }}" 
+                            data-dokter="{{ kunjungan.dokter_hewan }}" 
+                            data-perawat="{{ kunjungan.perawat_hewan }}">
+                        {{ kunjungan.id }} - {{ kunjungan.nama_hewan }} - {{ kunjungan.nama_klien }}
+                    </option>
+                    {% endfor %}
+                </select>                <div id="kunjungan-details" class="kunjungan-details hidden">
+                    <div class="detail-item">
+                        <span class="detail-label">ID Kunjungan:</span> <span id="detail-id">-</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Nama Hewan:</span> <span id="detail-hewan">-</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Nama Klien:</span> <span id="detail-klien">-</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Front Desk:</span> <span id="detail-front-desk">-</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Dokter Hewan:</span> <span id="detail-dokter">-</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Perawat Hewan:</span> <span id="detail-perawat">-</span>
+                    </div>
+                </div>
+            </div>            <div class="form-group">
+                <label class="form-label" for="jenis_perawatan">Jenis Perawatan</label>
+                <select id="jenis_perawatan" name="jenis_perawatan" class="form-select" required>
+                    <option value="">-- Pilih Jenis Perawatan --</option>
+                    {% for perawatan in jenis_perawatan_list %}
+                    <option value="{{ perawatan.kode }}">{{ perawatan.display }}</option>
+                    {% endfor %}
                 </select>
             </div>
 
             <div class="form-group">
-                <label for="jenis_perawatan">Jenis Perawatan</label>
-                <select id="jenis_perawatan" name="jenis_perawatan" class="form-control">
-                    <option value="">Jenis Perawatan</option>
-                    <option value="TRM001">TRM001 - Dental Care</option>
-                    <option value="TRM002">TRM002 - Parasite Control</option>
-                    <option value="TRM003">TRM003 - Flea Treatment</option>
-                </select>
+                <label class="form-label" for="catatan_medis">Catatan Medis (Opsional)</label>
+                <textarea id="catatan_medis" name="catatan_medis" class="form-control" rows="4" placeholder="Masukkan catatan medis jika diperlukan..."></textarea>
+            </div>            <div class="form-actions">
+                <a href="{% url 'hijau:list_perawatan' %}" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary">Create Treatment</button>
             </div>
-
-            <div class="form-group">
-                <label for="catatan_medis">Catatan Medis</label>
-                <textarea id="catatan_medis" name="catatan_medis" class="form-control" rows="4" ></textarea>
-            </div>
-
-            <button type="submit" class="btn btn-success">Create</button>
-            <a href="#" class="btn btn-dark">Cancel</a>
         </form>
     </div>
+
+    <script>
+        function loadKunjunganDetails() {
+            const kunjunganSelect = document.getElementById('kunjungan');
+            const selectedOption = kunjunganSelect.options[kunjunganSelect.selectedIndex];
+            const detailsDiv = document.getElementById('kunjungan-details');
+            
+            if (!kunjunganSelect.value) {
+                detailsDiv.classList.add('hidden');
+                return;
+            }
+            
+            // Get data from selected option attributes
+            const id = selectedOption.getAttribute('data-id') || '';
+            const hewan = selectedOption.getAttribute('data-hewan') || '';
+            const klien = selectedOption.getAttribute('data-klien') || '';
+            const frontDesk = selectedOption.getAttribute('data-front-desk') || '';
+            const dokter = selectedOption.getAttribute('data-dokter') || '';
+            const perawat = selectedOption.getAttribute('data-perawat') || '';
+            
+            // Update detail fields
+            document.getElementById('detail-id').textContent = id;
+            document.getElementById('detail-hewan').textContent = hewan;
+            document.getElementById('detail-klien').textContent = klien;
+            document.getElementById('detail-front-desk').textContent = frontDesk;
+            document.getElementById('detail-dokter').textContent = dokter;
+            document.getElementById('detail-perawat').textContent = perawat;
+            
+            // Show details
+            detailsDiv.classList.remove('hidden');        }
+
+        function showAlert(message, type = 'success') {
+            const alertContainer = document.getElementById('alert-container');
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.textContent = message;
+            
+            alertContainer.appendChild(alertDiv);
+            
+            // Remove alert after 5 seconds
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        }        function cancelForm() {
+            if (confirm('Are you sure you want to cancel? All unsaved changes will be lost.')) {
+                window.location.href = "{% url 'hijau:list_perawatan' %}";
+            }
+        }
+
+        // Handle form submission
+        document.getElementById('treatmentForm').addEventListener('submit', function(e) {
+            const kunjungan = document.getElementById('kunjungan').value;
+            const jenisPerawatan = document.getElementById('jenis_perawatan').value;
+            
+            if (!kunjungan) {
+                e.preventDefault();
+                showAlert('Please select a Kunjungan.', 'error');
+                return;
+            }
+            
+            if (!jenisPerawatan) {
+                e.preventDefault();
+                showAlert('Please select a Jenis Perawatan.', 'error');
+                return;
+            }
+            
+            // Form will be submitted to Django backend
+        });
+    </script>
 </body>
 </html>
