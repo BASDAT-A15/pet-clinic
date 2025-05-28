@@ -2,128 +2,320 @@
 {% load static %}
 
 {% block meta %}
-<title>Profile Dokter</title>
+  <title>Profile Dokter Hewan</title>
 {% endblock meta %}
 
 {% block content %}
 <div class="container mx-auto px-4 py-8">
-    <div class="bg-white rounded-lg shadow p-6 max-w-3xl mx-auto">
-        <!-- Header with buttons -->
-        <div class="flex flex-wrap justify-between items-center mb-6">
-            <h1 class="text-2xl font-bold">Profile Dokter</h1>
-            <div class="space-x-3 mt-3 sm:mt-0">
-                <button class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-md transition-colors">
-                    Update Password
-                </button>
-                <button class="px-4 py-2 bg-[#0B1120] hover:bg-gray-900 text-white rounded-md transition-colors">
-                    Update Profile
-                </button>
-            </div>
-        </div>
-
-        <!-- Profile Information -->
-        <div class="space-y-4 mb-8">
-            <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
-                <div class="font-medium">Nomor Identitas</div>
-                <div class="col-span-2">c4fd2f14-0202-4526-b1f4-5fcde0c28783</div>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
-                <div class="font-medium">Nomor Izin Praktik</div>
-                <div class="col-span-2">SIP-HEWAN-12345</div>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
-                <div class="font-medium">Email</div>
-                <div class="col-span-2">bobby.muhammad@petclinic.com</div>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
-                <div class="font-medium">Tanggal Diterima</div>
-                <div class="col-span-2">23 Januari 2025</div>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
-                <div class="font-medium">Tanggal Akhir Kerja</div>
-                <div class="col-span-2">-</div>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
-                <div class="font-medium">Alamat</div>
-                <div class="col-span-2">Jl. Melati Indah No. 23, Kel. Sukamaju, Kec. Cibinong, Kab. Bogor, Jawa Barat, 16914</div>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
-                <div class="font-medium">Nomor Telepon</div>
-                <div class="col-span-2">081234567893</div>
-            </div>
-        </div>
-
-        <!-- Certificate Section -->
-        <div class="mb-6">
-            <h2 class="text-xl font-bold mb-4">Daftar Sertifikat</h2>
-            <div class="overflow-x-auto">
-                <table class="min-w-full border border-gray-200">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="py-2 px-4 border text-left">No</th>
-                            <th class="py-2 px-4 border text-left">Nomor Sertifikat</th>
-                            <th class="py-2 px-4 border text-left">Nama Sertifikat</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td class="py-2 px-4 border">1</td>
-                            <td class="py-2 px-4 border">123/DH/456</td>
-                            <td class="py-2 px-4 border">BNSP Dokter Hewan Praktis</td>
-                        </tr>
-                        <tr>
-                            <td class="py-2 px-4 border">2</td>
-                            <td class="py-2 px-4 border">456/DH/456</td>
-                            <td class="py-2 px-4 border">Sertifikat PB PDHI</td>
-                        </tr>
-                        <tr>
-                            <td class="py-2 px-4 border">3</td>
-                            <td class="py-2 px-4 border">789/DH/789</td>
-                            <td class="py-2 px-4 border">Sertifikat Organisasi Profesi</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Schedule Section -->
-        <div>
-            <h2 class="text-xl font-bold mb-4">Daftar Jadwal Praktik</h2>
-            <div class="overflow-x-auto">
-                <table class="min-w-full border border-gray-200">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="py-2 px-4 border text-left">No</th>
-                            <th class="py-2 px-4 border text-left">Hari</th>
-                            <th class="py-2 px-4 border text-left">Jam</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td class="py-2 px-4 border">1</td>
-                            <td class="py-2 px-4 border">Senin</td>
-                            <td class="py-2 px-4 border">13.00 - 15.00</td>
-                        </tr>
-                        <tr>
-                            <td class="py-2 px-4 border">2</td>
-                            <td class="py-2 px-4 border">Rabu</td>
-                            <td class="py-2 px-4 border">13.00 - 15.00</td>
-                        </tr>
-                        <tr>
-                            <td class="py-2 px-4 border">3</td>
-                            <td class="py-2 px-4 border">Jumat</td>
-                            <td class="py-2 px-4 border">14.00 - 16.00</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+  <div class="bg-white rounded-lg shadow p-6 max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="flex flex-wrap justify-between items-center mb-6">
+      <h1 class="text-2xl font-bold">Profile Dokter Hewan</h1>
+      <div class="space-x-3 mt-3 sm:mt-0">
+        <a href="{% url 'main:update_password' %}?email={{ data.email }}" 
+           class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-md transition-colors">
+          Update Password
+        </a>
+        {% if not edit_mode %}
+        <a href="{% url 'main:update_profile' %}" 
+           class="px-4 py-2 bg-[#0B1120] hover:bg-gray-900 text-white rounded-md transition-colors">
+          Update Profile
+        </a>
+        {% endif %}
+      </div>
     </div>
+
+    {% if edit_mode %}
+    <!-- EDIT MODE -->
+    <form method="POST">
+      {% csrf_token %}
+      <div class="space-y-6">
+        
+        <!-- Basic Information -->
+        <div class="bg-gray-50 p-4 rounded-lg">
+          <h3 class="text-lg font-semibold mb-4">Informasi Dasar</h3>
+          
+          <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
+            <div class="font-medium">Nomor Identitas</div>
+            <div class="col-span-2">{{ data.no_pegawai }}</div>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
+            <div class="font-medium">Nomor Izin Praktik</div>
+            <div class="col-span-2">{{ data.no_izin_praktik }}</div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
+            <div class="font-medium">Email</div>
+            <div class="col-span-2">{{ data.email }}</div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
+            <div class="font-medium">Tanggal Akhir Kerja</div>
+            <div class="col-span-2">
+              <input type="date" name="tanggal_akhir_kerja" 
+                     value="{{ data.tanggal_akhir|date:'Y-m-d' }}" 
+                     class="w-full px-3 py-2 border rounded-md">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 items-start py-2">
+            <div class="font-medium">Alamat</div>
+            <div class="col-span-2">
+              <textarea name="alamat" rows="3"
+                class="w-full px-3 py-2 border rounded-md">{{ data.alamat }}</textarea>
+              {% if errors.alamat %}<p class="text-red-500 text-sm">{{ errors.alamat }}</p>{% endif %}
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
+            <div class="font-medium">Nomor Telepon</div>
+            <div class="col-span-2">
+              <input type="text" name="nomor_telepon" 
+                     value="{{ data.nomor_telepon }}"
+                     class="w-full px-3 py-2 border rounded-md">
+              {% if errors.nomor_telepon %}<p class="text-red-500 text-sm">{{ errors.nomor_telepon }}</p>{% endif %}
+            </div>
+          </div>
+        </div>
+
+        <!-- Sertifikat Section -->
+        <div class="bg-gray-50 p-4 rounded-lg">
+          <h3 class="text-lg font-semibold mb-4">Sertifikat Kompetensi</h3>
+          <div id="certificates-container">
+            {% for sertifikat in data.sertifikats %}
+            <div class="certificate-row grid grid-cols-12 gap-2 items-center py-2">
+              <div class="col-span-1">{{ forloop.counter }}.</div>
+              <div class="col-span-5">
+                <input type="text" name="no_sertifikat" 
+                       value="{{ sertifikat.0 }}"
+                       class="w-full px-3 py-2 border rounded-md"
+                       placeholder="Nomor Sertifikat">
+              </div>
+              <div class="col-span-5">
+                <input type="text" name="nama_sertifikat" 
+                       value="{{ sertifikat.1 }}"
+                       class="w-full px-3 py-2 border rounded-md"
+                       placeholder="Nama Sertifikat">
+              </div>
+              <div class="col-span-1">
+                <button type="button" onclick="removeRow(this)" 
+                        class="px-2 py-1 bg-red-500 text-white rounded text-sm">
+                  Hapus
+                </button>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          <button type="button" onclick="addCertificate()" 
+                  class="mt-4 px-4 py-2 bg-green-500 text-white rounded-md">
+            + Tambah Sertifikat
+          </button>
+        </div>
+
+        <!-- Jadwal Section -->
+        <div class="bg-gray-50 p-4 rounded-lg">
+          <h3 class="text-lg font-semibold mb-4">Jadwal Praktik</h3>
+          <div id="schedules-container">
+            {% for jadwal in data.jadwals %}
+            <div class="schedule-row grid grid-cols-12 gap-2 items-center py-2">
+              <div class="col-span-1">{{ forloop.counter }}.</div>
+              <div class="col-span-3">
+                <input type="text" name="hari" 
+                       value="{{ jadwal.0 }}"
+                       class="w-full px-3 py-2 border rounded-md"
+                       placeholder="Contoh: Senin">
+              </div>
+              <div class="col-span-6">
+                <input type="text" name="jam_praktik" 
+                       value="{{ jadwal.1 }}"
+                       class="w-full px-3 py-2 border rounded-md"
+                       placeholder="Contoh: 13.00-15.00">
+                {% if errors.jam_praktik %}<p class="text-red-500 text-sm">{{ errors.jam_praktik }}</p>{% endif %}
+              </div>
+              <div class="col-span-2">
+                <button type="button" onclick="removeRow(this)" 
+                        class="px-2 py-1 bg-red-500 text-white rounded text-sm">
+                  Hapus
+                </button>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          <button type="button" onclick="addSchedule()" 
+                  class="mt-4 px-4 py-2 bg-green-500 text-white rounded-md">
+            + Tambah Jadwal
+          </button>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex gap-3 pt-4">
+          <button type="submit" 
+                  class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md">
+            Simpan Perubahan
+          </button>
+          <a href="{% url 'main:profile_dokter' %}" 
+             class="px-6 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-md">
+            Batal
+          </a>
+        </div>
+      </div>
+    </form>
+
+    {% else %}
+    <!-- VIEW MODE -->
+    <div class="space-y-6">
+      
+      <!-- Basic Information -->
+      <div class="bg-gray-50 p-4 rounded-lg">
+        <h3 class="text-lg font-semibold mb-4">Informasi Dasar</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-y-4">
+          <div class="font-medium">Nomor Identitas</div>
+          <div class="col-span-2">{{ data.no_pegawai }}</div>
+          
+          <div class="font-medium">Nomor Izin Praktik</div>
+          <div class="col-span-2">{{ data.no_izin_praktik }}</div>
+          
+          <div class="font-medium">Email</div>
+          <div class="col-span-2">{{ data.email }}</div>
+          
+          <div class="font-medium">Tanggal Diterima</div>
+          <div class="col-span-2">{{ data.tanggal_mulai }}</div>
+          
+          <div class="font-medium">Tanggal Akhir Kerja</div>
+          <div class="col-span-2">{{ data.tanggal_akhir|default:"-" }}</div>
+          
+          <div class="font-medium">Alamat</div>
+          <div class="col-span-2">{{ data.alamat }}</div>
+          
+          <div class="font-medium">Nomor Telepon</div>
+          <div class="col-span-2">{{ data.nomor_telepon }}</div>
+        </div>
+      </div>
+
+      <!-- Sertifikat Section -->
+      <div class="bg-gray-50 p-4 rounded-lg">
+        <h3 class="text-lg font-semibold mb-4">Sertifikat Kompetensi</h3>
+        <div class="overflow-x-auto">
+          <table class="min-w-full border border-gray-200">
+            <thead class="bg-gray-100">
+              <tr>
+                <th class="py-2 px-4 border text-left">No</th>
+                <th class="py-2 px-4 border text-left">Nomor Sertifikat</th>
+                <th class="py-2 px-4 border text-left">Nama Sertifikat</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for sertifikat in data.sertifikats %}
+              <tr>
+                <td class="py-2 px-4 border">{{ forloop.counter }}</td>
+                <td class="py-2 px-4 border">{{ sertifikat.0 }}</td>
+                <td class="py-2 px-4 border">{{ sertifikat.1 }}</td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="3" class="py-2 px-4 border text-center text-gray-500">
+                  Belum ada sertifikat
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Jadwal Section -->
+      <div class="bg-gray-50 p-4 rounded-lg">
+        <h3 class="text-lg font-semibold mb-4">Jadwal Praktik</h3>
+        <div class="overflow-x-auto">
+          <table class="min-w-full border border-gray-200">
+            <thead class="bg-gray-100">
+              <tr>
+                <th class="py-2 px-4 border text-left">No</th>
+                <th class="py-2 px-4 border text-left">Hari</th>
+                <th class="py-2 px-4 border text-left">Jam Praktik</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for jadwal in data.jadwals %}
+              <tr>
+                <td class="py-2 px-4 border">{{ forloop.counter }}</td>
+                <td class="py-2 px-4 border">{{ jadwal.0 }}</td>
+                <td class="py-2 px-4 border">{{ jadwal.1 }}</td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="3" class="py-2 px-4 border text-center text-gray-500">
+                  Belum ada jadwal
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
 </div>
+
+<script>
+// Dynamic Form Handling
+function addCertificate() {
+  const container = document.getElementById('certificates-container');
+  const newRow = document.createElement('div');
+  newRow.className = 'certificate-row grid grid-cols-12 gap-2 items-center py-2';
+  newRow.innerHTML = `
+    <div class="col-span-1">${container.children.length + 1}.</div>
+    <div class="col-span-5">
+      <input type="text" name="no_sertifikat" 
+             class="w-full px-3 py-2 border rounded-md"
+             placeholder="Nomor Sertifikat">
+    </div>
+    <div class="col-span-5">
+      <input type="text" name="nama_sertifikat" 
+             class="w-full px-3 py-2 border rounded-md"
+             placeholder="Nama Sertifikat">
+    </div>
+    <div class="col-span-1">
+      <button type="button" onclick="removeRow(this)" 
+              class="px-2 py-1 bg-red-500 text-white rounded text-sm">
+        Hapus
+      </button>
+    </div>
+  `;
+  container.appendChild(newRow);
+}
+
+function addSchedule() {
+  const container = document.getElementById('schedules-container');
+  const newRow = document.createElement('div');
+  newRow.className = 'schedule-row grid grid-cols-12 gap-2 items-center py-2';
+  newRow.innerHTML = `
+    <div class="col-span-1">${container.children.length + 1}.</div>
+    <div class="col-span-3">
+      <input type="text" name="hari" 
+             class="w-full px-3 py-2 border rounded-md"
+             placeholder="Contoh: Senin">
+    </div>
+    <div class="col-span-6">
+      <input type="text" name="jam_praktik" 
+             class="w-full px-3 py-2 border rounded-md"
+             placeholder="Contoh: 13.00-15.00">
+    </div>
+    <div class="col-span-2">
+      <button type="button" onclick="removeRow(this)" 
+              class="px-2 py-1 bg-red-500 text-white rounded text-sm">
+        Hapus
+      </button>
+    </div>
+  `;
+  container.appendChild(newRow);
+}
+
+function removeRow(button) {
+  button.closest('.certificate-row, .schedule-row').remove();
+}
+</script>
+
 {% endblock content %}
