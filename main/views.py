@@ -97,9 +97,8 @@ def register(request):
         conn = get_db_connection()
         cur = conn.cursor()
 
-        uuid = uuid.uuid4()
+        unique_id = uuid.uuid4()
 
-        
         # 1) Insert ke USER table
         cur.execute(
             'INSERT INTO "USER"(email, password, alamat, nomor_telepon) VALUES (%s, %s, %s, %s)',
@@ -113,13 +112,13 @@ def register(request):
 
             cur.execute(
                 'INSERT INTO KLIEN(no_identitas, tanggal_registrasi, email)'
-                'VALUES (%s, %s, %s)', (uuid, datetime.today().date(), email)
+                'VALUES (%s, %s, %s)', (unique_id, datetime.today().date(), email)
             )
 
             cur.execute(
                 'INSERT INTO INDIVIDU(no_identitas_klien, nama_depan, nama_tengah, nama_belakang )'
                 'VALUES (%s, %s, %s, %s)',
-                (uuid, nama_depan, nama_tengah, nama_belakang)
+                (unique_id, nama_depan, nama_tengah, nama_belakang)
             )
 
         if role == "perusahaan":
@@ -127,12 +126,12 @@ def register(request):
 
             cur.execute(
                 'INSERT INTO KLIEN(no_identitas, tanggal_registrasi, email)'
-                'VALUES (%s, %s, %s) RETURNING no_identitas', (uuid, datetime.today().date(), email)
+                'VALUES (%s, %s, %s) RETURNING no_identitas', (unique_id, datetime.today().date(), email)
             )
 
             cur.execute(
                 'INSERT INTO PERUSAHAAN(no_identitas_klien, nama_perusahaan) VALUES (%s, %s)',
-                (uuid, nama_perusahaan)
+                (unique_id, nama_perusahaan)
             )
 
         if role == 'front_desk':
@@ -140,11 +139,11 @@ def register(request):
             
             cur.execute(
                 'INSERT INTO PEGAWAI(no_pegawai, tanggal_mulai_kerja, tanggal_akhir_kerja, email_user) '
-                'VALUES (%s, %s, NULL, %s) ', (uuid, tanggal_mulai, email)
+                'VALUES (%s, %s, NULL, %s) ', (unique_id, tanggal_mulai, email)
             )
             
 
-            cur.execute('INSERT INTO FRONT_DESK(no_front_desk) VALUES (%s)', (uuid))
+            cur.execute('INSERT INTO FRONT_DESK(no_front_desk) VALUES (%s)', (unique_id))
         
         if role == 'perawat_hewan':
             tanggal_mulai = data.get('tanggal_mulai_kerja','').strip()
@@ -152,15 +151,15 @@ def register(request):
             cur.execute(
                 'INSERT INTO PEGAWAI(no_pegawai, tanggal_mulai_kerja, tanggal_akhir_kerja, email_user) '
                 'VALUES (%s, %s, NULL, %s)', 
-                (uuid, tanggal_mulai, email)
+                (unique_id, tanggal_mulai, email)
             )
 
             no_izin_praktik = data.get('no_izin_praktik','').strip()
 
             cur.execute('INSERT INTO TENAGA_MEDIS(no_tenaga_medis, no_izin_praktik)'
-                        'VALUES (%s, %s)', (uuid, no_izin_praktik))
+                        'VALUES (%s, %s)', (unique_id, no_izin_praktik))
             
-            cur.execute('INSERT INTO PERAWAT_HEWAN(no_perawat_hewan) VALUES (%s)', (uuid))
+            cur.execute('INSERT INTO PERAWAT_HEWAN(no_perawat_hewan) VALUES (%s)', (unique_id))
         
             
         conn.commit()
