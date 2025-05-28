@@ -2,14 +2,17 @@
 {% load static %}
 
 {% block meta %}
-  <title>Profile Klien</title>
+  <title>Profile Front-Desk Officer</title>
 {% endblock meta %}
 
 {% block content %}
 <div class="container mx-auto px-4 py-8">
   <div class="bg-white rounded-lg shadow p-6 max-w-3xl mx-auto">
     <div class="flex flex-wrap justify-between items-center mb-6">
-      <h1 class="text-2xl font-bold">Profile Klien</h1>
+      <h1 class="text-2xl font-bold">
+        Profile<br>
+        Front-Desk Officer
+      </h1>
       <div class="space-x-3 mt-3 sm:mt-0">
         <a href="{% url 'main:update_password' %}?email={{ email }}"
            class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-md transition-colors">
@@ -31,7 +34,7 @@
         <!-- Nomor Identitas (read-only) -->
         <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
           <div class="font-medium">Nomor Identitas</div>
-          <div class="col-span-2">{{ data.no_identitas }}</div>
+          <div class="col-span-2">{{ data.no_pegawai }}</div>
         </div>
         
         <!-- Email (read-only) -->
@@ -40,65 +43,25 @@
           <div class="col-span-2">{{ data.email }}</div>
         </div>
 
-        <!-- Nama fields - conditional based on role -->
-        {% if data.nama_depan %}
-        <!-- Individual client fields -->
+        <!-- Tanggal Diterima (read-only) -->
         <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
-          <div class="font-medium">Nama Depan</div>
-          <div class="col-span-2">
-            <input
-              type="text"
-              name="nama_depan"
-              value="{{ data.nama_depan }}"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md"
-              required
-            >
-            {% if errors.nama_depan %}<p class="text-red-500 text-sm">{{ errors.nama_depan }}</p>{% endif %}
-          </div>
+          <div class="font-medium">Tanggal Diterima</div>
+          <div class="col-span-2">{{ data.tanggal_mulai|date:'d F Y' }}</div>
         </div>
 
+        <!-- Tanggal Akhir Kerja (editable) -->
         <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
-          <div class="font-medium">Nama Tengah</div>
+          <div class="font-medium">Tanggal Akhir Kerja</div>
           <div class="col-span-2">
             <input
-              type="text"
-              name="nama_tengah"
-              value="{{ data.nama_tengah|default:'' }}"
+              type="date"
+              name="tanggal_akhir_kerja"
+              value="{{ data.tanggal_akhir|date:'Y-m-d'|default:'' }}"
               class="w-full px-3 py-2 border border-gray-300 rounded-md"
             >
-            {% if errors.nama_tengah %}<p class="text-red-500 text-sm">{{ errors.nama_tengah }}</p>{% endif %}
+            {% if errors.tanggal_akhir_kerja %}<p class="text-red-500 text-sm mt-1">{{ errors.tanggal_akhir_kerja }}</p>{% endif %}
           </div>
         </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
-          <div class="font-medium">Nama Belakang</div>
-          <div class="col-span-2">
-            <input
-              type="text"
-              name="nama_belakang"
-              value="{{ data.nama_belakang }}"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md"
-              required
-            >
-            {% if errors.nama_belakang %}<p class="text-red-500 text-sm">{{ errors.nama_belakang }}</p>{% endif %}
-          </div>
-        </div>
-        {% else %}
-        <!-- Company client field -->
-        <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
-          <div class="font-medium">Nama Perusahaan</div>
-          <div class="col-span-2">
-            <input
-              type="text"
-              name="nama_perusahaan"
-              value="{{ data.nama_perusahaan }}"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md"
-              required
-            >
-            {% if errors.nama_perusahaan %}<p class="text-red-500 text-sm">{{ errors.nama_perusahaan }}</p>{% endif %}
-          </div>
-        </div>
-        {% endif %}
 
         <!-- Alamat (editable) -->
         <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
@@ -108,9 +71,8 @@
               name="alamat"
               rows="3"
               class="w-full px-3 py-2 border border-gray-300 rounded-md"
-              required
             >{{ data.alamat }}</textarea>
-            {% if errors.alamat %}<p class="text-red-500 text-sm">{{ errors.alamat }}</p>{% endif %}
+            {% if errors.alamat %}<p class="text-red-500 text-sm mt-1">{{ errors.alamat }}</p>{% endif %}
           </div>
         </div>
 
@@ -123,13 +85,12 @@
               name="nomor_telepon"
               value="{{ data.nomor_telepon }}"
               class="w-full px-3 py-2 border border-gray-300 rounded-md"
-              required
             >
-            {% if errors.nomor_telepon %}<p class="text-red-500 text-sm">{{ errors.nomor_telepon }}</p>{% endif %}
+            {% if errors.nomor_telepon %}<p class="text-red-500 text-sm mt-1">{{ errors.nomor_telepon }}</p>{% endif %}
           </div>
         </div>
 
-        <!-- Submit buttons -->
+        <!-- Submit -->
         <div class="pt-4">
           <button
             type="submit"
@@ -137,8 +98,8 @@
           >
             Simpan Perubahan
           </button>
-          <a href="{% url 'main:profile_klien' %}"
-             class="ml-2 px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-md transition-colors">
+          <a href="{% url 'main:profile_frontdesk' %}"
+             class="ml-2 px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-md">
             Batal
           </a>
         </div>
@@ -146,11 +107,10 @@
     </form>
 
     {% else %}
-    <!-- Display mode -->
     <div class="space-y-4">
       <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
         <div class="font-medium">Nomor Identitas</div>
-        <div class="col-span-2">{{ no_identitas }}</div>
+        <div class="col-span-2">{{ no_pegawai }}</div>
       </div>
       
       <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
@@ -159,13 +119,13 @@
       </div>
       
       <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
-        <div class="font-medium">Nama</div>
-        <div class="col-span-2">{{ full_name }}</div>
+        <div class="font-medium">Tanggal Diterima</div>
+        <div class="col-span-2">{{ tanggal_mulai }}</div>
       </div>
       
       <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
-        <div class="font-medium">Tanggal Pendaftaran</div>
-        <div class="col-span-2">{{ tanggal_registrasi }}</div>
+        <div class="font-medium">Tanggal Akhir Kerja</div>
+        <div class="col-span-2">{{ tanggal_akhir }}</div>
       </div>
       
       <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
@@ -177,13 +137,6 @@
         <div class="font-medium">Nomor Telepon</div>
         <div class="col-span-2">{{ nomor_telepon }}</div>
       </div>
-    </div>
-    {% endif %}
-
-    <!-- Display error messages if any -->
-    {% if non_field %}
-    <div class="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-      {{ non_field }}
     </div>
     {% endif %}
 

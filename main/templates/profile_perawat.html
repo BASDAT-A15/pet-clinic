@@ -2,95 +2,336 @@
 {% load static %}
 
 {% block meta %}
-<title>Profile Perawat</title>
+  <title>Profile Perawat</title>
 {% endblock meta %}
 
 {% block content %}
 <div class="container mx-auto px-4 py-8">
-    <div class="bg-white rounded-lg shadow p-6 max-w-3xl mx-auto">
-        <!-- Header with buttons -->
-        <div class="flex flex-wrap justify-between items-center mb-6">
-            <h1 class="text-2xl font-bold">Profile Perawat</h1>
-            <div class="space-x-3 mt-3 sm:mt-0">
-                <button class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-md transition-colors">
-                    Update Password
-                </button>
-                <button class="px-4 py-2 bg-[#0B1120] hover:bg-gray-900 text-white rounded-md transition-colors">
-                    Update Profile
-                </button>
-            </div>
-        </div>
-
-        <!-- Profile Information -->
-        <div class="space-y-4 mb-8">
-            <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
-                <div class="font-medium">Nomor Identitas</div>
-                <div class="col-span-2">1845ad38-ef76-49cd-b46e-350ba3f0ef59</div>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
-                <div class="font-medium">Nomor Izin Praktik</div>
-                <div class="col-span-2">SIP-PERAWAT-12345</div>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
-                <div class="font-medium">Email</div>
-                <div class="col-span-2">sandy.permata@petclinic.com</div>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
-                <div class="font-medium">Tanggal Diterima</div>
-                <div class="col-span-2">24 Januari 2025</div>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
-                <div class="font-medium">Tanggal Akhir Kerja</div>
-                <div class="col-span-2">-</div>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
-                <div class="font-medium">Alamat</div>
-                <div class="col-span-2">Jl. Melati Indah No. 24, Kel. Sukamaju, Kec. Cibinong, Kab. Bogor, Jawa Barat, 16914</div>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
-                <div class="font-medium">Nomor Telepon</div>
-                <div class="col-span-2">081234567894</div>
-            </div>
-        </div>
-
-        <!-- Certificate Section -->
-        <div class="mb-6">
-            <h2 class="text-xl font-bold mb-4">Daftar Sertifikat</h2>
-            <div class="overflow-x-auto">
-                <table class="min-w-full border border-gray-200">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="py-2 px-4 border text-left">No</th>
-                            <th class="py-2 px-4 border text-left">Nomor Sertifikat</th>
-                            <th class="py-2 px-4 border text-left">Nama Sertifikat</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td class="py-2 px-4 border">1</td>
-                            <td class="py-2 px-4 border">123/PH/456</td>
-                            <td class="py-2 px-4 border">Paraprofesional Kedokteran Hewan</td>
-                        </tr>
-                        <tr>
-                            <td class="py-2 px-4 border">2</td>
-                            <td class="py-2 px-4 border">456/PH/456</td>
-                            <td class="py-2 px-4 border">Keperawatan Hewan Profesional</td>
-                        </tr>
-                        <tr>
-                            <td class="py-2 px-4 border">3</td>
-                            <td class="py-2 px-4 border">789/PH/789</td>
-                            <td class="py-2 px-4 border">Sertifikat Organisasi Profesi</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+  <div class="bg-white rounded-lg shadow p-6 max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="flex flex-wrap justify-between items-center mb-6">
+      <h1 class="text-2xl font-bold">Profile Perawat</h1>
+      <div class="space-x-3 mt-3 sm:mt-0">
+        <a href="{% url 'main:update_password' %}?email={{ data.email }}"
+           class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-md transition-colors">
+          Update Password
+        </a>
+        {% if not edit_mode %}
+        <a href="{% url 'main:update_profile' %}"
+           class="px-4 py-2 bg-[#0B1120] hover:bg-gray-900 text-white rounded-md transition-colors">
+          Update Profile
+        </a>
+        {% endif %}
+      </div>
     </div>
+
+    {% if edit_mode %}
+    <!-- Edit Form -->
+    <form method="POST" action="{% url 'main:update_profile' %}">
+      {% csrf_token %}
+      <div class="space-y-6">
+        
+        <!-- Basic Information Section -->
+        <div class="bg-gray-50 p-4 rounded-lg">
+          <h3 class="text-lg font-semibold mb-4">Informasi Dasar</h3>
+          
+          <!-- Nomor Identitas (read-only) -->
+          <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
+            <div class="font-medium">Nomor Identitas</div>
+            <div class="col-span-2">{{ data.no_pegawai }}</div>
+          </div>
+
+          <!-- Nomor Izin Praktik (read-only) -->
+          <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
+            <div class="font-medium">Nomor Izin Praktik</div>
+            <div class="col-span-2">{{ data.no_izin_praktik }}</div>
+          </div>
+
+          <!-- Email (read-only) -->
+          <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
+            <div class="font-medium">Email</div>
+            <div class="col-span-2">{{ data.email }}</div>
+          </div>
+
+          <!-- Tanggal Diterima (read-only) -->
+          <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
+            <div class="font-medium">Tanggal Diterima</div>
+            <div class="col-span-2">{{ data.tanggal_mulai }}</div>
+          </div>
+
+          <!-- Tanggal Akhir Kerja (editable) -->
+          <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
+            <div class="font-medium">Tanggal Akhir Kerja</div>
+            <div class="col-span-2">
+              <input
+                type="date"
+                name="tanggal_akhir_kerja"
+                value="{{ data.tanggal_akhir|date:'Y-m-d'|default:'' }}"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+              {% if errors.tanggal_akhir_kerja %}<p class="text-red-500 text-sm mt-1">{{ errors.tanggal_akhir_kerja }}</p>{% endif %}
+            </div>
+          </div>
+
+          <!-- Alamat (editable) -->
+          <div class="grid grid-cols-1 md:grid-cols-3 items-start py-2">
+            <div class="font-medium">Alamat</div>
+            <div class="col-span-2">
+              <textarea
+                name="alamat"
+                rows="3"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Masukkan alamat lengkap"
+              >{{ data.alamat }}</textarea>
+              {% if errors.alamat %}<p class="text-red-500 text-sm mt-1">{{ errors.alamat }}</p>{% endif %}
+            </div>
+          </div>
+
+          <!-- Nomor Telepon (editable) -->
+          <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
+            <div class="font-medium">Nomor Telepon</div>
+            <div class="col-span-2">
+              <input
+                type="text"
+                name="nomor_telepon"
+                value="{{ data.nomor_telepon }}"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Contoh: 081234567890"
+              >
+              {% if errors.nomor_telepon %}<p class="text-red-500 text-sm mt-1">{{ errors.nomor_telepon }}</p>{% endif %}
+            </div>
+          </div>
+        </div>
+
+        <!-- Certificate Section (editable) -->
+        <div class="bg-gray-50 p-4 rounded-lg">
+          <h3 class="text-lg font-semibold mb-4">Sertifikat Kompetensi</h3>
+          
+          <div id="certificates-container">
+            {% for no_s, nama in data.sertifikats %}
+            <div class="certificate-row grid grid-cols-1 md:grid-cols-12 gap-2 items-center py-2">
+              <div class="md:col-span-1 font-medium">{{ forloop.counter }}.</div>
+              <div class="md:col-span-5">
+                <input
+                  type="text"
+                  name="no_sertifikat_kompetensi"
+                  value="{{ no_s }}"
+                  placeholder="Nomor Sertifikat"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+              </div>
+              <div class="md:col-span-5">
+                <input
+                  type="text"
+                  name="nama_sertifikat"
+                  value="{{ nama }}"
+                  placeholder="Nama Sertifikat"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+              </div>
+              <div class="md:col-span-1">
+                <button type="button" onclick="removeCertificate(this)" 
+                        class="px-2 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-sm">
+                  Hapus
+                </button>
+              </div>
+            </div>
+            {% empty %}
+            <div class="certificate-row grid grid-cols-1 md:grid-cols-12 gap-2 items-center py-2">
+              <div class="md:col-span-1 font-medium">1.</div>
+              <div class="md:col-span-5">
+                <input
+                  type="text"
+                  name="no_sertifikat_kompetensi"
+                  placeholder="Nomor Sertifikat"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+              </div>
+              <div class="md:col-span-5">
+                <input
+                  type="text"
+                  name="nama_sertifikat"
+                  placeholder="Nama Sertifikat"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+              </div>
+              <div class="md:col-span-1">
+                <button type="button" onclick="removeCertificate(this)" 
+                        class="px-2 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-sm">
+                  Hapus
+                </button>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+
+          <div class="mt-4">
+            <button type="button" onclick="addCertificate()" 
+                    class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-md">
+              + Tambah Sertifikat
+            </button>
+          </div>
+          
+          {% if errors.sertifikat %}<p class="text-red-500 text-sm mt-2">{{ errors.sertifikat }}</p>{% endif %}
+        </div>
+
+        <!-- Submit Buttons -->
+        <div class="flex space-x-3 pt-4">
+          <button
+            type="submit"
+            class="px-6 py-2 bg-[#0B1120] hover:bg-gray-900 text-white rounded-md transition-colors"
+          >
+            Simpan Perubahan
+          </button>
+          <a href="{% url 'main:profile_perawat' %}"
+             class="px-6 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-md transition-colors">
+            Batal
+          </a>
+        </div>
+      </div>
+    </form>
+
+    {% else %}
+    <!-- Display Mode -->
+    <div class="space-y-6">
+      
+      <!-- Basic Information Section -->
+      <div class="bg-gray-50 p-4 rounded-lg">
+        <h3 class="text-lg font-semibold mb-4">Informasi Dasar</h3>
+        
+        <div class="space-y-3">
+          <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
+            <div class="font-medium">Nomor Identitas</div>
+            <div class="col-span-2">{{ data.no_pegawai }}</div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
+            <div class="font-medium">Nomor Izin Praktik</div>
+            <div class="col-span-2">{{ data.no_izin_praktik }}</div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
+            <div class="font-medium">Email</div>
+            <div class="col-span-2">{{ data.email }}</div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
+            <div class="font-medium">Tanggal Diterima</div>
+            <div class="col-span-2">{{ data.tanggal_mulai }}</div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
+            <div class="font-medium">Tanggal Akhir Kerja</div>
+            <div class="col-span-2">{{ data.tanggal_akhir|default:'-' }}</div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
+            <div class="font-medium">Alamat</div>
+            <div class="col-span-2">{{ data.alamat }}</div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 items-center py-2">
+            <div class="font-medium">Nomor Telepon</div>
+            <div class="col-span-2">{{ data.nomor_telepon }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Certificate Section -->
+      <div class="bg-gray-50 p-4 rounded-lg">
+        <h3 class="text-lg font-semibold mb-4">Daftar Sertifikat Kompetensi</h3>
+        <div class="overflow-x-auto">
+          <table class="min-w-full border border-gray-200 bg-white">
+            <thead class="bg-gray-100">
+              <tr>
+                <th class="py-3 px-4 border text-left font-medium">No</th>
+                <th class="py-3 px-4 border text-left font-medium">Nomor Sertifikat</th>
+                <th class="py-3 px-4 border text-left font-medium">Nama Sertifikat</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for no_s, nama in data.sertifikats %}
+              <tr class="hover:bg-gray-50">
+                <td class="py-3 px-4 border">{{ forloop.counter }}</td>
+                <td class="py-3 px-4 border">{{ no_s }}</td>
+                <td class="py-3 px-4 border">{{ nama }}</td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="3" class="py-4 px-4 text-center text-gray-500">Belum ada sertifikat kompetensi</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
 </div>
+
+<script>
+function addCertificate() {
+  const container = document.getElementById('certificates-container');
+  const rows = container.querySelectorAll('.certificate-row');
+  const newIndex = rows.length + 1;
+  
+  const newRow = document.createElement('div');
+  newRow.className = 'certificate-row grid grid-cols-1 md:grid-cols-12 gap-2 items-center py-2';
+  newRow.innerHTML = `
+    <div class="md:col-span-1 font-medium">${newIndex}.</div>
+    <div class="md:col-span-5">
+      <input
+        type="text"
+        name="no_sertifikat_kompetensi"
+        placeholder="Nomor Sertifikat"
+        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+      >
+    </div>
+    <div class="md:col-span-5">
+      <input
+        type="text"
+        name="nama_sertifikat"
+        placeholder="Nama Sertifikat"
+        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+      >
+    </div>
+    <div class="md:col-span-1">
+      <button type="button" onclick="removeCertificate(this)" 
+              class="px-2 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-sm">
+        Hapus
+      </button>
+    </div>
+  `;
+  container.appendChild(newRow);
+}
+
+function removeCertificate(button) {
+  const row = button.closest('.certificate-row');
+  const container = document.getElementById('certificates-container');
+  
+  // Don't remove if it's the only row
+  const rows = container.querySelectorAll('.certificate-row');
+  if (rows.length > 1) {
+    row.remove();
+    // Renumber the remaining rows
+    updateCertificateNumbers();
+  } else {
+    // Clear the inputs instead of removing the row
+    const inputs = row.querySelectorAll('input');
+    inputs.forEach(input => input.value = '');
+  }
+}
+
+function updateCertificateNumbers() {
+  const container = document.getElementById('certificates-container');
+  const rows = container.querySelectorAll('.certificate-row');
+  rows.forEach((row, index) => {
+    const numberDiv = row.querySelector('.md\\:col-span-1');
+    numberDiv.textContent = `${index + 1}.`;
+  });
+}
+</script>
+
 {% endblock content %}
