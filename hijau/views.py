@@ -866,13 +866,107 @@ def create_kunjungan(request):
             conn.commit()
             messages.success(request, "Kunjungan berhasil dibuat")
             return redirect('hijau:list_kunjungan')
-            
         except psycopg2.Error as error:
             if conn:
                 conn.rollback()
             print(f"Error in create_kunjungan: {error}")
-            messages.error(request, f"Terjadi kesalahan: {error}")
-            return redirect('hijau:create_kunjungan')
+            
+            # Check for specific trigger error message
+            error_str = str(error)
+            if "Timestamp akhir kunjungan tidak boleh lebih awal dari timestamp awal" in error_str:
+                messages.error(request, "Waktu selesai penanganan tidak boleh lebih awal dari waktu mulai penanganan.")
+            else:
+                messages.error(request, f"Terjadi kesalahan: {error}")
+              # Re-render form with error message and preserve form data
+            # Fetch dropdown data for re-rendering the form
+            client_list = []
+            doctor_list = []
+            nurse_list = []
+            animal_list = []
+            
+            try:
+                if conn:
+                    cur_dropdown = conn.cursor()
+                else:
+                    conn_dropdown = get_db_connection()
+                    cur_dropdown = conn_dropdown.cursor()
+                
+                # Get clients (both individuals and companies)
+                cur_dropdown.execute('''
+                    SELECT k.no_identitas, i.nama_depan || ' ' || i.nama_belakang as nama
+                    FROM KLIEN k
+                    JOIN INDIVIDU i ON k.no_identitas = i.no_identitas_klien
+                    UNION
+                    SELECT k.no_identitas, p.nama_perusahaan as nama
+                    FROM KLIEN k
+                    JOIN PERUSAHAAN p ON k.no_identitas = p.no_identitas_klien
+                    ORDER BY nama
+                ''')
+                
+                for row in cur_dropdown.fetchall():
+                    client_list.append({
+                        'id': row[0],
+                        'name': row[1]
+                    })
+                
+                # Get doctors
+                cur_dropdown.execute('''
+                    SELECT p.no_pegawai, u.email
+                    FROM PEGAWAI p
+                    JOIN "USER" u ON p.email_user = u.email
+                    JOIN DOKTER_HEWAN d ON p.no_pegawai = d.no_dokter_hewan
+                    ORDER BY u.email
+                ''')
+                
+                for row in cur_dropdown.fetchall():
+                    doctor_list.append({
+                        'id': row[0],
+                        'email': row[1]
+                    })
+                
+                # Get nurses
+                cur_dropdown.execute('''
+                    SELECT p.no_pegawai, u.email
+                    FROM PEGAWAI p
+                    JOIN "USER" u ON p.email_user = u.email
+                    JOIN PERAWAT_HEWAN pw ON p.no_pegawai = pw.no_perawat_hewan
+                    ORDER BY u.email
+                ''')
+                
+                for row in cur_dropdown.fetchall():
+                    nurse_list.append({
+                        'id': row[0],
+                        'email': row[1]
+                    })
+                
+                # Get animals
+                cur_dropdown.execute('''
+                    SELECT h.nama, h.no_identitas_klien
+                    FROM HEWAN h
+                    ORDER BY h.nama
+                ''')
+                
+                for row in cur_dropdown.fetchall():
+                    animal_list.append({
+                        'name': row[0],
+                        'client_id': row[1]
+                    })
+                    
+                cur_dropdown.close()
+                if not conn:
+                    conn_dropdown.close()
+                    
+            except Exception as e:
+                print(f"Error fetching dropdown data: {e}")
+            
+            context = {
+                'client_list': client_list,
+                'doctor_list': doctor_list,
+                'nurse_list': nurse_list,
+                'animal_list': animal_list,
+                'form_data': request.POST  # Preserve form data
+            }
+            return render(request, 'create_kunjungan.html', context)
             
         finally:
             if cur:
@@ -1125,8 +1219,7 @@ def update_kunjungan(request):
                     tipe_kunjungan,
                     timestamp_awal,
                     timestamp_akhir,
-                    id_kunjungan
-                ))
+                    id_kunjungan                ))
             
             if cur.rowcount == 0:
                 messages.error(request, f"Kunjungan dengan ID {id_kunjungan} tidak ditemukan")
@@ -1135,13 +1228,146 @@ def update_kunjungan(request):
             conn.commit()
             messages.success(request, "Kunjungan berhasil diperbarui")
             return redirect('hijau:list_kunjungan')
-            
         except psycopg2.Error as error:
             if conn:
                 conn.rollback()
             print(f"Error in update_kunjungan: {error}")
-            messages.error(request, f"Terjadi kesalahan: {error}")
-            return redirect(f'hijau:update_kunjungan?id={id_kunjungan}')
+            
+            # Check for specific trigger error message
+            error_str = str(error)
+            if "Timestamp akhir kunjungan tidak boleh lebih awal dari timestamp awal" in error_str:
+                messages.error(request, "Waktu selesai penanganan tidak boleh lebih awal dari waktu mulai penanganan.")
+            else:
+                messages.error(request, f"Terjadi kesalahan: {error}")
+            
+            # Re-render form with error message and preserve form data
+            # Fetch dropdown data for re-rendering the form
+            visit_data = {}
+            client_list = []
+            doctor_list = []
+            nurse_list = []
+            animal_list = []
+            
+            try:
+                if conn:
+                    cur_dropdown = conn.cursor()
+                else:
+                    conn_dropdown = get_db_connection()
+                    cur_dropdown = conn_dropdown.cursor()
+                
+                # Get visit data for form context
+                cur_dropdown.execute('''
+                    SELECT k.no_identitas_klien, k.nama_hewan, 
+                           k.no_dokter_hewan, k.no_perawat_hewan, 
+                           k.tipe_kunjungan, k.timestamp_awal, k.timestamp_akhir,
+                           (SELECT email FROM "USER" u JOIN PEGAWAI p ON u.email = p.email_user 
+                            WHERE p.no_pegawai = k.no_dokter_hewan) as dokter_email,
+                           (SELECT email FROM "USER" u JOIN PEGAWAI p ON u.email = p.email_user 
+                            WHERE p.no_pegawai = k.no_perawat_hewan) as perawat_email
+                    FROM KUNJUNGAN k
+                    WHERE k.id_kunjungan = %s
+                ''', (id_kunjungan,))
+                
+                row = cur_dropdown.fetchone()
+                if row:
+                    # Format timestamps for the form
+                    timestamp_awal_str = row[5].strftime('%Y-%m-%dT%H:%M:%S') if row[5] else ''
+                    timestamp_akhir_str = row[6].strftime('%Y-%m-%dT%H:%M:%S') if row[6] else ''
+                    
+                    visit_data = {
+                        'id_kunjungan': id_kunjungan,
+                        'client_id': row[0],
+                        'nama_hewan': row[1],
+                        'doctor_id': row[2],
+                        'nurse_id': row[3],
+                        'tipe_kunjungan': row[4],
+                        'timestamp_awal': timestamp_awal_str,
+                        'timestamp_akhir': timestamp_akhir_str,
+                        'dokter_email': row[7],
+                        'perawat_email': row[8]
+                    }
+                
+                # Get clients (both individuals and companies)
+                cur_dropdown.execute('''
+                    SELECT k.no_identitas, i.nama_depan || ' ' || i.nama_belakang as nama
+                    FROM KLIEN k
+                    JOIN INDIVIDU i ON k.no_identitas = i.no_identitas_klien
+                    UNION
+                    SELECT k.no_identitas, p.nama_perusahaan as nama
+                    FROM KLIEN k
+                    JOIN PERUSAHAAN p ON k.no_identitas = p.no_identitas_klien
+                    ORDER BY nama
+                ''')
+                
+                for row in cur_dropdown.fetchall():
+                    client_list.append({
+                        'id': row[0],
+                        'name': row[1],
+                        'selected': str(row[0]) == str(visit_data.get('client_id', ''))
+                    })
+                
+                # Get doctors
+                cur_dropdown.execute('''
+                    SELECT p.no_pegawai, u.email
+                    FROM PEGAWAI p
+                    JOIN "USER" u ON p.email_user = u.email
+                    JOIN DOKTER_HEWAN d ON p.no_pegawai = d.no_dokter_hewan
+                    ORDER BY u.email
+                ''')
+                
+                for row in cur_dropdown.fetchall():
+                    doctor_list.append({
+                        'id': row[0],
+                        'email': row[1],
+                        'selected': str(row[0]) == str(visit_data.get('doctor_id', ''))
+                    })
+                
+                # Get nurses
+                cur_dropdown.execute('''
+                    SELECT p.no_pegawai, u.email
+                    FROM PEGAWAI p
+                    JOIN "USER" u ON p.email_user = u.email
+                    JOIN PERAWAT_HEWAN pw ON p.no_pegawai = pw.no_perawat_hewan
+                    ORDER BY u.email
+                ''')
+                
+                for row in cur_dropdown.fetchall():
+                    nurse_list.append({
+                        'id': row[0],
+                        'email': row[1],
+                        'selected': str(row[0]) == str(visit_data.get('nurse_id', ''))
+                    })
+                
+                # Get animals
+                cur_dropdown.execute('''
+                    SELECT h.nama, h.no_identitas_klien
+                    FROM HEWAN h
+                    ORDER BY h.nama
+                ''')
+                
+                for row in cur_dropdown.fetchall():
+                    animal_list.append({
+                        'name': row[0],
+                        'client_id': row[1],
+                        'selected': row[0] == visit_data.get('nama_hewan', '')
+                    })
+                    
+                cur_dropdown.close()
+                if not conn:
+                    conn_dropdown.close()
+                    
+            except Exception as e:
+                print(f"Error fetching dropdown data: {e}")
+            
+            context = {
+                'visit': visit_data,
+                'client_list': client_list,
+                'doctor_list': doctor_list,
+                'nurse_list': nurse_list,
+                'animal_list': animal_list,
+                'form_data': request.POST  # Preserve form data
+            }
+            return render(request, 'update_kunjungan.html', context)
             
         finally:
             if cur:

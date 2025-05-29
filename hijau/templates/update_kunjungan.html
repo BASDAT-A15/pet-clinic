@@ -8,8 +8,34 @@
 {% block content %}
 <style>
         * {
-            margin: 0;
-            padding: 0;
+            margin: 0;                    <                    <                    <select class="form-select" name="doctor" id="dokterHewan" required>
+                        <option value="">Pilih Dokter Hewan</option>
+                        {% for doctor in doctor_list %}
+                            <option value="{{ doctor.email }}" 
+                                {% if form_data.doctor == doctor.email %}selected
+                                {% elif not form_data and doctor.selected %}selected{% endif %}>
+                                dr. {{ doctor.email }}
+                            </option>
+                        {% endfor %}
+                    </select>lass="form-select" name="animalName" id="animalName" required>
+                        <option value="">Pilih Nama Hewan</option>
+                        {% for animal in animal_list %}
+                            <option value="{{ animal.name }}" data-client="{{ animal.client_id }}" 
+                                {% if form_data.animalName == animal.name %}selected
+                                {% elif not form_data and animal.selected %}selected{% endif %}>
+                                {{ animal.name }}
+                            </option>
+                        {% endfor %}
+                    </select>lass="form-select" name="clientId" id="clientId" required>
+                        <option value="">Pilih ID Klien</option>
+                        {% for client in client_list %}
+                            <option value="{{ client.id }}" 
+                                {% if form_data.clientId == client.id|stringformat:"s" %}selected
+                                {% elif not form_data and client.selected %}selected{% endif %}>
+                                {{ client.id }} - {{ client.name }}
+                            </option>
+                        {% endfor %}
+                    </select>     padding: 0;
             box-sizing: border-box;
         }
 
@@ -234,11 +260,12 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Perawat Hewan</label>
-                    <select class="form-select" name="nurse" id="perawatHewan" required>
+                    <label class="form-label">Perawat Hewan</label>                    <select class="form-select" name="nurse" id="perawatHewan" required>
                         <option value="">Pilih Perawat Hewan</option>
                         {% for nurse in nurse_list %}
-                            <option value="{{ nurse.email }}" {% if nurse.selected %}selected{% endif %}>
+                            <option value="{{ nurse.email }}" 
+                                {% if form_data.nurse == nurse.email %}selected
+                                {% elif not form_data and nurse.selected %}selected{% endif %}>
                                 {{ nurse.email }}
                             </option>
                         {% endfor %}
@@ -246,23 +273,28 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Metode Kunjungan</label>
-                    <select class="form-select" name="visitMethod" id="metodeKunjungan" required>
+                    <label class="form-label">Metode Kunjungan</label>                    <select class="form-select" name="visitMethod" id="metodeKunjungan" required>
                         <option value="">Pilih metode kunjungan</option>
-                        <option value="Janji Temu" {% if visit.tipe_kunjungan == "Janji Temu" %}selected{% endif %}>Janji Temu</option>
-                        <option value="Walk-In" {% if visit.tipe_kunjungan == "Walk-In" %}selected{% endif %}>Walk-In</option>
-                        <option value="Darurat" {% if visit.tipe_kunjungan == "Darurat" %}selected{% endif %}>Darurat</option>
+                        <option value="Janji Temu" 
+                            {% if form_data.visitMethod == "Janji Temu" %}selected
+                            {% elif not form_data and visit.tipe_kunjungan == "Janji Temu" %}selected{% endif %}>Janji Temu</option>
+                        <option value="Walk-In" 
+                            {% if form_data.visitMethod == "Walk-In" %}selected
+                            {% elif not form_data and visit.tipe_kunjungan == "Walk-In" %}selected{% endif %}>Walk-In</option>
+                        <option value="Darurat" 
+                            {% if form_data.visitMethod == "Darurat" %}selected
+                            {% elif not form_data and visit.tipe_kunjungan == "Darurat" %}selected{% endif %}>Darurat</option>
                     </select>
-                </div>
-
-                <div class="form-group">
+                </div>                <div class="form-group">
                     <label class="form-label">Waktu Mulai Penanganan</label>
-                    <input type="datetime-local" class="datetime-input" name="startTime" id="waktuMulai" value="{{ visit.timestamp_awal }}" required>
+                    <input type="datetime-local" class="datetime-input" name="startTime" id="waktuMulai" 
+                           value="{% if form_data.startTime %}{{ form_data.startTime }}{% else %}{{ visit.timestamp_awal }}{% endif %}" required>
                 </div>
 
                 <div class="form-group">
                     <label class="form-label">Waktu Selesai Penanganan (Opsional)</label>
-                    <input type="datetime-local" class="datetime-input" name="endTime" id="waktuSelesai" value="{{ visit.timestamp_akhir }}">
+                    <input type="datetime-local" class="datetime-input" name="endTime" id="waktuSelesai" 
+                           value="{% if form_data.endTime %}{{ form_data.endTime }}{% else %}{{ visit.timestamp_akhir }}{% endif %}">
                 </div>
             </div>
 
