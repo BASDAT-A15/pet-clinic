@@ -13,14 +13,12 @@ def list_vaksinasi(request):
     if not no_dokter:
         return HttpResponseForbidden("Session no_pegawai belum diset.")
 
-    # 3) Buka koneksi & set schema
     conn = get_db_connection()
     cur  = conn.cursor()
     vaksinasi_list = []
     try:
         cur.execute("SET search_path TO petclinic;")
 
-        # 4) Query vaksinasi
         cur.execute("""
           SELECT k.id_kunjungan,
                  to_char(k.timestamp_awal, 'Day, DD Month YYYY') AS tanggal,
@@ -33,7 +31,6 @@ def list_vaksinasi(request):
         """, [no_dokter])
         rows = cur.fetchall()
 
-        # 5) Bangun list untuk template
         vaksinasi_list = [{
             'id_kunjungan': r[0],
             'tanggal':      r[1],
@@ -45,7 +42,6 @@ def list_vaksinasi(request):
         cur.close()
         conn.close()
 
-    # 6) Render
     return render(request, 'klinik/list_vaksinasi.html', {
         'vaksinasi_list': vaksinasi_list
     })
