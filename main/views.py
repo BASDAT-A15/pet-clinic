@@ -224,13 +224,10 @@ def register(request):
         
         if conn:
             conn.rollback()
+            print("DEBUG: Transaction rolled back")
             
         # Tampilkan error yang lebih spesifik untuk debugging
-        
-        full_msg  = str(e)
-        clean_msg = full_msg.split('CONTEXT')[0].strip()
-        context['non_field'] = clean_msg
-
+        context['non_field'] = f'Terjadi kesalahan saat menyimpan data: {str(e)}'
         return render(request, tpl, context)
 
     finally:
@@ -330,7 +327,7 @@ def login(request):
 
     except psycopg2.Error as e:
         print("Login DB error:", e)
-        messages.error(request, f'Terjadi kesalahan server: {str(e)}')
+        messages.error(request, 'Terjadi kesalahan server.')
         return redirect('main:login')
 
     finally:
@@ -657,15 +654,6 @@ def update_profile(request):
     if not email or not role:
         return redirect('main:login')
 
-    # Template mapping - moved outside to be available for both GET and POST
-    tpl_map = {
-        'individu':     'profile_klien.html',
-        'perusahaan':   'profile_klien.html',
-        'front_desk':   'profile_front_desk.html',
-        'dokter_hewan': 'profile_dokter.html',
-        'perawat_hewan':'profile_perawat.html',
-    }
-
     conn = get_db_connection()
     cur  = conn.cursor()
     try:
@@ -676,31 +664,23 @@ def update_profile(request):
             data['email'] = email
             # common fields from USER
             cur.execute('SELECT alamat,nomor_telepon FROM "USER" WHERE email=%s', (email,))
-            user_data = cur.fetchone()
-            if user_data:
-                data['alamat'], data['nomor_telepon'] = user_data
+            data['alamat'], data['nomor_telepon'] = cur.fetchone()
 
             if role in ('individu','perusahaan'):
                 cur.execute('SELECT no_identitas FROM KLIEN WHERE email=%s', (email,))
-                klien_data = cur.fetchone()
-                if klien_data:
-                    data['no_identitas'] = klien_data[0]
-                    if role=='individu':
-                        cur.execute(
-                          'SELECT nama_depan,nama_tengah,nama_belakang FROM INDIVIDU WHERE no_identitas_klien=%s',
-                          (data['no_identitas'],)
-                        )
-                        individu_data = cur.fetchone()
-                        if individu_data:
-                            data['nama_depan'], data['nama_tengah'], data['nama_belakang'] = individu_data
-                    else:
-                        cur.execute(
-                          'SELECT nama_perusahaan FROM PERUSAHAAN WHERE no_identitas_klien=%s',
-                          (data['no_identitas'],)
-                        )
-                        perusahaan_data = cur.fetchone()
-                        if perusahaan_data:
-                            data['nama_perusahaan'] = perusahaan_data[0]
+                data['no_identitas'] = cur.fetchone()[0]
+                if role=='individu':
+                    cur.execute(
+                      'SELECT nama_depan,nama_tengah,nama_belakang FROM INDIVIDU WHERE no_identitas_klien=%s',
+                      (data['no_identitas'],)
+                    )
+                    data['nama_depan'], data['nama_tengah'], data['nama_belakang'] = cur.fetchone()
+                else:
+                    cur.execute(
+                      'SELECT nama_perusahaan FROM PERUSAHAAN WHERE no_identitas_klien=%s',
+                      (data['no_identitas'],)
+                    )
+                    data['nama_perusahaan'] = cur.fetchone()[0]
 
             else:  # pegawai
                 cur.execute(
@@ -708,49 +688,40 @@ def update_profile(request):
                   'FROM PEGAWAI WHERE email_user=%s ORDER BY tanggal_mulai_kerja DESC LIMIT 1',
                   (email,)
                 )
-                pegawai_data = cur.fetchone()
-                if pegawai_data:
-                    no_peg, t_mulai, t_akhir = pegawai_data
-                    data['no_pegawai'] = no_peg
-                    data['tanggal_mulai'] = t_mulai
-                    data['tanggal_akhir'] = t_akhir
+                no_peg, t_mulai, t_akhir = cur.fetchone()
+                data['no_pegawai'] = no_peg
+                data['tanggal_mulai']   = t_mulai
+                data['tanggal_akhir'] = t_akhir
 
-                    # Store no_pegawai in session if not already there
-                    if 'no_pegawai' not in request.session:
-                        request.session['no_pegawai'] = str(no_peg)
-
-                    if role in ('dokter_hewan', 'perawat_hewan'):
-                        # Get no_izin_praktik
+                if role=='dokter_hewan' or role=='perawat_hewan':
+                    # sertifikat list
+                    cur.execute(
+                      'SELECT no_sertifikat_kompetensi,nama_sertifikat '
+                      'FROM SERTIFIKAT_KOMPETENSI WHERE no_tenaga_medis=%s',
+                      (no_peg,)
+                    )
+                    data['sertifikats'] = cur.fetchall()
+                    if role=='dokter_hewan':
+                        # jadwal
                         cur.execute(
-                          'SELECT no_izin_praktik FROM TENAGA_MEDIS WHERE no_tenaga_medis=%s',
+                          'SELECT hari,jam FROM JADWAL_PRAKTIK WHERE no_dokter_hewan=%s',
                           (no_peg,)
                         )
-                        
-                        izin_data = cur.fetchone()
-                        if izin_data:
-                            data['no_izin_praktik'] = izin_data[0]
-
-                        # sertifikat list
-                        cur.execute(
-                          'SELECT no_sertifikat_kompetensi,nama_sertifikat '
-                          'FROM SERTIFIKAT_KOMPETENSI WHERE no_tenaga_medis=%s',
-                          (no_peg,)
-                        )
-                        data['sertifikats'] = cur.fetchall()
-                        
-                        if role=='dokter_hewan':
-                            # jadwal
-                            cur.execute(
-                              'SELECT hari,jam FROM JADWAL_PRAKTIK WHERE no_dokter_hewan=%s',
-                              (no_peg,)
-                            )
-                            data['jadwals'] = cur.fetchall()
+                        data['jadwals'] = cur.fetchall()
 
             context = {
                 'data': data,
                 'edit_mode': True,
                 'errors': {},
                 'non_field': None,
+            }
+            # render ke template yang sama dengan profile
+            tpl_map = {
+              'individu':     'profile_klien.html',
+              'perusahaan':   'profile_klien.html',
+              'front_desk':   'profile_front_desk.html',
+              'dokter_hewan': 'profile_dokter.html',
+              'perawat_hewan':'profile_perawat.html',
             }
             return render(request, tpl_map[role], context)
 
@@ -761,187 +732,85 @@ def update_profile(request):
         # validasi universal
         alamat = post.get('alamat','').strip()
         telepon = post.get('nomor_telepon','').strip()
-        if not alamat: 
-            errors['alamat'] = 'Alamat wajib diisi.'
-        if not telepon: 
-            errors['nomor_telepon'] = 'Nomor telepon wajib diisi.'
+        if not alamat: errors['alamat'] = 'Alamat wajib.'
+        if not telepon: errors['nomor_telepon'] = 'Telepon wajib.'
 
         # role‐specific validation
         if role=='individu':
-            nama_depan = post.get('nama_depan','').strip()
-            nama_belakang = post.get('nama_belakang','').strip()
-            if not nama_depan: 
-                errors['nama_depan'] = 'Nama depan wajib diisi.'
-            if not nama_belakang: 
-                errors['nama_belakang'] = 'Nama belakang wajib diisi.'
+            if not post.get('nama_depan','').strip(): errors['nama_depan']='Nama depan wajib.'
+            if not post.get('nama_belakang','').strip(): errors['nama_belakang']='Nama belakang wajib.'
         elif role=='perusahaan':
-            nama_perusahaan = post.get('nama_perusahaan','').strip()
-            if not nama_perusahaan: 
-                errors['nama_perusahaan'] = 'Nama perusahaan wajib diisi.'
+            if not post.get('nama_perusahaan','').strip(): errors['nama_perusahaan']='Nama perusahaan wajib.'
+        elif role=='front_desk':
+            # tanggal akhir kerja optional
+            pass
+        elif role in ('dokter_hewan','perawat_hewan'):
+            # tanggal akhir kerja optional
+            pass
 
-        # Validate jadwal praktik format for dokter_hewan
-        if role == 'dokter_hewan':
-            jadwal_list = list(zip(post.getlist('hari'), post.getlist('jam')))
-            for i, (hari, jam) in enumerate(jadwal_list):
-                if hari.strip() and jam.strip():
-                    # Simple validation for time format (e.g., "13.00-15.00")
-                    if '-' not in jam or len(jam.split('-')) != 2:
-                        errors[f'jam_praktik_{i}'] = f'Format jam praktik tidak valid untuk {hari}. Gunakan format: HH.MM-HH.MM'
-
-        # If there are errors, return to form with error messages
         if errors:
-            # Get current data to repopulate form
-            data = dict(post.items())
-            data['email'] = email
-            
-            # For dokter_hewan and perawat_hewan, rebuild sertifikats and jadwals from POST data
-            if role in ('dokter_hewan', 'perawat_hewan'):
-                # Rebuild sertifikats from form data
-                no_sertifikat_list = post.getlist('no_sertifikat_kompetensi')
-                nama_sertifikat_list = post.getlist('nama_sertifikat')
-                data['sertifikats'] = list(zip(no_sertifikat_list, nama_sertifikat_list))
-                
-                if role == 'dokter_hewan':
-                    # Rebuild jadwals from form data
-                    hari_list = post.getlist('hari')
-                    jam_list = post.getlist('jam')
-                    data['jadwals'] = list(zip(hari_list, jam_list))
-
-            context = {
-                'data': data, 
-                'errors': errors, 
-                'edit_mode': True,
-                'non_field': None
-            }
+            context = {'data': post, 'errors': errors, 'edit_mode': True}
             return render(request, tpl_map[role], context)
 
         # lakukan update ke database
-        try:
-            # Update USER table
-            if hasattr(conn, 'notices'):
-                conn.notices.clear()
-                
+        # USER
+        cur.execute(
+            'UPDATE "USER" SET alamat=%s, nomor_telepon=%s WHERE email=%s',
+            (alamat, telepon, email)
+        )
+
+        if role=='individu':
             cur.execute(
-                'UPDATE "USER" SET alamat=%s, nomor_telepon=%s WHERE email=%s',
-                (alamat, telepon, email)
+              'UPDATE INDIVIDU SET nama_depan=%s, nama_tengah=%s, nama_belakang=%s '
+              'WHERE no_identitas_klien=(SELECT no_identitas FROM KLIEN WHERE email=%s)',
+              (
+                post['nama_depan'].strip(),
+                post.get('nama_tengah','').strip() or None,
+                post['nama_belakang'].strip(),
+                email
+              )
             )
-
-            if role=='individu':
-                cur.execute(
-                  'UPDATE INDIVIDU SET nama_depan=%s, nama_tengah=%s, nama_belakang=%s '
-                  'WHERE no_identitas_klien=(SELECT no_identitas FROM KLIEN WHERE email=%s)',
-                  (
-                    post['nama_depan'].strip(),
-                    post.get('nama_tengah','').strip() or None,
-                    post['nama_belakang'].strip(),
-                    email
-                  )
-                )
-            elif role=='perusahaan':
-                cur.execute(
-                  'UPDATE PERUSAHAAN SET nama_perusahaan=%s '
-                  'WHERE no_identitas_klien=(SELECT no_identitas FROM KLIEN WHERE email=%s)',
-                  (post['nama_perusahaan'].strip(), email)
-                )
-            else:  # pegawai (front_desk, dokter_hewan, perawat_hewan)
-                no_pegawai = request.session.get('no_pegawai')
-                if not no_pegawai:
-                    # Get no_pegawai if not in session
-                    cur.execute(
-                      'SELECT no_pegawai FROM PEGAWAI WHERE email_user=%s ORDER BY tanggal_mulai_kerja DESC LIMIT 1',
-                      (email,)
-                    )
-                    result = cur.fetchone()
-                    if result:
-                        no_pegawai = result[0]
-                        request.session['no_pegawai'] = str(no_pegawai)
-
-                if no_pegawai:
-                    # Update tanggal akhir kerja
-                    tanggal_akhir = post.get('tanggal_akhir_kerja') or None
-                    cur.execute(
-                      'UPDATE PEGAWAI SET tanggal_akhir_kerja=%s WHERE no_pegawai=%s',
-                      (tanggal_akhir if tanggal_akhir else None, no_pegawai)
-                    )
-                    
-                    # Tangkap NOTICE dari trigger & masukkan ke messages
-                    # setelah: buang prefix "NOTICE:"
-                    for notice in conn.notices:
-                        text = notice.strip()
-                        # Hapus kata "NOTICE:" di depan, kalau ada
-                        if text.upper().startswith('NOTICE:'):
-                            text = text[len('NOTICE:'):].strip()
-                        messages.info(request, text)
-                    conn.notices.clear()
-
-                    if role in ('dokter_hewan','perawat_hewan'):
-                        # Handle sertifikat kompetensi - replace all
-                        cur.execute('DELETE FROM SERTIFIKAT_KOMPETENSI WHERE no_tenaga_medis=%s', (no_pegawai,))
-                        
-                        no_sertifikat_list = post.getlist('no_sertifikat_kompetensi')
-                        nama_sertifikat_list = post.getlist('nama_sertifikat')
-                        
-                        for no_s, nm_s in zip(no_sertifikat_list, nama_sertifikat_list):
-                            if no_s.strip() and nm_s.strip():
-                                cur.execute(
-                                  'INSERT INTO SERTIFIKAT_KOMPETENSI(no_sertifikat_kompetensi,no_tenaga_medis,nama_sertifikat) VALUES(%s,%s,%s)',
-                                  (no_s.strip(), no_pegawai, nm_s.strip())
-                                )
-
-                         # jadwal hanya untuk dokter dan hanya jika masih aktif
-            if role == 'dokter_hewan' and not tanggal_akhir:
-                cur.execute(
-                    'DELETE FROM jadwal_praktik WHERE no_dokter_hewan=%s',
-                    (no_pegawai,)
-                )
-                for hari, jam in zip(
-                        post.getlist('hari'),
-                        post.getlist('jam')
-                    ):
-                    if hari.strip() and jam.strip():
+        elif role=='perusahaan':
+            cur.execute(
+              'UPDATE PERUSAHAAN SET nama_perusahaan=%s '
+              'WHERE no_identitas_klien=(SELECT no_identitas FROM KLIEN WHERE email=%s)',
+              (post['nama_perusahaan'].strip(), email)
+            )
+        else:  # pegawai
+            # tanggal akhir kerja
+            cur.execute(
+              'UPDATE PEGAWAI SET tanggal_akhir_kerja=%s WHERE no_pegawai=%s',
+              (post.get('tanggal_akhir_kerja') or None, request.session.get('no_pegawai'))
+            )
+            if role in ('dokter_hewan','perawat_hewan'):
+                # sertifikat replace: hapus semua lalu insert ulang
+                no_peg = request.session['no_pegawai']
+                cur.execute('DELETE FROM SERTIFIKAT_KOMPETENSI WHERE no_tenaga_medis=%s',(no_peg,))
+                for no_s,nm_s in zip(post.getlist('no_sertifikat_kompetensi'),
+                                     post.getlist('nama_sertifikat')):
+                    if no_s.strip() and nm_s.strip():
                         cur.execute(
-                            'INSERT INTO jadwal_praktik(no_dokter_hewan, hari, jam)'
-                            ' VALUES(%s,%s,%s)',
-                            (no_pegawai, hari.strip(), jam.strip())
+                          'INSERT INTO SERTIFIKAT_KOMPETENSI(no_sertifikat_kompetensi,no_tenaga_medis,nama_sertifikat) VALUES(%s,%s,%s)',
+                          (no_s.strip(), no_peg, nm_s.strip())
                         )
+                if role=='dokter_hewan':
+                    # jadwal praktik
+                    cur.execute('DELETE FROM JADWAL_PRAKTIK WHERE no_dokter_hewan=%s',(no_peg,))
+                    for h,j in zip(post.getlist('hari'),post.getlist('jam')):
+                        if h.strip() and j.strip():
+                            cur.execute(
+                              'INSERT INTO JADWAL_PRAKTIK(no_dokter_hewan,hari,jam) VALUES(%s,%s,%s)',
+                              (no_peg,h.strip(),j.strip())
+                            )
 
-            conn.commit()
-            # IMPORTANT: Process PostgreSQL notices AFTER commit
-            if hasattr(conn, 'notices') and conn.notices:
-                for notice in conn.notices:
-                    notice_text = notice.strip()
-                    if 'INFO:' in notice_text:
-                        # Extract the message after 'INFO:'
-                        info_message = notice_text.split('INFO:', 1)[1].strip()
-                        messages.info(request, info_message)
-                    else:
-                        messages.info(request, notice_text)
-                # Clear notices after processing them
-                conn.notices.clear()
-            messages.success(request, 'Profil berhasil diperbarui!')
-            
-            # Redirect to appropriate profile page
-            profile_url_map = {
-                'individu':      'main:profile_klien',
-                'perusahaan':    'main:profile_klien',
-                'front_desk':    'main:profile_frontdesk',
-                'dokter_hewan':  'main:profile_dokter',
-                'perawat_hewan': 'main:profile_perawat',
-            }
-            return redirect(profile_url_map.get(role, 'main:login'))
+        conn.commit()
+        messages.success(request, 'Profil berhasil diperbarui!')
+        return redirect('main:profile_'+role)
 
-        except Exception as e:
-            conn.rollback()
-            messages.error(request, f'Terjadi kesalahan saat memperbarui profil: {str(e)}')
-            return redirect('main:update_profile')
-
-    except Exception as e:
-        messages.error(request, f'Terjadi kesalahan: {str(e)}')
-        return redirect('main:profile')
     finally:
         cur.close()
         conn.close()
-        
+
 @require_http_methods(['POST'])
 def logout_view(request):
     request.session.flush()
@@ -977,5 +846,3 @@ def debug_session(request):
     """
     
     return HttpResponse(html)
-
-########
