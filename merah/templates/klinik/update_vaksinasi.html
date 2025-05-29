@@ -91,12 +91,12 @@
         {% csrf_token %}
         <div class="mb-3">
             <label class="form-label">Kunjungan</label>
-            <input type="text" class="form-control" value="{{ kunjungan.id_kunjungan }}" disabled>
+            <input type="text" class="form-control" value="{{ kunjungan }}" disabled>
         </div>
 
         <div class="mb-3">
             <label class="form-label">Vaksin</label>
-            <select name="kode_vaksin" class="form-select" required>
+            <select name="kode_vaksin" id="kode_vaksin" class="form-select" required>
                 <option value="" disabled selected hidden>Vaksin</option> 
                 {% for v in vaksin_options %}
                 <option value="{{ v.kode_vaksin }}">

@@ -63,7 +63,8 @@
                     <td class="py-3 px-4 border">{{ client.nama }}</td>
                     <td class="py-3 px-4 border">{{ client.jenis }}</td>
                     <td class="py-3 px-4 border">
-                        <a href="{% url 'merah:detail_klien' client.id %}" 
+                        <a href="{% url 'merah:detail_klien' client.no_identitas %}"
+
                            class="bg-[#0B1120] hover:bg-gray-900 text-white px-3 py-1 rounded text-sm transition">
                             Detail
                         </a>
