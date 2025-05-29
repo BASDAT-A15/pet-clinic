@@ -1,0 +1,125 @@
+{% load static %}
+<nav class="fixed top-0 left-0 right-0 bg-[#0B1120] shadow-md z-50">
+  <div class="container mx-auto px-4">
+    <div class="flex justify-between items-center h-16">
+      <!-- Logo -->
+      <div class="flex-shrink-0">
+        <a href="/" class="font-bold text-xl text-white">Pet Clinic</a>
+      </div>
+
+      <!-- Desktop Links -->
+      <div class="hidden md:flex flex-1 items-center justify-between ml-8">
+        <div class="flex items-center space-x-6">
+          {% if not request.session.role %}
+            {# guest #}
+            <a href="{% url 'main:login' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Login</a>
+            <a href="{% url 'main:register' %}" class="bg-white text-[#0B1120] px-4 py-2 rounded text-sm">Register</a>
+
+          {% elif request.session.role == 'individu' or request.session.role == 'perusahaan' %}
+            {# klien #}
+            <a href="{% url 'main:profile_klien' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Dashboard</a>
+            <a href="{% url 'kuning:list_hewan' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Kelola Hewan Peliharaan</a>
+            <a href="{% url 'hijau:list_kunjungan' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Daftar Kunjungan</a>
+            <a href="{% url 'merah:list_vaksin_hewan' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Daftar Vaksinasi</a>
+            <a href="{% url 'hijau:list_perawatan' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Perawatan Hewan</a>
+            <a href="{% url 'merah:list_klien' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Data Klien</a>
+
+          {% elif request.session.role == 'front_desk' %}
+            {# front-desk #}
+            <a href="{% url 'main:profile_frontdesk' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Dashboard</a>
+            <a href="{% url 'kuning:list_jenis_hewan' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Kelola Jenis Hewan</a>
+            <a href="{% url 'hijau:list_kunjungan' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Kelola Kunjungan</a>
+            <a href="{% url 'merah:list_klien' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Daftar Klien</a>
+            <a href="{% url 'hijau:list_perawatan' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Perawatan Hewan</a>
+
+          {% elif request.session.role == 'dokter_hewan' %}
+            {# dokter #}
+            <a href="{% url 'main:profile_dokter' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Dashboard</a>
+            <a href="{% url 'kuning:list_jenis_hewan' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Daftar Jenis Hewan</a>
+            <a href="{% url 'hijau:list_kunjungan' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Daftar Kunjungan</a>
+            <a href="{% url 'merah:list_vaksinasi' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Manajemen Vaksinasi Hewan</a>
+            <a href="{% url 'hijau:list_perawatan' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Perawatan Hewan</a>
+
+          {% elif request.session.role == 'perawat_hewan' %}
+            {# perawat #}
+            <a href="{% url 'main:profile_perawat' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Dashboard</a>
+            <a href="{% url 'merah:list_vaksin' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Kelola Vaksin</a>
+            <a href="{% url 'hijau:list_perawatan' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Perawatan Hewan</a>
+
+          {% endif %}
+        </div>
+
+        {% if request.session.role %}
+          <form method="post" action="{% url 'main:logout' %}" class="inline">
+            {% csrf_token %}
+            <button type="submit" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Logout</button>
+          </form>
+        {% endif %}
+      </div>
+
+      <!-- Mobile menu button -->
+      <div class="md:hidden">
+        <button id="mobile-menu-button" class="text-gray-300 hover:text-white focus:outline-none">
+          <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M4 6h16M4 12h16m-7 6h7"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile menu (sama logic role) -->
+    <div id="mobile-menu" class="hidden md:hidden pb-4 bg-[#0B1120]">
+      <div class="flex flex-col space-y-3 pt-2">
+        {% if not request.session.role %}
+          <a href="{% url 'main:login' %}" class="text-white px-3 py-2 text-base text-center">Login</a>
+          <a href="{% url 'main:register' %}" class="bg-white text-[#0B1120] px-3 py-2 text-base text-center">Register</a>
+        {% elif request.session.role == 'individu' or request.session.role == 'perusahaan' %}
+            {# klien #}
+            <a href="{% url 'main:profile_klien' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Dashboard</a>
+            <a href="{% url 'kuning:list_hewan' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Kelola Hewan Peliharaan</a>
+            <a href="{% url 'hijau:list_kunjungan' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Daftar Kunjungan</a>
+            <a href="{% url 'merah:list_vaksin_hewan' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Daftar Vaksinasi</a>
+            <a href="{% url 'hijau:list_perawatan' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Perawatan Hewan</a>
+            <a href="{% url 'merah:list_klien' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Data Klien</a>
+
+          {% elif request.session.role == 'front_desk' %}
+            {# front-desk #}
+            <a href="{% url 'main:profile_frontdesk' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Dashboard</a>
+            <a href="{% url 'kuning:list_jenis_hewan' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Kelola Jenis Hewan</a>
+            <a href="{% url 'hijau:list_kunjungan' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Kelola Kunjungan</a>
+            <a href="{% url 'merah:list_klien' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Daftar Klien</a>
+            <a href="{% url 'hijau:list_perawatan' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Perawatan Hewan</a>
+
+          {% elif request.session.role == 'dokter_hewan' %}
+            {# dokter #}
+            <a href="{% url 'main:profile_dokter' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Dashboard</a>
+            <a href="{% url 'kuning:list_jenis_hewan' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Daftar Jenis Hewan</a>
+            <a href="{% url 'hijau:list_kunjungan' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Daftar Kunjungan</a>
+            <a href="{% url 'merah:list_vaksinasi' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Manajemen Vaksinasi Hewan</a>
+            <a href="{% url 'hijau:list_perawatan' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Perawatan Hewan</a>
+
+          {% elif request.session.role == 'perawat_hewan' %}
+            {# perawat #}
+            <a href="{% url 'main:profile_perawat' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Dashboard</a>
+            <a href="{% url 'merah:list_vaksin' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Kelola Vaksin</a>
+            <a href="{% url 'hijau:list_perawatan' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Perawatan Hewan</a>
+
+          {% endif %}
+
+        {% if request.session.role %}
+          <form method="post" action="{% url 'main:logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="text-white w-full px-3 py-2 text-base">Logout</button>
+          </form>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</nav>
+
+<script>
+  document.getElementById('mobile-menu-button').addEventListener('click', () => {
+    document.getElementById('mobile-menu').classList.toggle('hidden')
+  })
+</script>

@@ -7,6 +7,18 @@
 {% block content %}
 <div class="create-vaccination-container mx-auto p-8 bg-white rounded-lg shadow-md max-w-lg">
   <h2 class="text-3xl font-bold text-center mb-6">Create New Vaccination</h2>
+
+  {# Messages #}
+  {% if messages %}
+    <div class="mb-4">
+      {% for msg in messages %}
+        <div class="p-3 mb-2 rounded {% if msg.tags == 'error' %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %}">
+          {{ msg }}
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
   <form method="post">
     {% csrf_token %}
     

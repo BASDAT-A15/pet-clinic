@@ -66,37 +66,26 @@ def add_vaksinasi(request):
         conn = get_db_connection()
         cur  = conn.cursor()
         try:
-            # cek stok
-            cur.execute("SELECT stok FROM vaksin WHERE kode = %s", [vaksin])
-            stok = cur.fetchone()
-            if not stok or stok[0] <= 0:
-                messages.error(request, "Stok vaksin sudah habis.")
-                return redirect('merah:add_vaksinasi')
-
-            # cek kunjungan terbuka
-            cur.execute("""
-              SELECT 1 FROM kunjungan
-               WHERE id_kunjungan = %s
-                 AND no_dokter_hewan = %s
-                 AND timestamp_akhir IS NULL
-            """, [kunjungan, no_dokter])
-            if not cur.fetchone():
-                messages.error(request, "Kunjungan tidak ditemukan atau sudah selesai.")
-                return redirect('merah:add_vaksinasi')
-
-            # update kunjungan
+            # INSERT kunjungan → trigger akan cek stok & kurangi 1
             cur.execute("""
               UPDATE kunjungan
                  SET kode_vaksin    = %s,
-                     timestamp_akhir = now()
+                     timestamp_akhir = date_trunc('second', now())
                WHERE id_kunjungan  = %s
-            """, [vaksin, kunjungan])
+                 AND no_dokter_hewan = %s
+            """, [vaksin, kunjungan, no_dokter])
 
-            # kurangi stok vaksin
-            cur.execute("UPDATE vaksin SET stok = stok - 1 WHERE kode = %s", [vaksin])
             conn.commit()
             messages.success(request, "Vaksinasi berhasil dibuat.")
             return redirect('merah:list_vaksinasi')
+
+        except Exception as e:
+            conn.rollback()
+            full_msg  = str(e)
+            clean_msg = full_msg.split('CONTEXT')[0].strip()
+            messages.error(request, clean_msg)
+            return redirect('merah:add_vaksinasi')
+
         finally:
             cur.close()
             conn.close()
@@ -142,39 +131,27 @@ def update_vaksinasi(request, id_kunjungan):
         conn = get_db_connection()
         cur  = conn.cursor()
         try:
-            # cek stok baru
-            cur.execute("SELECT stok FROM vaksin WHERE kode = %s", [new_vaksin])
-            stok = cur.fetchone()
-            if not stok or stok[0] <= 0:
-                messages.error(request, "Stok vaksin sudah habis.")
-                return redirect('merah:update_vaksinasi', id_kunjungan=id_kunjungan)
-
-            # ambil vaksin lama
-            cur.execute("""
-              SELECT kode_vaksin
-                FROM kunjungan
-               WHERE id_kunjungan = %s
-                 AND no_dokter_hewan = %s
-            """, [id_kunjungan, no_dokter])
-            old = cur.fetchone()
-            if not old:
-                messages.error(request, "Vaksinasi tidak ditemukan.")
-                return redirect('merah:list_vaksinasi')
-            old_kode = old[0]
-
-            # update kunjungan
+            # langsung update kode_vaksin → trigger otomatis:
+            #  - restore stok lama
+            #  - cek & kurangi stok baru, atau RAISE EXCEPTION
             cur.execute("""
               UPDATE kunjungan
                  SET kode_vaksin = %s
                WHERE id_kunjungan = %s
-            """, [new_vaksin, id_kunjungan])
+                 AND no_dokter_hewan = %s
+            """, [new_vaksin, id_kunjungan, no_dokter])
 
-            # restore stok lama & kurangi stok baru
-            cur.execute("UPDATE vaksin SET stok = stok + 1 WHERE kode = %s", [old_kode])
-            cur.execute("UPDATE vaksin SET stok = stok - 1 WHERE kode = %s", [new_vaksin])
             conn.commit()
             messages.success(request, "Vaksinasi berhasil diperbarui.")
             return redirect('merah:list_vaksinasi')
+
+        except Exception as e:
+            conn.rollback()
+            full_msg  = str(e)
+            clean_msg = full_msg.split('CONTEXT')[0].strip()
+            messages.error(request, clean_msg)
+            return redirect('merah:update_vaksinasi', id_kunjungan=id_kunjungan)
+
         finally:
             cur.close()
             conn.close()
@@ -222,7 +199,7 @@ def delete_vaksinasi(request, id_kunjungan):
     try:
         # Ambil kode vaksin lama dari kunjungan
         cur.execute("""
-            SELECT kode_vaksin
+            SELECT kode_vaksin, timestamp_akhir
               FROM kunjungan
              WHERE id_kunjungan = %s
                AND no_dokter_hewan = %s
@@ -237,7 +214,7 @@ def delete_vaksinasi(request, id_kunjungan):
         # Set kode_vaksin menjadi NULL pada kunjungan
         cur.execute("""
             UPDATE kunjungan
-               SET kode_vaksin = NULL
+               SET kode_vaksin = NULL,
              WHERE id_kunjungan = %s
                AND no_dokter_hewan = %s
         """, [id_kunjungan, no_dokter])
@@ -255,7 +232,6 @@ def delete_vaksinasi(request, id_kunjungan):
         conn.close()
 
     return redirect('merah:list_vaksinasi')
-
 @require_http_methods(['GET'])
 def list_vaksin_hewan(request):
     # 1) hanya Klien
@@ -544,9 +520,20 @@ def delete_vaksin(request, kode_vaksin):
 
 @require_http_methods(['GET'])
 def list_klien(request):
+    role = request.session.get('role') 
+    no_identitas = request.session.get('no_identitas')
+    # DEBUG: Print session info
+    print(f"DEBUG - Role: {role}")
+    print(f"DEBUG - No Identitas: {no_identitas}")
+    if role in ['perusahaan', 'individu']:
+        if no_identitas:
+            return redirect('merah:detail_klien', client_id=no_identitas)
+        else:
+            return HttpResponseForbidden("Session tidak valid - no identitas tidak ditemukan.")
+    
     # 1) Akses hanya Front-Desk Officer
-    if request.session.get('role') != 'front_desk':
-        return HttpResponseForbidden("Hanya Front-Desk Officer yang boleh akses.")
+    if request.session.get('role') not in ['individu', 'klien', 'front_desk']:
+        return HttpResponseForbidden("Hanya Front-Desk Officer atau  Klien yang boleh akses.")
 
     search_query = request.GET.get('search', '').strip().lower()
     conn = get_db_connection()
@@ -601,14 +588,15 @@ def list_klien(request):
         'search_query': request.GET.get('search', '')
     })
 
-
 @require_http_methods(['GET'])
 def detail_klien(request, client_id):
     role = request.session.get('role')
 
     # 1) Jika Klien: hanya boleh lihat detail dirinya sendiri
-    if role == 'klien':
-        no_klien = request.session.get('no_identitas_klien')
+    if role in ['individu', 'perusahaan']:  # Ubah dari 'klien' ke ['individu', 'perusahaan']
+        no_klien = request.session.get('no_identitas')  # Ubah dari 'no_identitas_klien' ke 'no_identitas'
+        print(f"DEBUG detail_klien - No klien from session: {no_klien}")
+        
         if not no_klien or str(client_id) != str(no_klien):
             return HttpResponseForbidden("Anda hanya boleh melihat data Anda sendiri.")
 
