@@ -8,8 +8,6 @@ urlpatterns = [
     path('list_perawatan/', views.list_perawatan, name='list_perawatan'),
     path('create_perawatan/', views.create_perawatan, name='create_perawatan'),
     path('api/kunjungan/<str:kunjungan_id>/', views.get_kunjungan_details, name='get_kunjungan_details'),
-    path('update_perawatan/<str:id_kunjungan>/', views.update_perawatan, name='update_perawatan'),
-    path('delete_perawatan/', views.delete_perawatan, name='delete_perawatan'),
       # AJAX Endpoints - ADD THESE
     path('api/treatment/<str:id_kunjungan>/', views.get_treatment_details, name='get_treatment_details'),
     path('api/update-treatment/', views.update_treatment_ajax, name='update_treatment_ajax'),

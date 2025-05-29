@@ -1,17 +1,15 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.http import HttpResponseForbidden, JsonResponse
+from django.views.decorators.http import require_http_methods
 from utils.db_utils import get_db_connection
 import psycopg2
-from datetime import datetime
-import uuid
 import json
+import uuid
 
-# PERAWATAN HEWAN (Animal Treatment) functions
-
-# Function to list all treatments
-def list_perawatan(request):   
-    # Check if user has authorized role for this operation (only clients and doctors can view treatments)
+@require_http_methods(['GET'])
+def list_perawatan(request):
+    # Check if user is authenticated and has valid session
     if request.session.get('role') not in ['individu', 'perusahaan', 'dokter_hewan','perawat_hewan', 'front_desk']:
         return HttpResponseForbidden("Anda tidak memiliki akses ke halaman ini.")
     
@@ -125,7 +123,6 @@ def list_perawatan(request):
     
     return render(request, 'list_perawatan.html', {'treatments': treatments})
 
-# Function to create a new treatment
 def create_perawatan(request):
     # Check if user is authenticated and has valid session
     if not request.session.get('email') or not request.session.get('role'):
@@ -302,10 +299,7 @@ def create_perawatan(request):
         }
         
         return render(request, 'create_perawatan.html', context)
-# Add these AJAX endpoints to your hijau/views.py
-
-import json
-
+    
 # AJAX endpoint to get treatment details for update modal
 def get_treatment_details(request, id_kunjungan):
     """AJAX endpoint to get treatment data for update modal"""
@@ -737,329 +731,6 @@ def get_kunjungan_details(request, kunjungan_id):
         if conn:
             conn.close()
 
-# Function to update an existing treatment
-def update_perawatan(request, id_kunjungan=None):
-    # Check if user is authenticated and has valid session
-      # Check if user has authorized role for this operation (only doctors can update treatments)
-    user_role = request.session.get('role')
-    print(f"DEBUG: User role in update_perawatan: {user_role}")
-    if user_role not in ['dokter_hewan']:
-        print(f"DEBUG: Access denied for role: {user_role}")
-        return HttpResponseForbidden("Anda tidak memiliki akses ke halaman ini.")
-    
-    conn = None
-    cur = None
-    
-    # If POST request (form submission)
-    if request.method == 'POST':
-        try:
-            conn = get_db_connection()
-            cur = conn.cursor()
-            
-            # Get form data
-            id_kunjungan = request.POST.get('kunjungan')
-            jenis_perawatan_new = request.POST.get('jenis_perawatan')
-            kode_perawatan_old = request.POST.get('kode_perawatan_old')
-            catatan_medis = request.POST.get('catatan_medis', '')
-            
-            # Input validation
-            if not id_kunjungan or not jenis_perawatan_new or not kode_perawatan_old:
-                messages.error(request, "Kunjungan dan jenis perawatan harus diisi")
-                return redirect('hijau:list_perawatan')
-              # Verify that the doctor is authenticated
-            email = request.session.get('email')
-            cur.execute(
-                'SELECT no_pegawai FROM PEGAWAI WHERE email_user = %s',
-                (email,)
-            )
-            doctor_result = cur.fetchone()
-            if not doctor_result:
-                messages.error(request, "Data dokter tidak ditemukan")
-                return redirect('hijau:list_perawatan')
-            
-            doctor_id = doctor_result[0]
-              
-            # Check if the kunjungan exists
-            cur.execute('''
-                SELECT no_dokter_hewan FROM KUNJUNGAN WHERE id_kunjungan = %s
-            ''', (id_kunjungan,))
-            result = cur.fetchone()
-            if not result:
-                messages.error(request, "Data kunjungan tidak ditemukan")
-                return redirect('hijau:list_perawatan')            # Get treatment details to maintain other data
-            cur.execute('''
-                SELECT nama_hewan, no_identitas_klien, no_front_desk, 
-                       no_perawat_hewan, no_dokter_hewan, catatan
-                FROM KUNJUNGAN_KEPERAWATAN 
-                WHERE id_kunjungan = %s AND kode_perawatan = %s
-            ''', (id_kunjungan, kode_perawatan_old))
-            
-            treatment_data = cur.fetchone()
-            if not treatment_data:
-                messages.error(request, "Perawatan tidak ditemukan")
-                return redirect('hijau:list_perawatan')
-            
-            nama_hewan, no_identitas_klien, no_front_desk, no_perawat_hewan, no_dokter_hewan, existing_catatan = treatment_data
-              # Check if only catatan_medis was updated (treatment type remains the same)
-            if jenis_perawatan_new == kode_perawatan_old:
-                # Update only the catatan_medis field
-                cur.execute('''
-                    UPDATE KUNJUNGAN_KEPERAWATAN
-                    SET catatan = %s
-                    WHERE id_kunjungan = %s AND kode_perawatan = %s
-                ''', (catatan_medis, id_kunjungan, kode_perawatan_old))
-            else:
-                # Both treatment type and catatan are being updated
-                # Delete old treatment record
-                cur.execute('''
-                    DELETE FROM KUNJUNGAN_KEPERAWATAN
-                    WHERE id_kunjungan = %s AND kode_perawatan = %s
-                ''', (id_kunjungan, kode_perawatan_old))
-                  
-                # Create new treatment record with updated type and catatan
-                cur.execute('''
-                    INSERT INTO KUNJUNGAN_KEPERAWATAN(
-                        id_kunjungan, nama_hewan, no_identitas_klien, 
-                        no_front_desk, no_perawat_hewan, no_dokter_hewan,
-                        kode_perawatan, catatan)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-                ''', (
-                    id_kunjungan, 
-                    nama_hewan, 
-                    no_identitas_klien, 
-                    no_front_desk, 
-                    no_perawat_hewan, 
-                    no_dokter_hewan,                    
-                    jenis_perawatan_new,
-                    catatan_medis  # Store catatan in KUNJUNGAN_KEPERAWATAN
-                ))
-            
-            conn.commit()
-            messages.success(request, "Perawatan berhasil diperbarui")
-            return redirect('hijau:list_perawatan')
-            
-        except psycopg2.Error as error:
-            if conn:
-                conn.rollback()
-            error_message = str(error)
-            print(f"Error in update_perawatan: {error_message}")
-            
-            # Provide more user-friendly error messages
-            if "duplicate key" in error_message.lower():
-                messages.error(request, "Perawatan dengan jenis tersebut sudah ada untuk kunjungan ini")
-            elif "foreign key constraint" in error_message.lower():
-                messages.error(request, "Terjadi kesalahan referensi data. Periksa data yang dimasukkan")
-            else:
-                messages.error(request, f"Terjadi kesalahan database: {error_message}")
-            return redirect('hijau:list_perawatan')
-                
-        except Exception as e:
-            if conn:
-                conn.rollback()
-            print(f"Unexpected error in update_perawatan: {e}")
-            messages.error(request, f"Terjadi kesalahan tak terduga: {e}")
-            return redirect('hijau:list_perawatan')
-            
-        finally:
-            if cur:
-                cur.close()
-            if conn:
-                conn.close()
-      # If GET request (display form)
-    else:
-        treatment_data = {}
-        jenis_perawatan_list = []
-        
-        try:
-            conn = get_db_connection()
-            cur = conn.cursor()
-              # Get treatment data
-            cur.execute('''
-                SELECT 
-                    kk.kode_perawatan, 
-                    p.nama_perawatan, 
-                    kk.catatan,
-                    kk.nama_hewan,
-                    kk.no_identitas_klien,
-                    kk.no_front_desk,
-                    kk.no_perawat_hewan,
-                    kk.no_dokter_hewan
-                FROM KUNJUNGAN_KEPERAWATAN kk
-                JOIN KUNJUNGAN k ON kk.id_kunjungan = k.id_kunjungan
-                JOIN PERAWATAN p ON kk.kode_perawatan = p.kode_perawatan
-                WHERE kk.id_kunjungan = %s
-            ''', (id_kunjungan,))
-            
-            row = cur.fetchone()
-            if not row:
-                messages.error(request, "Perawatan tidak ditemukan")
-                return redirect('hijau:list_perawatan')
-            
-            treatment_data = {
-                'id_kunjungan': id_kunjungan,
-                'kode_perawatan': row[0],
-                'jenis_perawatan': row[0],
-                'catatan_medis': row[2] or "",
-                'nama_hewan': row[3],
-                'no_identitas_klien': row[4],
-                'no_front_desk': row[5],
-                'no_perawat_hewan': row[6],
-                'no_dokter_hewan': row[7]
-            }
-            
-            # Get available treatment types
-            cur.execute('''
-                SELECT kode_perawatan, nama_perawatan
-                FROM PERAWATAN
-                ORDER BY kode_perawatan
-            ''')
-            
-            for row in cur.fetchall():
-                jenis_perawatan_list.append({                    'kode': row[0],
-                    'display': f"{row[0]} - {row[1]}",
-                    'selected': row[0] == treatment_data['kode_perawatan']
-                })
-                
-        except psycopg2.Error as error:
-            print(f"Error fetching data for update_perawatan form: {error}")
-            messages.error(request, f"Terjadi kesalahan: {error}")
-            return redirect('hijau:list_perawatan')
-              
-        finally:
-            if cur:
-                cur.close()
-            if conn:
-                conn.close()
-        
-        # Get client name for display
-        try:
-            conn = get_db_connection()
-            cur = conn.cursor()
-            
-            # Try to get client name from INDIVIDU
-            cur.execute('''
-                SELECT i.nama_depan || ' ' || i.nama_belakang as nama_klien
-                FROM INDIVIDU i
-                WHERE i.no_identitas_klien = %s
-            ''', (treatment_data['no_identitas_klien'],))
-            
-            client_result = cur.fetchone()
-            
-            if client_result:
-                client_name = client_result[0]
-            else:
-                # Try to get client name from PERUSAHAAN
-                cur.execute('''
-                    SELECT p.nama_perusahaan as nama_klien
-                    FROM PERUSAHAAN p
-                    WHERE p.no_identitas_klien = %s
-                ''', (treatment_data['no_identitas_klien'],))
-                
-                client_result = cur.fetchone()
-                client_name = client_result[0] if client_result else "Unknown"
-            
-            treatment_data['nama_klien'] = client_name
-            
-            # Get staff names (front desk, doctor, nurse)
-            cur.execute('''
-                SELECT u.email, u.nama_lengkap
-                FROM "USER" u
-                JOIN PEGAWAI p ON u.email = p.email_user
-                WHERE p.no_pegawai = %s
-            ''', (treatment_data['no_front_desk'],))
-            
-            result = cur.fetchone()
-            treatment_data['front_desk_name'] = result[1] if result else "-"
-            
-            cur.execute('''
-                SELECT u.email, u.nama_lengkap
-                FROM "USER" u
-                JOIN PEGAWAI p ON u.email = p.email_user
-                WHERE p.no_pegawai = %s
-            ''', (treatment_data['no_dokter_hewan'],))
-            
-            result = cur.fetchone()
-            treatment_data['dokter_name'] = result[1] if result else "-"
-            
-            cur.execute('''
-                SELECT u.email, u.nama_lengkap
-                FROM "USER" u
-                JOIN PEGAWAI p ON u.email = p.email_user
-                WHERE p.no_pegawai = %s
-            ''', (treatment_data['no_perawat_hewan'],))
-            
-            result = cur.fetchone()
-            treatment_data['perawat_name'] = result[1] if result else "-"
-        
-        except Exception as e:
-            print(f"Error fetching additional data: {e}")
-            # Continue with available data
-        
-        finally:
-            if cur:
-                cur.close()
-            if conn:
-                conn.close()
-        
-        context = {
-            'treatment': treatment_data,
-            'jenis_perawatan_list': jenis_perawatan_list
-        }
-        
-        return render(request, 'update_perawatan.html', context)
-
-# Function to delete a treatment
-def delete_perawatan(request):
-    # Check if user is authenticated and has valid session
-
-    # Check if user has authorized role for this operation (only doctors can delete treatments)
-    if request.session.get('role') not in ['dokter_hewan']:
-        return HttpResponseForbidden("Anda tidak memiliki akses ke halaman ini.")
-    
-    if request.method == 'POST':
-        id_kunjungan = request.POST.get('id_kunjungan')
-        kode_perawatan = request.POST.get('kode_perawatan')
-        
-        if not id_kunjungan or not kode_perawatan:
-            messages.error(request, "ID Kunjungan dan kode perawatan diperlukan")
-            return redirect('hijau:list_perawatan')
-        
-        conn = None
-        cur = None
-        
-        try:
-            conn = get_db_connection()
-            cur = conn.cursor()
-            
-            # Delete the treatment record
-            cur.execute('''
-                DELETE FROM KUNJUNGAN_KEPERAWATAN
-                WHERE id_kunjungan = %s AND kode_perawatan = %s
-            ''', (id_kunjungan, kode_perawatan))
-            
-            if cur.rowcount == 0:
-                messages.error(request, "Perawatan tidak ditemukan")
-                return redirect('hijau:list_perawatan')
-            
-            conn.commit()
-            messages.success(request, "Perawatan berhasil dihapus")
-            
-        except psycopg2.Error as error:
-            if conn:
-                conn.rollback()
-            print(f"Error in delete_perawatan: {error}")
-            messages.error(request, f"Terjadi kesalahan: {error}")
-            
-        finally:
-            if cur:
-                cur.close()
-            if conn:
-                conn.close()
-    
-    return redirect('hijau:list_perawatan')
-
-# KUNJUNGAN (Visit) functions
-
 # Function to list all visits
 def list_kunjungan(request):
     # Check if user is authenticated and has valid session
@@ -1186,7 +857,7 @@ def create_kunjungan(request):
                 front_desk_id, 
                 nurse_id, 
                 doctor_id, 
-                'VAK001', # Default vaccine code
+                None,  
                 tipe_kunjungan,
                 timestamp_awal,
                 timestamp_akhir
