@@ -5,16 +5,12 @@ from utils.db_utils import get_db_connection
 import psycopg2
 from datetime import datetime
 import uuid
+import json
 
 # PERAWATAN HEWAN (Animal Treatment) functions
 
 # Function to list all treatments
-def list_perawatan(request):
-    # Check if user is authenticated and has valid session
-    if not request.session.get('email') or not request.session.get('role'):
-        messages.error(request, "Session tidak valid. Silakan login kembali.")
-        return redirect('main:login')
-    
+def list_perawatan(request):   
     # Check if user has authorized role for this operation (only clients and doctors can view treatments)
     if request.session.get('role') not in ['individu', 'perusahaan', 'dokter_hewan','perawat_hewan', 'front_desk']:
         return HttpResponseForbidden("Anda tidak memiliki akses ke halaman ini.")
@@ -295,7 +291,364 @@ def create_perawatan(request):
         }
         
         return render(request, 'create_perawatan.html', context)
+# Add these AJAX endpoints to your hijau/views.py
 
+import json
+
+# AJAX endpoint to get treatment details for update modal
+def get_treatment_details(request, id_kunjungan):
+    """AJAX endpoint to get treatment data for update modal"""
+
+    if request.session.get('role') not in ['dokter_hewan']:
+        return JsonResponse({'success': False, 'message': 'Akses tidak diizinkan'}, status=403)
+    
+    conn = None
+    cur = None
+    
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        # Get treatment data
+        cur.execute('''
+            SELECT 
+                kk.kode_perawatan, 
+                p.nama_perawatan, 
+                kk.catatan,
+                kk.nama_hewan,
+                kk.no_identitas_klien,
+                kk.no_front_desk,
+                kk.no_perawat_hewan,
+                kk.no_dokter_hewan
+            FROM KUNJUNGAN_KEPERAWATAN kk
+            JOIN KUNJUNGAN k ON kk.id_kunjungan = k.id_kunjungan
+            JOIN PERAWATAN p ON kk.kode_perawatan = p.kode_perawatan
+            WHERE kk.id_kunjungan = %s
+            LIMIT 1
+        ''', (id_kunjungan,))
+        
+        row = cur.fetchone()
+        if not row:
+            return JsonResponse({'success': False, 'message': 'Perawatan tidak ditemukan'}, status=404)
+        
+        treatment_data = {
+            'id_kunjungan': id_kunjungan,
+            'kode_perawatan': row[0],
+            'jenis_perawatan': row[0],
+            'catatan_medis': row[2] or "",
+            'nama_hewan': row[3],
+            'no_identitas_klien': row[4],
+            'no_front_desk': row[5],
+            'no_perawat_hewan': row[6],
+            'no_dokter_hewan': row[7]
+        }
+        
+        # Get available treatment types
+        cur.execute('''
+            SELECT kode_perawatan, nama_perawatan
+            FROM PERAWATAN
+            ORDER BY kode_perawatan
+        ''')
+        
+        jenis_perawatan_list = []
+        for row in cur.fetchall():
+            jenis_perawatan_list.append({
+                'kode': row[0],
+                'display': f"{row[0]} - {row[1]}",
+                'selected': row[0] == treatment_data['kode_perawatan']
+            })
+        
+        # Get client name and staff names for display
+        try:
+            # Try to get client name from INDIVIDU first
+            cur.execute('''
+                SELECT i.nama_depan || ' ' || i.nama_belakang as nama_klien
+                FROM INDIVIDU i
+                WHERE i.no_identitas_klien = %s
+            ''', (treatment_data['no_identitas_klien'],))
+            
+            client_result = cur.fetchone()
+            
+            if client_result:
+                client_name = client_result[0]
+            else:
+                # Try to get client name from PERUSAHAAN
+                cur.execute('''
+                    SELECT p.nama_perusahaan as nama_klien
+                    FROM PERUSAHAAN p
+                    WHERE p.no_identitas_klien = %s
+                ''', (treatment_data['no_identitas_klien'],))
+                
+                client_result = cur.fetchone()
+                client_name = client_result[0] if client_result else "Unknown"
+            
+            treatment_data['nama_klien'] = client_name
+            
+            # Get staff emails for display
+            cur.execute('''
+                SELECT u.email
+                FROM "USER" u
+                JOIN PEGAWAI p ON u.email = p.email_user
+                WHERE p.no_pegawai = %s
+            ''', (treatment_data['no_front_desk'],))
+            
+            result = cur.fetchone()
+            treatment_data['front_desk_name'] = result[0].capitalize() if result else "-"
+            
+            cur.execute('''
+                SELECT u.email
+                FROM "USER" u
+                JOIN PEGAWAI p ON u.email = p.email_user
+                WHERE p.no_pegawai = %s
+            ''', (treatment_data['no_dokter_hewan'],))
+            
+            result = cur.fetchone()
+            treatment_data['dokter_name'] = f"dr. {result[0]}" if result else "-"
+            
+            cur.execute('''
+                SELECT u.email
+                FROM "USER" u
+                JOIN PEGAWAI p ON u.email = p.email_user
+                WHERE p.no_pegawai = %s
+            ''', (treatment_data['no_perawat_hewan'],))
+            
+            result = cur.fetchone()
+            treatment_data['perawat_name'] = result[0].capitalize() if result else "-"
+            
+        except Exception as e:
+            print(f"Error fetching additional data: {e}")
+            # Set default values if error occurs
+            treatment_data['nama_klien'] = treatment_data.get('nama_klien', 'Unknown')
+            treatment_data['front_desk_name'] = '-'
+            treatment_data['dokter_name'] = '-'
+            treatment_data['perawat_name'] = '-'
+        
+        return JsonResponse({
+            'success': True,
+            'treatment': treatment_data,
+            'jenis_perawatan_list': jenis_perawatan_list
+        })
+        
+    except psycopg2.Error as error:
+        print(f"Error in get_treatment_details: {error}")
+        return JsonResponse({'success': False, 'message': f'Database error: {error}'}, status=500)
+        
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+# AJAX endpoint to update treatment
+def update_treatment_ajax(request):
+    """AJAX endpoint to update treatment"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Method not allowed'}, status=405)
+    
+    if not request.session.get('email') or not request.session.get('role'):
+        return JsonResponse({'success': False, 'message': 'Session tidak valid'}, status=401)
+    
+    if request.session.get('role') not in ['dokter_hewan']:
+        return JsonResponse({'success': False, 'message': 'Akses tidak diizinkan'}, status=403)
+    
+    conn = None
+    cur = None
+    
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        # Get form data
+        id_kunjungan = request.POST.get('kunjungan')
+        jenis_perawatan_new = request.POST.get('jenis_perawatan')
+        kode_perawatan_old = request.POST.get('kode_perawatan_old')
+        catatan_medis = request.POST.get('catatan_medis', '')
+        
+        print(f"DEBUG AJAX Update: {id_kunjungan}, {jenis_perawatan_new}, {kode_perawatan_old}")
+        
+        # Input validation
+        if not id_kunjungan or not jenis_perawatan_new or not kode_perawatan_old:
+            return JsonResponse({'success': False, 'message': 'Kunjungan dan jenis perawatan harus diisi'})
+        
+        # Verify that the doctor is authenticated
+        email = request.session.get('email')
+        cur.execute(
+            'SELECT no_pegawai FROM PEGAWAI WHERE email_user = %s',
+            (email,)
+        )
+        doctor_result = cur.fetchone()
+        if not doctor_result:
+            return JsonResponse({'success': False, 'message': 'Data dokter tidak ditemukan'})
+        
+        # Get treatment details to maintain other data
+        cur.execute('''
+            SELECT nama_hewan, no_identitas_klien, no_front_desk, 
+                   no_perawat_hewan, no_dokter_hewan, catatan
+            FROM KUNJUNGAN_KEPERAWATAN 
+            WHERE id_kunjungan = %s AND kode_perawatan = %s
+        ''', (id_kunjungan, kode_perawatan_old))
+        
+        treatment_data = cur.fetchone()
+        if not treatment_data:
+            return JsonResponse({'success': False, 'message': 'Perawatan tidak ditemukan'})
+        
+        nama_hewan, no_identitas_klien, no_front_desk, no_perawat_hewan, no_dokter_hewan, existing_catatan = treatment_data
+        
+        # Check if only catatan_medis was updated (treatment type remains the same)
+        if jenis_perawatan_new == kode_perawatan_old:
+            # Update only the catatan_medis field
+            cur.execute('''
+                UPDATE KUNJUNGAN_KEPERAWATAN
+                SET catatan = %s
+                WHERE id_kunjungan = %s AND kode_perawatan = %s
+            ''', (catatan_medis, id_kunjungan, kode_perawatan_old))
+        else:
+            # Both treatment type and catatan are being updated
+            # Delete old treatment record
+            cur.execute('''
+                DELETE FROM KUNJUNGAN_KEPERAWATAN
+                WHERE id_kunjungan = %s AND kode_perawatan = %s
+            ''', (id_kunjungan, kode_perawatan_old))
+            
+            # Create new treatment record with updated type and catatan
+            cur.execute('''
+                INSERT INTO KUNJUNGAN_KEPERAWATAN(
+                    id_kunjungan, nama_hewan, no_identitas_klien, 
+                    no_front_desk, no_perawat_hewan, no_dokter_hewan,
+                    kode_perawatan, catatan)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            ''', (
+                id_kunjungan, 
+                nama_hewan, 
+                no_identitas_klien, 
+                no_front_desk, 
+                no_perawat_hewan, 
+                no_dokter_hewan,                    
+                jenis_perawatan_new,
+                catatan_medis
+            ))
+        
+        # Commit transaction
+        conn.commit()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Perawatan berhasil diperbarui'
+        })
+        
+    except psycopg2.Error as error:
+        if conn:
+            conn.rollback()
+        error_message = str(error)
+        print(f"Error in update_treatment_ajax: {error_message}")
+        
+        # Provide more user-friendly error messages
+        if "duplicate key" in error_message.lower():
+            return JsonResponse({'success': False, 'message': 'Perawatan dengan jenis tersebut sudah ada untuk kunjungan ini'})
+        elif "foreign key constraint" in error_message.lower():
+            return JsonResponse({'success': False, 'message': 'Terjadi kesalahan referensi data. Periksa data yang dimasukkan'})
+        else:
+            return JsonResponse({'success': False, 'message': f'Terjadi kesalahan database: {error_message}'})
+            
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        print(f"Unexpected error in update_treatment_ajax: {e}")
+        return JsonResponse({'success': False, 'message': f'Terjadi kesalahan tak terduga: {e}'})
+        
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+# AJAX endpoint to delete treatment
+def delete_treatment_ajax(request):
+    """AJAX endpoint to delete treatment"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Method not allowed'}, status=405)
+    
+    if not request.session.get('email') or not request.session.get('role'):
+        return JsonResponse({'success': False, 'message': 'Session tidak valid'}, status=401)
+    
+    if request.session.get('role') not in ['dokter_hewan']:
+        return JsonResponse({'success': False, 'message': 'Akses tidak diizinkan'}, status=403)
+    
+    conn = None
+    cur = None
+    
+    try:
+        # Parse JSON data
+        data = json.loads(request.body)
+        id_kunjungan = data.get('id_kunjungan')
+        kode_perawatan = data.get('kode_perawatan')
+        
+        print(f"DEBUG AJAX Delete: {id_kunjungan}, {kode_perawatan}")
+        
+        if not id_kunjungan or not kode_perawatan:
+            return JsonResponse({'success': False, 'message': 'ID Kunjungan dan kode perawatan diperlukan'})
+        
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        # Verify that the doctor is authenticated
+        email = request.session.get('email')
+        cur.execute(
+            'SELECT no_pegawai FROM PEGAWAI WHERE email_user = %s',
+            (email,)
+        )
+        doctor_result = cur.fetchone()
+        if not doctor_result:
+            return JsonResponse({'success': False, 'message': 'Data dokter tidak ditemukan'})
+        
+        # First check if the treatment exists
+        cur.execute('''
+            SELECT id_kunjungan, kode_perawatan
+            FROM KUNJUNGAN_KEPERAWATAN
+            WHERE id_kunjungan = %s AND kode_perawatan = %s
+        ''', (id_kunjungan, kode_perawatan))
+        
+        existing_treatment = cur.fetchone()
+        if not existing_treatment:
+            return JsonResponse({'success': False, 'message': 'Perawatan tidak ditemukan'})
+        
+        # Delete the treatment record
+        cur.execute('''
+            DELETE FROM KUNJUNGAN_KEPERAWATAN
+            WHERE id_kunjungan = %s AND kode_perawatan = %s
+        ''', (id_kunjungan, kode_perawatan))
+        
+        # Commit the transaction
+        conn.commit()
+        
+        print(f"DEBUG: Successfully deleted treatment. Rows affected: {cur.rowcount}")
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Perawatan berhasil dihapus'
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'message': 'Invalid JSON data'})
+        
+    except psycopg2.Error as error:
+        if conn:
+            conn.rollback()
+        print(f"Error in delete_treatment_ajax: {error}")
+        return JsonResponse({'success': False, 'message': f'Terjadi kesalahan database: {error}'})
+        
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        print(f"Unexpected error in delete_treatment_ajax: {e}")
+        return JsonResponse({'success': False, 'message': f'Terjadi kesalahan tak terduga: {e}'})
+        
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+            
 # API endpoint to get kunjungan details for AJAX calls
 def get_kunjungan_details(request, kunjungan_id):
     # Check if user is authenticated and has valid session
@@ -376,9 +729,6 @@ def get_kunjungan_details(request, kunjungan_id):
 # Function to update an existing treatment
 def update_perawatan(request, id_kunjungan=None):
     # Check if user is authenticated and has valid session
-    if not request.session.get('email') or not request.session.get('role'):
-        messages.error(request, "Session tidak valid. Silakan login kembali.")
-        return redirect('main:login')
       # Check if user has authorized role for this operation (only doctors can update treatments)
     user_role = request.session.get('role')
     print(f"DEBUG: User role in update_perawatan: {user_role}")
@@ -650,10 +1000,7 @@ def update_perawatan(request, id_kunjungan=None):
 # Function to delete a treatment
 def delete_perawatan(request):
     # Check if user is authenticated and has valid session
-    if not request.session.get('email') or not request.session.get('role'):
-        messages.error(request, "Session tidak valid. Silakan login kembali.")
-        return redirect('main:login')
-    
+
     # Check if user has authorized role for this operation (only doctors can delete treatments)
     if request.session.get('role') not in ['dokter_hewan']:
         return HttpResponseForbidden("Anda tidak memiliki akses ke halaman ini.")
@@ -704,11 +1051,6 @@ def delete_perawatan(request):
 
 # Function to list all visits
 def list_kunjungan(request):
-    # Check if user is authenticated and has valid session
-    if not request.session.get('email') or not request.session.get('role'):
-        messages.error(request, "Session tidak valid. Silakan login kembali.")
-        return redirect('main:login')
-    
     # Check if user has authorized role for this operation
     if request.session.get('role') not in ['individu', 'perusahaan', 'dokter_hewan', 'perawat_hewan', 'front_desk']:
         return HttpResponseForbidden("Anda tidak memiliki akses ke halaman ini.")
@@ -809,11 +1151,6 @@ def list_kunjungan(request):
 
 # Function to create a new visit
 def create_kunjungan(request):
-    # Check if user is authenticated and has valid session
-    if not request.session.get('email') or not request.session.get('role'):
-        messages.error(request, "Session tidak valid. Silakan login kembali.")
-        return redirect('main:login')
-    
     # Check if user has authorized role for this operation (only front desk can create visits)
     if request.session.get('role') not in ['front_desk']:
         return HttpResponseForbidden("Anda tidak memiliki akses ke halaman ini.")
@@ -989,11 +1326,6 @@ def create_kunjungan(request):
 
 # Function to update a visit
 def update_kunjungan(request):
-    # Check if user is authenticated and has valid session
-    if not request.session.get('email') or not request.session.get('role'):
-        messages.error(request, "Session tidak valid. Silakan login kembali.")
-        return redirect('main:login')
-    
     # Check if user has authorized role for this operation (only front desk can update visits)
     if request.session.get('role') not in ['front_desk']:
         return HttpResponseForbidden("Anda tidak memiliki akses ke halaman ini.")
