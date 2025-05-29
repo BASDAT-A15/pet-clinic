@@ -330,7 +330,7 @@ def login(request):
 
     except psycopg2.Error as e:
         print("Login DB error:", e)
-        messages.error(request, 'Terjadi kesalahan server.')
+        messages.error(request, f'Terjadi kesalahan server: {str(e)}')
         return redirect('main:login')
 
     finally:
