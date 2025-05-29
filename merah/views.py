@@ -49,67 +49,26 @@ def list_vaksinasi(request):
 
 @require_http_methods(['GET', 'POST'])
 def add_vaksinasi(request):
-    # Hanya dokter hewan
     if request.session.get('role') != 'dokter_hewan':
         return HttpResponseForbidden("Hanya dokter hewan yang boleh akses.")
+
     no_dokter = request.session.get('no_pegawai')
     if not no_dokter:
         return HttpResponseForbidden("Session no_pegawai belum diset.")
 
-    if request.method == 'POST':
-        kunjungan = request.POST.get('id_kunjungan')
-        vaksin    = request.POST.get('kode_vaksin')
-
-        conn = get_db_connection()
-        cur  = conn.cursor()
-        try:
-            cur.execute("""
-              UPDATE kunjungan
-                 SET kode_vaksin    = %s,
-                     timestamp_akhir = date_trunc('second', now())
-               WHERE id_kunjungan  = %s
-                 AND no_dokter_hewan = %s
-            """, (vaksin, kunjungan, no_dokter))
-            conn.commit()
-            messages.success(request, "Vaksinasi berhasil dibuat.")
-
-            # ==== SESSION FIX ====
-            email_val   = request.session.get('email')
-            role_val    = request.session.get('role')
-            pegawai_val = request.session.get('no_pegawai', None)
-
-            request.session.cycle_key()
-            request.session['email']      = email_val
-            request.session['role']       = role_val
-            if pegawai_val:
-                request.session['no_pegawai'] = pegawai_val
-            request.session.save()
-            # ====================
-
-            return redirect('merah:list_vaksinasi')
-
-        except Exception as e:
-            conn.rollback()
-            messages.error(request, f'Gagal menambahkan vaksinasi: {e}')
-
-            # Pastikan session tidak hilang
-            request.session.modified = True
-            return redirect('merah:add_vaksinasi')
-
-        finally:
-            cur.close()
-            conn.close()
-
-    # GET: render form
+    # Ambil opsi kunjungan & vaksin untuk form (baik GET maupun POST)
     conn = get_db_connection()
-    cur  = conn.cursor()
+    cur = conn.cursor()
+    kunjungan_options = []
+    vaksin_options = []
+    
     try:
         cur.execute("""
           SELECT id_kunjungan
             FROM kunjungan
            WHERE no_dokter_hewan = %s
              AND timestamp_akhir IS NULL
-        """, (no_dokter,))
+        """, [no_dokter])
         kunjungan_options = [r[0] for r in cur.fetchall()]
 
         cur.execute("SELECT kode, nama, stok FROM vaksin ORDER BY kode")
@@ -121,119 +80,275 @@ def add_vaksinasi(request):
         cur.close()
         conn.close()
 
+    if request.method == 'POST':
+        kunjungan = request.POST.get('id_kunjungan', '').strip()
+        vaksin = request.POST.get('kode_vaksin', '').strip()
+
+        if not kunjungan or not vaksin:
+            messages.error(request, 'Semua field harus diisi.')
+        else:
+            conn = get_db_connection()
+            cur = conn.cursor()
+            
+            try:
+                cur.execute("""
+                  UPDATE kunjungan
+                     SET kode_vaksin = %s,
+                         timestamp_akhir = date_trunc('second', now())
+                   WHERE id_kunjungan = %s
+                     AND no_dokter_hewan = %s
+                """, [vaksin, kunjungan, no_dokter])
+
+                # Kurangi stok vaksin
+                cur.execute("UPDATE vaksin SET stok = stok - 1 WHERE kode = %s", [vaksin])
+
+                conn.commit()
+                messages.success(request, "Vaksinasi berhasil dibuat.")
+                
+                # Save session data sebelum redirect
+                email_val = request.session.get('email')
+                role_val = request.session.get('role')
+                pegawai_val = request.session.get('no_pegawai')
+                
+                try:
+                    request.session.cycle_key()
+                    
+                    if email_val:
+                        request.session['email'] = email_val
+                    if role_val:
+                        request.session['role'] = role_val
+                    if pegawai_val:
+                        request.session['no_pegawai'] = pegawai_val
+                    
+                    request.session.save()
+                    
+                    return redirect('merah:list_vaksinasi')
+                    
+                except Exception as e:
+                    print(f"Session error in add_vaksinasi: {e}")
+                    request.session.flush()
+                    if email_val:
+                        request.session['email'] = email_val
+                    if role_val:
+                        request.session['role'] = role_val
+                    if pegawai_val:
+                        request.session['no_pegawai'] = pegawai_val
+                    return redirect('merah:list_vaksinasi')
+
+            except Exception as e:
+                conn.rollback()
+                full_msg = str(e)
+                clean_msg = full_msg.split('CONTEXT')[0].strip()
+                messages.error(request, clean_msg)
+            finally:
+                cur.close()
+                conn.close()
+
     return render(request, 'klinik/add_vaksinasi.html', {
         'kunjungan_options': kunjungan_options,
-        'vaksin_options':    vaksin_options,
+        'vaksin_options': vaksin_options,
     })
 
 @require_http_methods(['GET', 'POST'])
 def update_vaksinasi(request, id_kunjungan):
     if request.session.get('role') != 'dokter_hewan':
         return HttpResponseForbidden("Hanya dokter hewan yang boleh akses.")
+
     no_dokter = request.session.get('no_pegawai')
+    if not no_dokter:
+        return HttpResponseForbidden("Session no_pegawai belum diset.")
 
+    # Ambil data current & opsi vaksin (untuk GET dan POST)
     conn = get_db_connection()
-    cur  = conn.cursor()
+    cur = conn.cursor()
+    current = None
+    vaksin_options = []
+    
     try:
-        if request.method == 'POST':
-            vaksin = request.POST.get('kode_vaksin')
+        # Ambil current vaksinasi
+        cur.execute("""
+          SELECT k.kode_vaksin, v.nama, v.stok
+            FROM kunjungan k
+            JOIN vaksin v ON v.kode = k.kode_vaksin
+           WHERE k.id_kunjungan = %s
+             AND k.no_dokter_hewan = %s
+        """, [id_kunjungan, no_dokter])
+        row = cur.fetchone()
+        
+        if not row:
+            messages.error(request, "Vaksinasi tidak ditemukan.")
+            return redirect('merah:list_vaksinasi')
+            
+        current = {'kode_vaksin': row[0], 'nama_vaksin': row[1], 'stok': row[2]}
 
+        # Ambil semua opsi vaksin
+        cur.execute("SELECT kode, nama, stok FROM vaksin ORDER BY kode")
+        vaksin_options = [
+            {'kode_vaksin': r[0], 'nama_vaksin': r[1], 'stok': r[2]}
+            for r in cur.fetchall()
+        ]
+    except Exception as e:
+        messages.error(request, f'Error mengambil data: {str(e)}')
+        return redirect('merah:list_vaksinasi')
+    finally:
+        cur.close()
+        conn.close()
+
+    if request.method == 'POST':
+        new_vaksin = request.POST.get('kode_vaksin', '').strip()
+        
+        if not new_vaksin:
+            messages.error(request, 'Kode vaksin harus dipilih.')
+        else:
+            conn = get_db_connection()
+            cur = conn.cursor()
+            
             try:
+                old_vaksin = current['kode_vaksin']
+                
+                # Update vaksinasi
                 cur.execute("""
                   UPDATE kunjungan
                      SET kode_vaksin = %s
                    WHERE id_kunjungan = %s
                      AND no_dokter_hewan = %s
-                """, (vaksin, id_kunjungan, no_dokter))
+                """, [new_vaksin, id_kunjungan, no_dokter])
+
+                # Jika vaksin berubah, update stok
+                if old_vaksin != new_vaksin:
+                    # Kembalikan stok vaksin lama
+                    cur.execute("UPDATE vaksin SET stok = stok + 1 WHERE kode = %s", [old_vaksin])
+                    # Kurangi stok vaksin baru
+                    cur.execute("UPDATE vaksin SET stok = stok - 1 WHERE kode = %s", [new_vaksin])
+
                 conn.commit()
                 messages.success(request, "Vaksinasi berhasil diperbarui.")
-
-                # ==== SESSION FIX ====
-                email_val   = request.session.get('email')
-                role_val    = request.session.get('role')
-                pegawai_val = request.session.get('no_pegawai', None)
-
-                request.session.cycle_key()
-                request.session['email']      = email_val
-                request.session['role']       = role_val
-                if pegawai_val:
-                    request.session['no_pegawai'] = pegawai_val
-                request.session.save()
-                # ====================
-
-                return redirect('merah:list_vaksinasi')
+                
+                # Save session data sebelum redirect
+                email_val = request.session.get('email')
+                role_val = request.session.get('role')
+                pegawai_val = request.session.get('no_pegawai')
+                
+                try:
+                    request.session.cycle_key()
+                    
+                    if email_val:
+                        request.session['email'] = email_val
+                    if role_val:
+                        request.session['role'] = role_val
+                    if pegawai_val:
+                        request.session['no_pegawai'] = pegawai_val
+                    
+                    request.session.save()
+                    
+                    return redirect('merah:list_vaksinasi')
+                    
+                except Exception as e:
+                    print(f"Session error in update_vaksinasi: {e}")
+                    request.session.flush()
+                    if email_val:
+                        request.session['email'] = email_val
+                    if role_val:
+                        request.session['role'] = role_val
+                    if pegawai_val:
+                        request.session['no_pegawai'] = pegawai_val
+                    return redirect('merah:list_vaksinasi')
 
             except Exception as e:
                 conn.rollback()
-                messages.error(request, f'Gagal memperbarui vaksinasi: {e}')
-                request.session.modified = True
-                return redirect('merah:update_vaksinasi', id_kunjungan=id_kunjungan)
+                full_msg = str(e)
+                clean_msg = full_msg.split('CONTEXT')[0].strip()
+                messages.error(request, clean_msg)
+            finally:
+                cur.close()
+                conn.close()
 
-        # GET → load current data
-        cur.execute("""
-          SELECT kode_vaksin
-            FROM kunjungan
-           WHERE id_kunjungan = %s
-             AND no_dokter_hewan = %s
-        """, (id_kunjungan, no_dokter))
-        row = cur.fetchone()
-        current_kode = row[0] if row else None
-
-        cur.execute("SELECT kode, nama FROM vaksin ORDER BY kode")
-        vaksin_options = [{'kode': r[0], 'nama': r[1]} for r in cur.fetchall()]
-
-        return render(request, 'klinik/update_vaksinasi.html', {
-            'id_kunjungan':    id_kunjungan,
-            'current_kode':    current_kode,
-            'vaksin_options':  vaksin_options,
-        })
-
-    finally:
-        cur.close()
-        conn.close()
+    return render(request, 'klinik/update_vaksinasi.html', {
+        'kunjungan': id_kunjungan,
+        'current': current,
+        'vaksin_options': vaksin_options,
+    })
 
 @require_http_methods(['POST'])
 def delete_vaksinasi(request, id_kunjungan):
     if request.session.get('role') != 'dokter_hewan':
         return HttpResponseForbidden("Hanya dokter hewan yang boleh akses.")
+
     no_dokter = request.session.get('no_pegawai')
+    if not no_dokter:
+        return HttpResponseForbidden("Session no_pegawai belum diset.")
 
     conn = get_db_connection()
-    cur  = conn.cursor()
+    cur = conn.cursor()
+    
     try:
+        # Ambil kode vaksin lama dari kunjungan
         cur.execute("""
-          DELETE FROM kunjungan
-           WHERE id_kunjungan = %s
-             AND no_dokter_hewan = %s
-        """, (id_kunjungan, no_dokter))
-        conn.commit()
-        messages.success(request, "Vaksinasi berhasil dihapus.")
+            SELECT kode_vaksin, timestamp_akhir
+              FROM kunjungan
+             WHERE id_kunjungan = %s
+               AND no_dokter_hewan = %s
+        """, [id_kunjungan, no_dokter])
+        row = cur.fetchone()
+        
+        if not row or row[0] is None:
+            messages.error(request, "Vaksinasi tidak ditemukan atau sudah dihapus.")
+        else:
+            old_kode = row[0]
 
-        # ==== SESSION FIX ====
-        email_val   = request.session.get('email')
-        role_val    = request.session.get('role')
-        pegawai_val = request.session.get('no_pegawai', None)
+            # Fix: Hilangkan koma yang salah tempat
+            cur.execute("""
+                UPDATE kunjungan
+                   SET kode_vaksin = NULL
+                 WHERE id_kunjungan = %s
+                   AND no_dokter_hewan = %s
+            """, [id_kunjungan, no_dokter])
 
-        request.session.cycle_key()
-        request.session['email']      = email_val
-        request.session['role']       = role_val
-        if pegawai_val:
-            request.session['no_pegawai'] = pegawai_val
-        request.session.save()
-        # ====================
-
-        return redirect('merah:list_vaksinasi')
-
+            # Kembalikan stok vaksin
+            cur.execute("UPDATE vaksin SET stok = stok + 1 WHERE kode = %s", [old_kode])
+            
+            conn.commit()
+            messages.success(request, f"Vaksinasi {id_kunjungan} berhasil dihapus.")
+            
     except Exception as e:
         conn.rollback()
-        messages.error(request, f'Gagal menghapus vaksinasi: {e}')
-        request.session.modified = True
-        return redirect('merah:list_vaksinasi')
-
+        full_msg = str(e)
+        clean_msg = full_msg.split('CONTEXT')[0].strip()
+        messages.error(request, clean_msg)
     finally:
         cur.close()
         conn.close()
 
+    # Save session data sebelum redirect
+    email_val = request.session.get('email')
+    role_val = request.session.get('role')
+    pegawai_val = request.session.get('no_pegawai')
+    
+    try:
+        request.session.cycle_key()
+        
+        if email_val:
+            request.session['email'] = email_val
+        if role_val:
+            request.session['role'] = role_val
+        if pegawai_val:
+            request.session['no_pegawai'] = pegawai_val
+        
+        request.session.save()
+        
+        return redirect('merah:list_vaksinasi')
+        
+    except Exception as e:
+        print(f"Session error in delete_vaksinasi: {e}")
+        request.session.flush()
+        if email_val:
+            request.session['email'] = email_val
+        if role_val:
+            request.session['role'] = role_val
+        if pegawai_val:
+            request.session['no_pegawai'] = pegawai_val
+        return redirect('merah:list_vaksinasi')
+    
 @require_http_methods(['GET'])
 def list_vaksin_hewan(request):
     # 1) hanya Klien
@@ -357,139 +472,193 @@ def list_vaksin(request):
     return render(request, 'klinik/list_vaksin.html', {
         'vaksin_list': vaksin_list
     })
-
 @require_http_methods(['GET', 'POST'])
 def add_vaksin(request):
-    if request.session.get('role') != 'perawat_hewan':
-        return HttpResponseForbidden("Hanya perawat hewan yang boleh akses.")
-    no_perawat = request.session.get('no_pegawai')
-    if not no_perawat:
+    if request.session.get('role') != 'perawat_hewan': 
+        return HttpResponseForbidden("Hanya perawat hewan yang boleh akses.") 
+
+    no_perawat = request.session.get('no_pegawai') 
+    if not no_perawat: 
         return HttpResponseForbidden("Session no_pegawai belum diset.")
     
     if request.method == 'POST':
-        nama     = request.POST.get('nama_vaksin', '').strip()
-        harga_str= request.POST.get('harga', '').strip()
+        nama = request.POST.get('nama_vaksin', '').strip()
+        harga_str = request.POST.get('harga', '').strip()
         stok_str = request.POST.get('stok', '').strip()
 
         # Validasi input
-        if not all([nama, harga_str, stok_str]):
+        if not nama or not harga_str or not stok_str:
             messages.error(request, "Semua field harus diisi.")
         else:
             try:
-                harga = int(harga_str); stok = int(stok_str)
+                harga = int(harga_str)
+                stok = int(stok_str)
+                
                 if harga < 0 or stok < 0:
                     messages.error(request, "Harga dan stok tidak boleh negatif.")
                 else:
                     conn = get_db_connection()
-                    cur  = conn.cursor()
+                    cur = conn.cursor()
+                    
                     try:
-                        # generate kode otomatis
+                        # Generate kode otomatis: ambil max existing
                         cur.execute("SELECT MAX(kode) FROM vaksin")
                         row = cur.fetchone()[0]
-                        if row and row.startswith('VAK'):
-                            seq = int(row.replace('VAK','')) + 1
+                        if row:
+                            # Handle both VAC and VAK prefixes, extract the numeric part
+                            if row.startswith('VAC'):
+                                next_seq = int(row.replace('VAC','')) + 1
+                            elif row.startswith('VAK'):
+                                next_seq = int(row.replace('VAK','')) + 1
+                            else:
+                                # If neither prefix, try to extract numbers from the end
+                                import re
+                                numbers = re.findall(r'\d+', row)
+                                if numbers:
+                                    next_seq = int(numbers[-1]) + 1
+                                else:
+                                    next_seq = 1
                         else:
-                            seq = 1
-                        kode = f"VAK{seq:03d}"
+                            next_seq = 1
+                        
+                        # Use VAK prefix to match your existing data
+                        kode = f"VAK{next_seq:03d}"
 
-                        cur.execute(
-                          "INSERT INTO vaksin(kode, nama, harga, stok) VALUES (%s,%s,%s,%s)",
-                          (kode, nama, harga, stok)
-                        )
+                        cur.execute("""
+                          INSERT INTO vaksin(kode, nama, harga, stok)
+                          VALUES (%s,%s,%s,%s)
+                        """, [kode, nama, harga, stok])
                         conn.commit()
                         messages.success(request, f"Vaksin {kode} berhasil ditambahkan.")
-
-                        # ==== SESSION FIX ====
-                        email_val   = request.session.get('email')
-                        role_val    = request.session.get('role')
+                        
+                        # Save session data sebelum redirect
+                        email_val = request.session.get('email')
+                        role_val = request.session.get('role')
                         pegawai_val = request.session.get('no_pegawai')
-
-                        request.session.cycle_key()
-                        request.session['email']      = email_val
-                        request.session['role']       = role_val
-                        request.session['no_pegawai'] = pegawai_val
-                        request.session.save()
-                        # ====================
-
-                        return redirect('merah:list_vaksin')
-
+                        
+                        try:
+                            request.session.cycle_key()
+                            
+                            if email_val:
+                                request.session['email'] = email_val
+                            if role_val:
+                                request.session['role'] = role_val
+                            if pegawai_val:
+                                request.session['no_pegawai'] = pegawai_val
+                            
+                            request.session.save()
+                            
+                            return redirect('merah:list_vaksin')
+                            
+                        except Exception as e:
+                            print(f"Session error in add_vaksin: {e}")
+                            request.session.flush()
+                            if email_val:
+                                request.session['email'] = email_val
+                            if role_val:
+                                request.session['role'] = role_val
+                            if pegawai_val:
+                                request.session['no_pegawai'] = pegawai_val
+                            return redirect('merah:list_vaksin')
+                        
                     except Exception as e:
                         conn.rollback()
-                        messages.error(request, str(e))
+                        full_msg = str(e)
+                        clean_msg = full_msg.split('CONTEXT')[0].strip()
+                        messages.error(request, clean_msg)
                     finally:
                         cur.close()
                         conn.close()
+                        
             except ValueError:
                 messages.error(request, "Harga dan stok harus berupa angka.")
 
-        # POST-error: pastikan session tetap dipertahankan
-        request.session.modified = True
-
-    # GET: tampilkan form
     return render(request, 'klinik/add_vaksin.html')
 
 @require_http_methods(['GET', 'POST'])
 def update_vaksin(request, kode_vaksin):
-    if request.session.get('role') != 'perawat_hewan':
-        return HttpResponseForbidden("Hanya perawat hewan yang boleh akses.")
-    no_perawat = request.session.get('no_pegawai')
-    if not no_perawat:
-        return HttpResponseForbidden("Session no_pegawai belum diset.")
+    if request.session.get('role') != 'perawat_hewan': 
+        return HttpResponseForbidden("Hanya perawat hewan yang boleh akses.") 
 
+    no_perawat = request.session.get('no_pegawai') 
+    if not no_perawat: 
+        return HttpResponseForbidden("Session no_pegawai belum diset.")
+        
     conn = get_db_connection()
-    cur  = conn.cursor()
+    cur = conn.cursor()
     vaksin = None
+    
     try:
-        # Load existing
-        cur.execute("SELECT kode, nama, harga, stok FROM vaksin WHERE kode = %s", [kode_vaksin])
+        # Ambil data vaksin
+        cur.execute("SELECT kode, nama, harga FROM vaksin WHERE kode=%s", [kode_vaksin])
         row = cur.fetchone()
         if not row:
             raise Http404
-        vaksin = {'kode_vaksin': row[0], 'nama_vaksin': row[1], 'harga': row[2], 'stok': row[3]}
+
+        vaksin = {'kode_vaksin': row[0], 'nama_vaksin': row[1], 'harga': row[2]}
 
         if request.method == 'POST':
-            nama_str  = request.POST.get('nama_vaksin', '').strip()
+            nama = request.POST.get('nama_vaksin', '').strip()
             harga_str = request.POST.get('harga', '').strip()
-            stok_str  = request.POST.get('stok', '').strip()
-
-            if not all([nama_str, harga_str, stok_str]):
+            
+            if not nama or not harga_str:
                 messages.error(request, "Semua field harus diisi.")
             else:
                 try:
-                    harga = int(harga_str); stok = int(stok_str)
-                    if harga < 0 or stok < 0:
-                        messages.error(request, "Harga dan stok tidak boleh negatif.")
+                    harga = int(harga_str)
+                    if harga < 0:
+                        messages.error(request, "Harga tidak boleh negatif.")
                     else:
-                        cur.execute(
-                          "UPDATE vaksin SET nama = %s, harga = %s, stok = %s WHERE kode = %s",
-                          (nama_str, harga, stok, kode_vaksin)
-                        )
+                        cur.execute("""
+                          UPDATE vaksin
+                             SET nama = %s, harga = %s
+                           WHERE kode = %s
+                        """, [nama, harga, kode_vaksin])
                         conn.commit()
                         messages.success(request, f"Vaksin {kode_vaksin} berhasil diperbarui.")
-
-                        # ==== SESSION FIX ====
-                        email_val   = request.session.get('email')
-                        role_val    = request.session.get('role')
+                        
+                        # Save session data sebelum redirect
+                        email_val = request.session.get('email')
+                        role_val = request.session.get('role')
                         pegawai_val = request.session.get('no_pegawai')
-
-                        request.session.cycle_key()
-                        request.session['email']      = email_val
-                        request.session['role']       = role_val
-                        request.session['no_pegawai'] = pegawai_val
-                        request.session.save()
-                        # ====================
-
-                        return redirect('merah:list_vaksin')
-
+                        
+                        try:
+                            request.session.cycle_key()
+                            
+                            if email_val:
+                                request.session['email'] = email_val
+                            if role_val:
+                                request.session['role'] = role_val
+                            if pegawai_val:
+                                request.session['no_pegawai'] = pegawai_val
+                            
+                            request.session.save()
+                            
+                            return redirect('merah:list_vaksin')
+                            
+                        except Exception as e:
+                            print(f"Session error in update_vaksin: {e}")
+                            request.session.flush()
+                            if email_val:
+                                request.session['email'] = email_val
+                            if role_val:
+                                request.session['role'] = role_val
+                            if pegawai_val:
+                                request.session['no_pegawai'] = pegawai_val
+                            return redirect('merah:list_vaksin')
+                        
                 except ValueError:
-                    messages.error(request, "Harga dan stok harus berupa angka.")
+                    messages.error(request, "Harga harus berupa angka.")
                 except Exception as e:
                     conn.rollback()
-                    messages.error(request, str(e))
-
-            # POST-error: pertahankan session
-            request.session.modified = True
-
+                    full_msg = str(e)
+                    clean_msg = full_msg.split('CONTEXT')[0].strip()
+                    messages.error(request, clean_msg)
+                    
+    except Exception as e:
+        messages.error(request, f'Error: {str(e)}')
+        if not vaksin:
+            vaksin = {'kode_vaksin': kode_vaksin, 'nama_vaksin': '', 'harga': 0}
     finally:
         cur.close()
         conn.close()
@@ -498,26 +667,28 @@ def update_vaksin(request, kode_vaksin):
 
 @require_http_methods(['GET', 'POST'])
 def update_stok_vaksin(request, kode_vaksin):
-    if request.session.get('role') != 'perawat_hewan':
-        return HttpResponseForbidden("Hanya perawat hewan yang boleh akses.")
-    no_perawat = request.session.get('no_pegawai')
-    if not no_perawat:
-        return HttpResponseForbidden("Session no_pegawai belum diset.")
+    if request.session.get('role') != 'perawat_hewan': 
+        return HttpResponseForbidden("Hanya perawat hewan yang boleh akses.") 
 
+    no_perawat = request.session.get('no_pegawai') 
+    if not no_perawat: 
+        return HttpResponseForbidden("Session no_pegawai belum diset.")
+        
     conn = get_db_connection()
-    cur  = conn.cursor()
+    cur = conn.cursor()
     vaksin = None
+    
     try:
-        # Load data vaksin
         cur.execute("SELECT kode, nama, stok FROM vaksin WHERE kode=%s", [kode_vaksin])
         row = cur.fetchone()
         if not row:
             raise Http404
+
         vaksin = {'kode_vaksin': row[0], 'nama_vaksin': row[1], 'stok': row[2]}
 
         if request.method == 'POST':
             stok_str = request.POST.get('stok', '').strip()
-
+            
             if not stok_str:
                 messages.error(request, "Stok harus diisi.")
             else:
@@ -526,36 +697,52 @@ def update_stok_vaksin(request, kode_vaksin):
                     if stok < 0:
                         messages.error(request, "Stok tidak boleh negatif.")
                     else:
-                        cur.execute(
-                            "UPDATE vaksin SET stok = %s WHERE kode = %s",
-                            (stok, kode_vaksin)
-                        )
+                        cur.execute("UPDATE vaksin SET stok = %s WHERE kode = %s", [stok, kode_vaksin])
                         conn.commit()
                         messages.success(request, f"Stok vaksin {kode_vaksin} diubah menjadi {stok}.")
-
-                        # ==== SESSION FIX ====
-                        email_val   = request.session.get('email')
-                        role_val    = request.session.get('role')
+                        
+                        # Save session data sebelum redirect
+                        email_val = request.session.get('email')
+                        role_val = request.session.get('role')
                         pegawai_val = request.session.get('no_pegawai')
-
-                        request.session.cycle_key()
-                        request.session['email']      = email_val
-                        request.session['role']       = role_val
-                        request.session['no_pegawai'] = pegawai_val
-                        request.session.save()
-                        # ====================
-
-                        return redirect('merah:list_vaksin')
-
+                        
+                        try:
+                            request.session.cycle_key()
+                            
+                            if email_val:
+                                request.session['email'] = email_val
+                            if role_val:
+                                request.session['role'] = role_val
+                            if pegawai_val:
+                                request.session['no_pegawai'] = pegawai_val
+                            
+                            request.session.save()
+                            
+                            return redirect('merah:list_vaksin')
+                            
+                        except Exception as e:
+                            print(f"Session error in update_stok_vaksin: {e}")
+                            request.session.flush()
+                            if email_val:
+                                request.session['email'] = email_val
+                            if role_val:
+                                request.session['role'] = role_val
+                            if pegawai_val:
+                                request.session['no_pegawai'] = pegawai_val
+                            return redirect('merah:list_vaksin')
+                        
                 except ValueError:
                     messages.error(request, "Stok harus berupa angka.")
                 except Exception as e:
                     conn.rollback()
-                    messages.error(request, str(e))
-
-            # Jika ada error di POST, pertahankan session
-            request.session.modified = True
-
+                    full_msg = str(e)
+                    clean_msg = full_msg.split('CONTEXT')[0].strip()
+                    messages.error(request, clean_msg)
+                    
+    except Exception as e:
+        messages.error(request, f'Error: {str(e)}')
+        if not vaksin:
+            vaksin = {'kode_vaksin': kode_vaksin, 'nama_vaksin': '', 'stok': 0}
     finally:
         cur.close()
         conn.close()
@@ -566,39 +753,53 @@ def update_stok_vaksin(request, kode_vaksin):
 def delete_vaksin(request, kode_vaksin):
     if request.session.get('role') != 'perawat_hewan':
         return HttpResponseForbidden("Hanya perawat hewan yang boleh akses.")
-    no_perawat = request.session.get('no_pegawai')
-    if not no_perawat:
-        return HttpResponseForbidden("Session no_pegawai belum diset.")
 
     conn = get_db_connection()
-    cur  = conn.cursor()
+    cur = conn.cursor()
+    
     try:
         cur.execute("DELETE FROM vaksin WHERE kode = %s", [kode_vaksin])
         conn.commit()
         messages.success(request, f"Vaksin {kode_vaksin} berhasil dihapus.")
-
-        # ==== SESSION FIX ====
-        email_val   = request.session.get('email')
-        role_val    = request.session.get('role')
-        pegawai_val = request.session.get('no_pegawai')
-
-        request.session.cycle_key()
-        request.session['email']      = email_val
-        request.session['role']       = role_val
-        request.session['no_pegawai'] = pegawai_val
-        request.session.save()
-        # ====================
-
     except Exception as e:
         conn.rollback()
-        messages.error(request, str(e))
-        # Jika error, jangan hilangkan session
-        request.session.modified = True
+        full_msg = str(e)
+        clean_msg = full_msg.split('CONTEXT')[0].strip()
+        messages.error(request, clean_msg)
     finally:
         cur.close()
         conn.close()
 
-    return redirect('merah:list_vaksin')
+    # Save session data sebelum redirect
+    email_val = request.session.get('email')
+    role_val = request.session.get('role')
+    pegawai_val = request.session.get('no_pegawai')
+    
+    try:
+        request.session.cycle_key()
+        
+        if email_val:
+            request.session['email'] = email_val
+        if role_val:
+            request.session['role'] = role_val
+        if pegawai_val:
+            request.session['no_pegawai'] = pegawai_val
+        
+        request.session.save()
+        
+        return redirect('merah:list_vaksin')
+        
+    except Exception as e:
+        print(f"Session error in delete_vaksin: {e}")
+        request.session.flush()
+        if email_val:
+            request.session['email'] = email_val
+        if role_val:
+            request.session['role'] = role_val
+        if pegawai_val:
+            request.session['no_pegawai'] = pegawai_val
+        return redirect('merah:list_vaksin')
+    
 @require_http_methods(['GET'])
 def list_klien(request):
     role = request.session.get('role') 
