@@ -23,135 +23,14 @@
             font-family: 'Playfair Display';
             color: #000000; 
         }
-        
-        /* Message positioning */
-        .message-container {
-            position: fixed;
-            bottom: 2rem;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 1000;
-            max-width: 500px;
-            width: 90%;
-        }
-        
-        /* Message styling */
-        .message {
-            padding: 0.75rem 1rem;
-            border-radius: 0.5rem;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            animation: slideUp 0.3s ease-out;
-        }
-        
-        .message.error {
-            background-color: #fef2f2;
-            border: 1px solid #fecaca;
-            color: #dc2626;
-        }
-        
-        .message.success {
-            background-color: #f0fdf4;
-            border: 1px solid #bbf7d0;
-            color: #16a34a;
-        }
-        
-        .message.warning {
-            background-color: #fffbeb;
-            border: 1px solid #fed7aa;
-            color: #d97706;
-        }
-        
-        .message.info {
-            background-color: #eff6ff;
-            border: 1px solid #bfdbfe;
-            color: #2563eb;
-        }
-        
-        /* Default message style */
-        .message:not(.error):not(.success):not(.warning):not(.info) {
-            background-color: #f3f4f6;
-            border: 1px solid #d1d5db;
-            color: #374151;
-        }
-        
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        /* Auto-hide messages after 5 seconds */
-        .message {
-            animation: slideUp 0.3s ease-out, fadeOut 0.3s ease-out 4.7s forwards;
-        }
-        
-        @keyframes fadeOut {
-            from {
-                opacity: 1;
-                transform: translateY(0);
-            }
-            to {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-        }
     </style>
 </head>
 
 <body class="font-raleway">
-    {% if request.path == '/login/' or request.path == '/register/' or request.path == '/login_register/' or request.path == '/' %}
-        {% include 'navbar_guest.html' %}
-    {% endif %}
-
-    {% if request.path == '/hewan/' or request.path == '/profile-klien/' %}
-        {% include 'navbar_klien.html' %}
-    {% endif %}
-
-    {% if 'profile-frontdesk' in request.path or 'hewan/jenis-hewan' in request.path or 'klinik/klien' in request.path %}
-        {% include 'navbar_front_desk.html' %}
-    {% endif %}
-
-    {% if request.path == '/profile-dokter/' or request.path == '/hewan/jenis-hewan/' or request.path == '/list_perawatan' %}
-        {% include 'navbar_dokter.html' %}
-    {% endif %}
-
-    {% if request.path == '/profile-perawat/' or request.path == '/klinik/vaksin/' %}
-        {% include 'navbar_perawat.html' %}
-    {% endif %}
-    
-    <!-- Messages Container -->
-    {% if messages %}
-    <div class="message-container">
-        {% for msg in messages %}
-        <div class="message {{ msg.tags }}" role="alert">
-            {{ msg }}
-        </div>
-        {% endfor %}
-    </div>
-    {% endif %}
-    
-    <div class="container mx-auto mt-4">
-        {% block content %} {% endblock content %}
+    {% include 'navbar.html' %}
+  <div class="container mx-auto mt-4">
+    {% block content %} {% endblock content %}
     </div> 
-
-    <script>
-        // Auto-hide messages after 5 seconds
-        document.addEventListener('DOMContentLoaded', function() {
-            const messages = document.querySelectorAll('.message');
-            messages.forEach(function(message) {
-                setTimeout(function() {
-                    message.style.display = 'none';
-                }, 5000);
-            });
-        });
-    </script>
 </body>
 
 </html>
