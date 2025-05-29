@@ -1,115 +1,109 @@
 {% extends 'base.html' %}
 
 {% block meta %}
-<title>Update Vaccination</title>
+  <title>Update Vaccination</title>
 {% endblock meta %}
 
 {% block content %}
 <style>
-    .create-vaccination-container {
-        background-color: #ffffff;
-        padding: 2rem;
-        margin: 3rem auto;
-        max-width: 600px;
-        border-radius: 10px;
-        border: 2px solid #e2e8f0;
-        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
-    }
-
-    .create-vaccination-container h2 {
-        text-align: center;
-        font-weight: bold;
-        margin-bottom: 2rem;
-    }
-
-    form {
-        width: 100%;
-    }
-
-    .form-label {
-        font-weight: 600;
-        margin-bottom: 0.5rem;
-    }
-
-    .form-select, 
-    .form-control {
-        width: 100%;
-        height: 50px;
-        margin-bottom: 1.5rem;
-        border-radius: 6px;
-        border: 1px solid #cbd5e1;
-        padding: 0 1rem;
-    }
-
-    /* Tambahan style khusus untuk input disabled */
-    .form-control:disabled {
-        background-color:#e2e8f0 !important;
-        color: #000000 !important;
-        -webkit-text-fill-color: #000000 !important;
-        opacity: 1 !important;
-    }
-
-    .btn-primary {
-        background-color: #0B1120;
-        color: white;
-        border: none;
-        padding: 0.6rem 1.5rem;
-        font-weight: bold;
-        border-radius: 5px;
-        min-width: 100px;
-    }
-
-    .btn-primary:hover {
-        background-color: #1F2937;
-    }
-
-    .btn-secondary {
-        padding: 0.6rem 1.5rem;
-        font-weight: bold;
-        border-radius: 5px;
-        background-color: #e2e8f0;
-        color: black;
-        border: none;
-        min-width: 100px;
-        margin-right: 10px;
-    }
-
-    .btn-secondary:hover {
-        background-color: #cbd5e1;
-    }
-
-    .button-group {
-        display: flex;
-        justify-content: flex-end;
-        margin-top: 1rem;
-    }
+  .create-vaccination-container {
+    background-color: #ffffff;
+    padding: 2rem;
+    margin: 3rem auto;
+    max-width: 600px;
+    border-radius: 10px;
+    border: 2px solid #e2e8f0;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+  }
+  .create-vaccination-container h2 {
+    text-align: center;
+    font-weight: bold;
+    margin-bottom: 2rem;
+  }
+  .form-label {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+  .form-select, .form-control {
+    width: 100%;
+    height: 50px;
+    margin-bottom: 1.5rem;
+    border-radius: 6px;
+    border: 1px solid #cbd5e1;
+    padding: 0 1rem;
+  }
+  .form-control:disabled {
+    background-color: #e2e8f0 !important;
+    color: #000 !important;
+    -webkit-text-fill-color: #000 !important;
+    opacity: 1 !important;
+  }
+  .btn-primary {
+    background-color: #0B1120;
+    color: white;
+    border: none;
+    padding: 0.6rem 1.5rem;
+    font-weight: bold;
+    border-radius: 5px;
+    min-width: 100px;
+  }
+  .btn-primary:hover { background-color: #1F2937; }
+  .btn-secondary {
+    padding: 0.6rem 1.5rem;
+    font-weight: bold;
+    border-radius: 5px;
+    background-color: #e2e8f0;
+    color: black;
+    border: none;
+    min-width: 100px;
+    margin-right: 10px;
+  }
+  .btn-secondary:hover { background-color: #cbd5e1; }
+  .button-group {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 1rem;
+  }
 </style>
 
 <div class="create-vaccination-container">
-    <h2 class="text-3xl font-bold mb-8">Update Vaccination</h2>
-    <form method="post">
-        {% csrf_token %}
-        <div class="mb-3">
-            <label class="form-label">Kunjungan</label>
-            <input type="text" class="form-control" value="{{ kunjungan }}" disabled>
-        </div>
+  <h2 class="text-3xl font-bold mb-8">Update Vaccination</h2>
 
-        <div class="mb-3">
-            <label class="form-label">Vaksin</label>
-            <select name="kode_vaksin" id="kode_vaksin" class="form-select" required>
-                <option value="" disabled selected hidden>Vaksin</option> 
-                {% for v in vaksin_options %}
-                <option value="{{ v.kode_vaksin }}">
-                    {{ v.kode_vaksin }} - {{ v.nama_vaksin }} [{{ v.stok }}]
-                </option>
-                {% endfor %}
-            </select>
+  {# Messages #}
+  {% if messages %}
+    <div class="mb-4">
+      {% for msg in messages %}
+        <div class="p-3 mb-2 rounded {% if msg.tags == 'error' %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %}">
+          {{ msg }}
         </div>
+      {% endfor %}
+    </div>
+  {% endif %}
 
-        <div class="button-group">
-            <a href="{% url 'merah:list_vaksinasi' %}" class="btn btn-secondary">Cancel</a>
-            <button type="submit" class="btn btn-primary">Update</button>
-        </div>
-    </form>
+  <form method="post">
+    {% csrf_token %}
+    <div class="mb-3">
+      <label class="form-label">Kunjungan</label>
+      <input type="text" class="form-control" value="{{ kunjungan }}" disabled>
+    </div>
+
+    <div class="mb-3">
+      <label for="kode_vaksin" class="form-label">Vaksin</label>
+      <select name="kode_vaksin" id="kode_vaksin" class="form-select" required>
+        <option value="" disabled>-- Pilih Vaksin --</option>
+        {% for v in vaksin_options %}
+          <option value="{{ v.kode_vaksin }}"
+            {% if v.kode_vaksin == current.kode_vaksin %}selected{% endif %}>
+            {{ v.kode_vaksin }} – {{ v.nama_vaksin }} [stok: {{ v.stok }}]
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="button-group">
+      <a href="{% url 'merah:list_vaksinasi' %}" class="btn-secondary">Cancel</a>
+      <button type="submit" class="btn-primary">Update</button>
+    </div>
+  </form>
 </div>
 {% endblock content %}
