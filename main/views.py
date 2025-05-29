@@ -301,7 +301,7 @@ def login(request):
         cur.execute('SELECT 1 FROM FRONT_DESK WHERE no_front_desk=%s', (no_pegawai,))
         if cur.fetchone():
             role = 'front_desk'
-            profile_url = 'main:profile_frontdesk'
+            profile_url = 'main:profile_front_desk'
         else:
             # Tenaga Medis → Dokter / Perawat
             cur.execute('SELECT no_izin_praktik FROM TENAGA_MEDIS WHERE no_tenaga_medis=%s', (no_pegawai,))
@@ -314,10 +314,10 @@ def login(request):
             cur.execute('SELECT 1 FROM DOKTER_HEWAN WHERE no_dokter_hewan=%s', (no_pegawai,))
             if cur.fetchone():
                 role = 'dokter_hewan'
-                profile_url = 'main:profile_dokter'
+                profile_url = 'main:profile_dokter_hewan'
             else:
                 role = 'perawat_hewan'
-                profile_url = 'main:profile_perawat'
+                profile_url = 'main:profile_perawat_hewan'
 
         # 5) simpan session & redirect
         request.session['email']      = email
@@ -805,7 +805,35 @@ def update_profile(request):
 
         conn.commit()
         messages.success(request, 'Profil berhasil diperbarui!')
-        return redirect('main:profile_'+role)
+
+        email_val = email
+        role_val = role
+        pegawai_val = request.session.get('no_pegawai') if 'no_pegawai' in request.session else None
+        
+        try:
+            request.session.cycle_key()
+            
+            request.session['email'] = email_val
+            request.session['role'] = role_val
+            if pegawai_val:
+                request.session['no_pegawai'] = pegawai_val
+            
+            request.session.save()
+            
+            if role_val == 'individu' or role_val == 'perusahaan':
+                return redirect('main:profile_klien')
+            
+            return redirect(f"main:profile_{role_val}")
+                
+        except Exception as e:
+            print(f"Session error in update_profile: {e}")
+            request.session.flush()
+            request.session['email'] = email_val
+            request.session['role'] = role_val
+            if pegawai_val:
+                request.session['no_pegawai'] = pegawai_val
+            return redirect('main:login')
+
 
     finally:
         cur.close()
