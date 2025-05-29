@@ -26,15 +26,16 @@
 
           {% elif request.session.role == 'front_desk' %}
             {# front-desk #}
-            <a href="{% url 'main:profile_frontdesk' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Dashboard</a>
+            <a href="{% url 'main:profile_front_desk' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Dashboard</a>
             <a href="{% url 'kuning:list_jenis_hewan' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Kelola Jenis Hewan</a>
+            <a href="{% url 'kuning:list_hewan' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Kelola Hewan Peliharaan</a>
             <a href="{% url 'hijau:list_kunjungan' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Kelola Kunjungan</a>
             <a href="{% url 'merah:list_klien' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Daftar Klien</a>
             <a href="{% url 'hijau:list_perawatan' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Perawatan Hewan</a>
 
           {% elif request.session.role == 'dokter_hewan' %}
             {# dokter #}
-            <a href="{% url 'main:profile_dokter' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Dashboard</a>
+            <a href="{% url 'main:profile_dokter_hewan' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Dashboard</a>
             <a href="{% url 'kuning:list_jenis_hewan' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Daftar Jenis Hewan</a>
             <a href="{% url 'hijau:list_kunjungan' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Daftar Kunjungan</a>
             <a href="{% url 'merah:list_vaksinasi' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Manajemen Vaksinasi Hewan</a>
@@ -42,7 +43,7 @@
 
           {% elif request.session.role == 'perawat_hewan' %}
             {# perawat #}
-            <a href="{% url 'main:profile_perawat' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Dashboard</a>
+            <a href="{% url 'main:profile_perawat_hewan' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Dashboard</a>
             <a href="{% url 'merah:list_vaksin' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Kelola Vaksin</a>
             <a href="{% url 'hijau:list_perawatan' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Perawatan Hewan</a>
 
@@ -85,15 +86,16 @@
 
           {% elif request.session.role == 'front_desk' %}
             {# front-desk #}
-            <a href="{% url 'main:profile_frontdesk' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Dashboard</a>
+            <a href="{% url 'main:profile_front_desk' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Dashboard</a>
             <a href="{% url 'kuning:list_jenis_hewan' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Kelola Jenis Hewan</a>
+            <a href="{% url 'kuning:list_hewan' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Kelola Hewan Peliharaan</a>
             <a href="{% url 'hijau:list_kunjungan' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Kelola Kunjungan</a>
             <a href="{% url 'merah:list_klien' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Daftar Klien</a>
             <a href="{% url 'hijau:list_perawatan' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Perawatan Hewan</a>
 
           {% elif request.session.role == 'dokter_hewan' %}
             {# dokter #}
-            <a href="{% url 'main:profile_dokter' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Dashboard</a>
+            <a href="{% url 'main:profile_dokter_hewan' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Dashboard</a>
             <a href="{% url 'kuning:list_jenis_hewan' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Daftar Jenis Hewan</a>
             <a href="{% url 'hijau:list_kunjungan' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Daftar Kunjungan</a>
             <a href="{% url 'merah:list_vaksinasi' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Manajemen Vaksinasi Hewan</a>
@@ -101,7 +103,7 @@
 
           {% elif request.session.role == 'perawat_hewan' %}
             {# perawat #}
-            <a href="{% url 'main:profile_perawat' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Dashboard</a>
+            <a href="{% url 'main:profile_perawat_hewan' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Dashboard</a>
             <a href="{% url 'merah:list_vaksin' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Kelola Vaksin</a>
             <a href="{% url 'hijau:list_perawatan' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm">Perawatan Hewan</a>
 

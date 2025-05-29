@@ -27,15 +27,26 @@
 {% endblock meta %}
 
 {% block content %}
+<!-- Flash Messages -->
+{% if messages %}
+<div class="mb-6">
+    {% for message in messages %}
+    <div class="p-4 {% if message.tags == 'error' %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %} rounded">
+        {{ message }}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
 <div class="p-6 bg-white rounded-lg shadow-md">
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-3xl font-bold">List Jenis Hewan</h1>
-        {% if role == 'frontdesk' %}
+        {% if role == 'front_desk' %}
         <button id="createButton" class="bg-[#0B1120] text-white py-2 px-4 rounded-md flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
             </svg>
-            Create New Animal Type
+            Create
         </button>
         {% endif %}
     </div>
@@ -47,7 +58,7 @@
                     <th class="w-16 px-4 py-3 border-b border-r text-left">No</th>
                     <th class="px-4 py-3 border-b border-r text-left">ID Jenis</th>
                     <th class="px-4 py-3 border-b border-r text-left">Nama Jenis</th>
-                    {% if role == 'frontdesk' %}
+                    {% if role == 'front_desk' %}
                     <th class="px-4 py-3 border-b text-center">Action</th>
                     {% endif %}
                 </tr>
@@ -58,7 +69,7 @@
                     <td class="px-4 py-3 border-b border-r">{{ hewan.no }}</td>
                     <td class="px-4 py-3 border-b border-r">{{ hewan.id_jenis }}</td>
                     <td class="px-4 py-3 border-b border-r">{{ hewan.nama_jenis }}</td>
-                    {% if role == 'frontdesk' %}
+                    {% if role == 'front_desk' %}
                     <td class="px-4 py-3 border-b">
                         <div class="flex justify-center gap-2">
                             <button 
@@ -67,12 +78,14 @@
                             >
                                 Update
                             </button>
+                            {% if hewan.id_jenis not in used_types %}
                             <button 
                                 onclick="openDeleteModal('{{ hewan.id_jenis }}', '{{ hewan.nama_jenis }}')"
                                 class="bg-red-500 hover:bg-red-600 text-white py-2 px-6 rounded-md"
                             >
                                 Delete
                             </button>
+                            {% endif %}
                         </div>
                     </td>
                     {% endif %}
@@ -83,13 +96,13 @@
     </div>
 </div>
 
-{% if role == 'frontdesk' %}
 <!-- Create Jenis Hewan Modal -->
 <div id="createModal" class="modal">
     <div class="modal-content">
         <h1 class="text-3xl font-bold mb-6">Create New Animal Type</h1>
         
-        <form id="createForm">
+        <form id="createForm" method="post" action="">
+            {% csrf_token %}
             <div class="mb-6">
                 <label for="namaJenis" class="block text-gray-700 mb-2">Nama Jenis</label>
                 <input 
@@ -126,7 +139,8 @@
     <div class="modal-content">
         <h1 class="text-3xl font-bold mb-6">Update Animal Type</h1>
         
-        <form id="updateForm">
+        <form id="updateForm" method="post" action="">
+            {% csrf_token %}
             <div class="mb-4">
                 <label for="updateIdJenis" class="block text-gray-700 mb-2">ID Jenis Hewan</label>
                 <input 
@@ -181,22 +195,26 @@
             <span id="deleteIdJenis" class="text-red-500 font-medium"></span>?
         </p>
         
-        <div class="flex justify-end gap-3">
-            <button 
-                type="button"
-                onclick="hideDeleteModal()" 
-                class="px-6 py-2 border border-gray-300 rounded-md bg-white text-gray-700 hover:bg-gray-100"
-            >
-                Cancel
-            </button>
-            <button 
-                type="button"
-                onclick="confirmDelete()" 
-                class="px-6 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
-            >
-                Confirm Deletion
-            </button>
-        </div>
+        <form id="deleteForm" method="post" action="">
+            {% csrf_token %}
+            <input type="hidden" id="deleteIdJenisInput" name="id_jenis">
+            
+            <div class="flex justify-end gap-3">
+                <button 
+                    type="button"
+                    onclick="hideDeleteModal()" 
+                    class="px-6 py-2 border border-gray-300 rounded-md bg-white text-gray-700 hover:bg-gray-100"
+                >
+                    Cancel
+                </button>
+                <button 
+                    type="submit" 
+                    class="px-6 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
+                >
+                    Confirm Deletion
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -209,11 +227,6 @@
         document.getElementById('createModal').style.display = 'none';
     }
     
-    document.getElementById('createForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        hideCreateModal();
-    });
-    
     function openUpdateModal(idJenis, namaJenis) {
         document.getElementById('updateIdJenis').value = idJenis;
         document.getElementById('updateNamaJenis').value = namaJenis;
@@ -225,18 +238,10 @@
         document.getElementById('updateModal').style.display = 'none';
     }
     
-    document.getElementById('updateForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        hideUpdateModal();
-    });
-    
-    let currentDeleteId = null;
-    
     function openDeleteModal(idJenis, namaJenis) {
-        currentDeleteId = idJenis;
-        
         document.getElementById('deleteIdJenis').textContent = idJenis;
         document.getElementById('deleteNamaJenis').textContent = namaJenis;
+        document.getElementById('deleteIdJenisInput').value = idJenis;
         
         document.getElementById('deleteModal').style.display = 'flex';
     }
@@ -244,14 +249,6 @@
     function hideDeleteModal() {
         document.getElementById('deleteModal').style.display = 'none';
     }
-    
-    function confirmDelete() {
-        console.log(`Deleting animal type with ID: ${currentDeleteId}`);
-        
-        hideDeleteModal();
-        
-        console.log('Item deleted successfully');
-    }
 </script>
-{% endif %}
+
 {% endblock content %}
