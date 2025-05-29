@@ -750,21 +750,46 @@ def list_kunjungan(request):
     try:
         conn = get_db_connection()
         cur = conn.cursor()
-        
-        # Get user role from session
+          # Get user role from session
         role = request.session.get('role')
         email = request.session.get('email')
         
-        # R (Read) - Kunjungan Semua: All authenticated users can view all visits
-        # Get all visits for all roles
-        cur.execute('''
-            SELECT k.id_kunjungan, k.no_identitas_klien, k.nama_hewan, 
-                   k.tipe_kunjungan, k.timestamp_awal, k.timestamp_akhir
-            FROM KUNJUNGAN k
-            ORDER BY k.timestamp_awal DESC
-        ''')
-        
-        rows = cur.fetchall()
+        # Different queries based on user role
+        if role in ['individu', 'perusahaan']:
+            # For clients (individu/perusahaan), only show their own visits
+            # First get the client's ID from their email
+            cur.execute('''
+                SELECT k.no_identitas
+                FROM KLIEN k
+                WHERE k.email = %s
+            ''', (email,))
+            
+            client_result = cur.fetchone()
+            if not client_result:
+                # Client not found, show empty list
+                rows = []
+            else:
+                client_id = client_result[0]
+                # Get only visits for this specific client
+                cur.execute('''
+                    SELECT k.id_kunjungan, k.no_identitas_klien, k.nama_hewan, 
+                           k.tipe_kunjungan, k.timestamp_awal, k.timestamp_akhir
+                    FROM KUNJUNGAN k
+                    WHERE k.no_identitas_klien = %s
+                    ORDER BY k.timestamp_awal DESC
+                ''', (client_id,))
+                
+                rows = cur.fetchall()
+        else:
+            # For staff (dokter_hewan, perawat_hewan, front_desk), show all visits
+            cur.execute('''
+                SELECT k.id_kunjungan, k.no_identitas_klien, k.nama_hewan, 
+                       k.tipe_kunjungan, k.timestamp_awal, k.timestamp_akhir
+                FROM KUNJUNGAN k
+                ORDER BY k.timestamp_awal DESC
+            ''')
+            
+            rows = cur.fetchall()
         for row in rows:
             # Format timestamps
             timestamp_awal = row[4].strftime('%d-%m-%Y %H:%M:%S') if row[4] else '-'

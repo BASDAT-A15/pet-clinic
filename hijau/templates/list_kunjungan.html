@@ -474,6 +474,10 @@
                                 <button class="btn btn-view" onclick="openMedicalRecordModal('{{ kunjungan.id_kunjungan }}')">
                                     Medical Record
                                 </button>
+                                {% elif request.session.role == 'individu' or request.session.role == 'perusahaan' %}
+                                <a href="{% url 'hijau:list_rekam_medis' %}?id={{ kunjungan.id_kunjungan }}" class="btn btn-view">
+                                    Lihat Rekam Medis
+                                </a>
                                 {% else %}
                                 <a href="{% url 'hijau:list_rekam_medis' %}?id={{ kunjungan.id_kunjungan }}" class="btn btn-view">
                                     Rekam Medis
@@ -494,12 +498,16 @@
                     </tr>
                     {% endfor %}
                 </tbody>
-            </table>
-            {% else %}
+            </table>            {% else %}
             <div class="no-data">
+                {% if request.session.role == 'individu' or request.session.role == 'perusahaan' %}
+                <h3>Tidak ada data kunjungan</h3>
+                <p>Anda belum memiliki kunjungan yang terdaftar dalam sistem.</p>
+                {% else %}
                 <h3>Tidak ada data kunjungan</h3>
                 <p>Belum ada kunjungan yang terdaftar dalam sistem.</p>
-            </div>            {% endif %}
+                {% endif %}
+            </div>{% endif %}
         </div>
     </div>
 
