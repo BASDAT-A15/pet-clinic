@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="px-6 py-4">
+  <h1 class="text-2xl font-bold mb-6">List Vaccine for Client’s Pet</h1>
+
+  <form method="get" class="flex justify-end gap-4 mb-6">
+    <select name="pet" class="border rounded px-3 py-2">
+      <option value="">Filter by Pet</option>
+      {% for pet in pet_options %}
+      <option value="{{ pet }}" {% if pet == current_pet %}selected{% endif %}>{{ pet }}</option>
+      {% endfor %}
+    </select>
+
+    <select name="vaksin" class="border rounded px-3 py-2">
+      <option value="">Filter by Vaccine</option>
+      {% for v in vaksin_options %}
+      <option value="{{ v }}" {% if v == current_vaksin %}selected{% endif %}>{{ v }}</option>
+      {% endfor %}
+    </select>
+
+    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Filter</button>
+  </form>
+
+  <table class="min-w-full border-collapse border">
+    <thead>
+      <tr class="bg-gray-100">
+        <th class="border px-4 py-2">No</th>
+        <th class="border px-4 py-2">Pet</th>
+        <th class="border px-4 py-2">Vaksin</th>
+        <th class="border px-4 py-2">ID Vaksin</th>
+        <th class="border px-4 py-2">Harga</th>
+        <th class="border px-4 py-2">Time and Date</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% if vaksinasi_list %}
+        {% for item in vaksinasi_list %}
+        <tr class="{% cycle 'bg-white' 'bg-gray-50' %}">
+          <td class="border px-4 py-2">{{ forloop.counter }}</td>
+          <td class="border px-4 py-2">
+            <a href="#" class="text-blue-600 hover:underline">{{ item.pet }}</a>
+          </td>
+          <td class="border px-4 py-2">{{ item.vaksin }}</td>
+          <td class="border px-4 py-2">{{ item.kode_vaksin }}</td>
+          <td class="border px-4 py-2">{{ item.harga }}</td>
+          <td class="border px-4 py-2">{{ item.waktu }}</td>
+        </tr>
+        {% endfor %}
+      {% else %}
+        <tr>
+          <td colspan="6" class="border px-4 py-6 text-center text-gray-500">
+            Belum ada data vaksinasi.
+          </td>
+        </tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
