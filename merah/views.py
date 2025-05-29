@@ -215,7 +215,6 @@ def delete_vaksinasi(request, id_kunjungan):
         cur.execute("""
             UPDATE kunjungan
                SET kode_vaksin = NULL,
-                   timestamp_akhir = NULL
              WHERE id_kunjungan = %s
                AND no_dokter_hewan = %s
         """, [id_kunjungan, no_dokter])
@@ -521,9 +520,20 @@ def delete_vaksin(request, kode_vaksin):
 
 @require_http_methods(['GET'])
 def list_klien(request):
+    role = request.session.get('role') 
+    no_identitas = request.session.get('no_identitas')
+    # DEBUG: Print session info
+    print(f"DEBUG - Role: {role}")
+    print(f"DEBUG - No Identitas: {no_identitas}")
+    if role in ['perusahaan', 'individu']:
+        if no_identitas:
+            return redirect('merah:detail_klien', client_id=no_identitas)
+        else:
+            return HttpResponseForbidden("Session tidak valid - no identitas tidak ditemukan.")
+    
     # 1) Akses hanya Front-Desk Officer
-    if request.session.get('role') != 'front_desk':
-        return HttpResponseForbidden("Hanya Front-Desk Officer yang boleh akses.")
+    if request.session.get('role') not in ['individu', 'klien', 'front_desk']:
+        return HttpResponseForbidden("Hanya Front-Desk Officer atau  Klien yang boleh akses.")
 
     search_query = request.GET.get('search', '').strip().lower()
     conn = get_db_connection()
@@ -583,8 +593,10 @@ def detail_klien(request, client_id):
     role = request.session.get('role')
 
     # 1) Jika Klien: hanya boleh lihat detail dirinya sendiri
-    if role == 'klien':
-        no_klien = request.session.get('no_identitas_klien')
+    if role in ['individu', 'perusahaan']:  # Ubah dari 'klien' ke ['individu', 'perusahaan']
+        no_klien = request.session.get('no_identitas')  # Ubah dari 'no_identitas_klien' ke 'no_identitas'
+        print(f"DEBUG detail_klien - No klien from session: {no_klien}")
+        
         if not no_klien or str(client_id) != str(no_klien):
             return HttpResponseForbidden("Anda hanya boleh melihat data Anda sendiri.")
 
