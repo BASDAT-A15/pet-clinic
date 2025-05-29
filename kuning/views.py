@@ -27,7 +27,9 @@ def list_jenis_hewan(request):
                 messages.success(request, f'Jenis hewan {nama_jenis} berhasil ditambahkan.')
             except Exception as e:
                 conn.rollback()
-                messages.error(request, f'Gagal menambahkan jenis hewan: {str(e)}')
+                full_msg  = str(e)
+                clean_msg = full_msg.split('CONTEXT')[0].strip()
+                messages.error(request, clean_msg)
             finally:
                 cur.close()
                 conn.close()
@@ -207,29 +209,14 @@ def list_hewan(request):
             cur = conn.cursor()
             
             try:
-                cur.execute(
-                    """
-                    SELECT COUNT(*) 
-                    FROM KUNJUNGAN 
-                    WHERE nama_hewan = %s AND 
-                    (timestamp_akhir IS NULL OR timestamp_akhir > NOW())
-                    """,
-                    (hewan_id,)
-                )
-                has_active = cur.fetchone()[0] > 0
-                
-                if has_active:
-                    messages.error(request, 'Hewan ini memiliki kunjungan aktif dan tidak dapat dihapus.')
-                else:
-                    cur.execute(
-                        "DELETE FROM HEWAN WHERE nama = %s",
-                        (hewan_id,)
-                    )
-                    conn.commit()
-                    messages.success(request, 'Data hewan berhasil dihapus.')
+                cur.execute("DELETE FROM HEWAN WHERE nama = %s", (hewan_id,))
+                conn.commit()
+                messages.success(request, f'Data hewan {hewan_id} berhasil dihapus.')
             except Exception as e:
                 conn.rollback()
-                messages.error(request, f'Gagal menghapus hewan: {str(e)}')
+                full_msg = str(e)
+                clean_msg = full_msg.split('CONTEXT')[0].strip()
+                messages.error(request, clean_msg)
             finally:
                 cur.close()
                 conn.close()
