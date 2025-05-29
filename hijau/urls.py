@@ -10,11 +10,11 @@ urlpatterns = [
     path('api/kunjungan/<str:kunjungan_id>/', views.get_kunjungan_details, name='get_kunjungan_details'),
     path('update_perawatan/<str:id_kunjungan>/', views.update_perawatan, name='update_perawatan'),
     path('delete_perawatan/', views.delete_perawatan, name='delete_perawatan'),
-    
-    # AJAX Endpoints - ADD THESE
+      # AJAX Endpoints - ADD THESE
     path('api/treatment/<str:id_kunjungan>/', views.get_treatment_details, name='get_treatment_details'),
     path('api/update-treatment/', views.update_treatment_ajax, name='update_treatment_ajax'),
     path('api/delete-treatment/', views.delete_treatment_ajax, name='delete_treatment_ajax'),
+    path('api/visit-medical-info/<str:visit_id>/', views.get_visit_medical_info, name='get_visit_medical_info'),
       # Other URLs
     path('list_kunjungan/', views.list_kunjungan, name='list_kunjungan'),
     path('create_kunjungan/', views.create_kunjungan, name='create_kunjungan'),
