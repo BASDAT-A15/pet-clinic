@@ -598,8 +598,54 @@ def profile_dokter(request):
         cur.close()
         conn.close()
         
+@require_http_methods(['GET', 'POST'])
 def update_password(request):
-    return render(request, 'update_password.html')
+    if not request.session.get('email'):
+        return redirect('main:login')
+
+    if request.method == 'GET':
+        return render(request, 'update_password.html')
+    
+    old_password = request.POST.get('old_password', '').strip()
+    new_password = request.POST.get('new_password', '').strip()
+    confirm_password = request.POST.get('confirm_password', '').strip()
+    email = request.session.get('email')
+    
+    if not old_password or not new_password or not confirm_password:
+        messages.error(request, 'Semua field wajib diisi.')
+        return render(request, 'update_password.html')
+        
+    if new_password != confirm_password:
+        messages.error(request, 'Password baru dan konfirmasi password tidak cocok.')
+        return render(request, 'update_password.html')
+    
+    conn = None
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        cur.execute('SELECT 1 FROM "USER" WHERE email=%s AND password=%s', (email, old_password))
+        if not cur.fetchone():
+            messages.error(request, 'Password lama salah.')
+            return render(request, 'update_password.html')
+        
+        cur.execute('UPDATE "USER" SET password=%s WHERE email=%s', (new_password, email))
+        conn.commit()
+        
+        messages.success(request, 'Password berhasil diperbarui.')
+        
+        return redirect('main:login')
+    
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        messages.error(request, f'Terjadi kesalahan: {str(e)}')
+        return render(request, 'update_password.html')
+    
+    finally:
+        if conn:
+            cur.close()
+            conn.close()
 
 @require_http_methods(['GET','POST'])
 def update_profile(request):
