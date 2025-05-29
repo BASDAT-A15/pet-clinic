@@ -1,112 +1,53 @@
 {% extends 'base.html' %}
 
 {% block meta %}
-<title>Create New Vaccination</title>
+  <title>Create New Vaccination</title>
 {% endblock meta %}
 
 {% block content %}
-<style>
-    .create-vaccination-container {
-        background-color: #ffffff;
-        padding: 2rem;
-        margin: 3rem auto;
-        max-width: 600px;
-        border-radius: 10px;
-        border: 2px solid #e2e8f0; /* tambah border biar lebih tegas */
-        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1); /* shadow lebih dalam */
-    }
+<div class="create-vaccination-container mx-auto p-8 bg-white rounded-lg shadow-md max-w-lg">
+  <h2 class="text-3xl font-bold text-center mb-6">Create New Vaccination</h2>
+  <form method="post">
+    {% csrf_token %}
+    
+    <div class="mb-4">
+      <label for="id_kunjungan" class="block font-semibold mb-2">Kunjungan</label>
+      <select name="id_kunjungan" id="id_kunjungan" required
+              class="w-full border border-gray-300 rounded p-2">
+        <option value="" disabled selected hidden>Pilih Kunjungan</option>
+        {% for kj in kunjungan_options %}
+          <option value="{{ kj }}">{{ kj }}</option>
+        {% empty %}
+          <option value="" disabled>Tidak ada kunjungan terbuka</option>
+        {% endfor %}
+      </select>
+    </div>
 
-    .create-vaccination-container h2 {
-        text-align: center;
-        font-weight: bold;
-        margin-bottom: 2rem;
-    }
+    <div class="mb-6">
+      <label for="kode_vaksin" class="block font-semibold mb-2">Vaksin</label>
+      <select name="kode_vaksin" id="kode_vaksin" required
+              class="w-full border border-gray-300 rounded p-2">
+        <option value="" disabled selected hidden>Pilih Vaksin</option>
+        {% for v in vaksin_options %}
+          <option value="{{ v.kode_vaksin }}">
+            {{ v.kode_vaksin }} – {{ v.nama_vaksin }} [stok: {{ v.stok }}]
+          </option>
+        {% empty %}
+          <option value="" disabled>Tidak ada vaksin tersedia</option>
+        {% endfor %}
+      </select>
+    </div>
 
-    form {
-        width: 100%;
-    }
-
-    .form-label {
-        font-weight: 600;
-        margin-bottom: 0.5rem;
-    }
-
-    .form-select, 
-    .form-control {
-        width: 100%;
-        height: 50px;
-        margin-bottom: 1.5rem;
-        border-radius: 6px;
-        border: 1px solid #cbd5e1; /* border input */
-        padding: 0 1rem;
-    }
-
-    .btn-primary {
-        background-color: #0B1120;
-        color: white;
-        border: none;
-        padding: 0.6rem 1.5rem;
-        font-weight: bold;
-        border-radius: 5px;
-        min-width: 100px;
-    }
-
-    .btn-primary:hover {
-        background-color: #1F2937;
-    }
-
-    .btn-secondary {
-        padding: 0.6rem 1.5rem;
-        font-weight: bold;
-        border-radius: 5px;
-        background-color: #e2e8f0;
-        color: black;
-        border: none;
-        min-width: 100px;
-        margin-right: 10px;
-    }
-
-    .btn-secondary:hover {
-        background-color: #cbd5e1;
-    }
-
-    .button-group {
-        display: flex;
-        justify-content: flex-end;
-        margin-top: 1rem;
-    }
-</style>
-
-<div class="create-vaccination-container">
-    <h2 class="text-3xl font-bold mb-8">Create New Vaccination</h2>
-    <form method="post">
-        {% csrf_token %}
-        <div class="mb-3">
-            <label class="form-label">Kunjungan</label>
-            <select name="id_kunjungan" class="form-select" required>
-                <option value="" disabled selected hidden>Kunjungan</option> 
-                {% for k in kunjungan_options %}
-                <option value="{{ k.id_kunjungan }}">{{ k.id_kunjungan }}</option>
-                {% endfor %}
-            </select>
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">Vaksin</label>
-            <select name="kode_vaksin" class="form-select" required>
-                <option value="" disabled selected hidden>Vaksin</option> 
-                {% for v in vaksin_options %}
-                <option value="{{ v.kode_vaksin }}">
-                    {{ v.kode_vaksin }} - {{ v.nama_vaksin }} [{{ v.stok }}]
-                </option>
-                {% endfor %}
-            </select>
-        </div>
-
-        <div class="button-group">
-            <a href="{% url 'merah:list_vaksinasi' %}" class="btn btn-secondary">Cancel</a>
-            <button type="submit" class="btn btn-primary">Create</button>
-        </div>
-    </form>
+    <div class="flex justify-end space-x-3">
+      <a href="{% url 'merah:list_vaksinasi' %}"
+         class="px-4 py-2 border border-gray-300 rounded hover:bg-gray-100">
+        Cancel
+      </a>
+      <button type="submit"
+              class="px-4 py-2 bg-[#0B1120] text-white rounded hover:bg-gray-900">
+        Create
+      </button>
+    </div>
+  </form>
 </div>
 {% endblock content %}

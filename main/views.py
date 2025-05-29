@@ -765,7 +765,7 @@ def update_profile(request):
         cur.close()
         conn.close()
 
-@require_http_methods(['GET'])
+@require_http_methods(['POST'])
 def logout_view(request):
     request.session.flush()
     return redirect('main:login')
