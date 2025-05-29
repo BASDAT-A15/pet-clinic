@@ -3,32 +3,478 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rekam Medis Tidak Tersedia</title>
+    <title>Rekam Medis - Pet Clinic</title>
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <style>
+        .header-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .header-title p {
+            margin: 0.5rem 0 0 0;
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background-color: #ffffff;
+            color: #667eea;
+        }
+
+        .btn-primary:hover {
+            background-color: #f8f9fa;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .main-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .filters-section {
+            background: #ffffff;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            margin-bottom: 2rem;
+        }
+
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            align-items: end;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .filter-group label {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .filter-group select,
+        .filter-group input {
+            padding: 0.5rem;
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+
+        .table-container {
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+
+        .table-header {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .table-header h2 {
+            margin: 0;
+            color: #2c3e50;
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table th {
+            background: #f8f9fa;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: #2c3e50;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .table td {
+            padding: 1rem;
+            border-bottom: 1px solid #eee;
+            vertical-align: middle;
+        }
+
+        .table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-normal {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .status-warning {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .status-critical {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-sm {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-view {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .btn-view:hover {
+            background-color: #2980b9;
+            transform: translateY(-1px);
+        }
+
+        .btn-edit {
+            background-color: #f39c12;
+            color: white;
+        }
+
+        .btn-edit:hover {
+            background-color: #e67e22;
+            transform: translateY(-1px);
+        }
+
+        .btn-delete {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background-color: #c0392b;
+            transform: translateY(-1px);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #7f8c8d;
+        }
+
+        .empty-state h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #bdc3c7;
+        }
+
+        .empty-state p {
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+        }
+
+        .alert {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-weight: 500;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+
+            .filters-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .table-container {
+                overflow-x: auto;
+            }
+
+            .table {
+                min-width: 800px;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
 </head>
 <body>
-    <!-- Modal -->
-    <div id="modal" class="modal">
-        <div class="modal-content">
-            <h2>Rekam Medis tidak Tersedia</h2>
-            <p>Maaf, sepertinya belum ada rekam medis yang dibuat untuk kunjungan ini.</p>
-            <div class="modal-actions">
-                <button class="create-btn" onclick="window.location.href='/create-rekam-medis'">Create</button>
-                <button class="ok-btn" onclick="closeModal()">OK</button>
+    <div class="header-section">
+        <div class="header-content">
+            <div class="header-title">
+                <h1>Rekam Medis</h1>
+                <p>Manajemen rekam medis pasien</p>
+            </div>
+            <div class="header-actions">
+                {% if user.role == 'dokter_hewan' or user.role == 'front_desk' %}
+                <a href="{% url 'create_rekam_medis' %}" class="btn btn-primary">
+                    ➕ Tambah Rekam Medis
+                </a>
+                {% endif %}
+                <a href="{% url 'list_kunjungan' %}" class="btn btn-primary">
+                    ← Kembali ke Kunjungan
+                </a>
             </div>
         </div>
     </div>
 
-    <script>
-        // Modal close function
-        function closeModal() {
-            document.getElementById('modal').style.display = 'none';
-        }
+    <div class="main-content">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
 
-        // Optionally, you can show the modal on page load (or based on a condition)
-        window.onload = function() {
-            document.getElementById('modal').style.display = 'block';
+        <div class="filters-section">
+            <div class="filters-grid">
+                <div class="filter-group">
+                    <label for="filterKlien">Filter by Klien</label>
+                    <select id="filterKlien">
+                        <option value="">Semua Klien</option>
+                        {% for client in client_list %}
+                            <option value="{{ client.nama }}">{{ client.nama }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="filterHewan">Filter by Hewan</label>
+                    <select id="filterHewan">
+                        <option value="">Semua Hewan</option>
+                        {% for animal in animal_list %}
+                            <option value="{{ animal.nama }}">{{ animal.nama }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="filterDokter">Filter by Dokter</label>
+                    <select id="filterDokter">
+                        <option value="">Semua Dokter</option>
+                        {% for doctor in doctor_list %}
+                            <option value="{{ doctor.nama }}">{{ doctor.nama }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="searchInput">Cari</label>
+                    <input type="text" id="searchInput" placeholder="Cari rekam medis...">
+                </div>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <div class="table-header">
+                <h2>Daftar Rekam Medis</h2>
+            </div>
+
+            {% if rekam_medis_list %}
+            <table class="table" id="rekamMedisTable">
+                <thead>
+                    <tr>
+                        <th>ID Rekam Medis</th>
+                        <th>Kunjungan</th>
+                        <th>Klien</th>
+                        <th>Hewan</th>
+                        <th>Dokter</th>
+                        <th>Suhu (°C)</th>
+                        <th>Berat (kg)</th>
+                        <th>Status</th>
+                        <th>Tanggal</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for rekam_medis in rekam_medis_list %}
+                    <tr>
+                        <td><strong>{{ rekam_medis.id }}</strong></td>
+                        <td>{{ rekam_medis.id_kunjungan.id }}</td>
+                        <td>{{ rekam_medis.id_kunjungan.id_klien.nama }}</td>
+                        <td>{{ rekam_medis.id_kunjungan.id_hewan.nama }} ({{ rekam_medis.id_kunjungan.id_hewan.jenis_hewan }})</td>
+                        <td>{{ rekam_medis.id_kunjungan.id_dokter.nama }}</td>
+                        <td>{{ rekam_medis.suhu_tubuh }}</td>
+                        <td>{{ rekam_medis.berat_badan }}</td>
+                        <td>
+                            {% if rekam_medis.suhu_tubuh >= 39 or rekam_medis.berat_badan <= 2 %}
+                                <span class="status-badge status-critical">Critical</span>
+                            {% elif rekam_medis.suhu_tubuh >= 38.5 %}
+                                <span class="status-badge status-warning">Warning</span>
+                            {% else %}
+                                <span class="status-badge status-normal">Normal</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ rekam_medis.created_at|date:"d M Y H:i" }}</td>
+                        <td>
+                            <div class="action-buttons">
+                                <a href="{% url 'view_rekam_medis' rekam_medis.id %}" class="btn-sm btn-view" title="Lihat Detail">
+                                    👁️ Lihat
+                                </a>
+                                {% if user.role == 'dokter_hewan' or user.role == 'front_desk' %}
+                                <a href="{% url 'update_rekam_medis' rekam_medis.id %}" class="btn-sm btn-edit" title="Edit">
+                                    ✏️ Edit
+                                </a>
+                                {% endif %}
+                                {% if user.role == 'front_desk' %}
+                                <a href="{% url 'delete_rekam_medis' rekam_medis.id %}" class="btn-sm btn-delete" title="Hapus" onclick="return confirm('Apakah Anda yakin ingin menghapus rekam medis ini?')">
+                                    🗑️ Hapus
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty-state">
+                <h3>📋 Belum Ada Rekam Medis</h3>
+                <p>Belum ada rekam medis yang tersedia dalam sistem.</p>
+                {% if user.role == 'dokter_hewan' or user.role == 'front_desk' %}
+                <a href="{% url 'create_rekam_medis' %}" class="btn btn-primary">
+                    Tambah Rekam Medis Pertama
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        // Search and filter functionality
+        document.getElementById('searchInput').addEventListener('input', function() {
+            filterTable();
+        });
+
+        document.getElementById('filterKlien').addEventListener('change', function() {
+            filterTable();
+        });
+
+        document.getElementById('filterHewan').addEventListener('change', function() {
+            filterTable();
+        });
+
+        document.getElementById('filterDokter').addEventListener('change', function() {
+            filterTable();
+        });
+
+        function filterTable() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const klienFilter = document.getElementById('filterKlien').value.toLowerCase();
+            const hewanFilter = document.getElementById('filterHewan').value.toLowerCase();
+            const dokterFilter = document.getElementById('filterDokter').value.toLowerCase();
+            
+            const table = document.getElementById('rekamMedisTable');
+            if (!table) return;
+            
+            const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+
+            for (let i = 0; i < rows.length; i++) {
+                const row = rows[i];
+                const cells = row.getElementsByTagName('td');
+                let showRow = true;
+
+                // Search term filter
+                if (searchTerm) {
+                    const rowText = row.textContent.toLowerCase();
+                    showRow = showRow && rowText.includes(searchTerm);
+                }
+
+                // Klien filter
+                if (klienFilter && cells[2]) {
+                    showRow = showRow && cells[2].textContent.toLowerCase().includes(klienFilter);
+                }
+
+                // Hewan filter
+                if (hewanFilter && cells[3]) {
+                    showRow = showRow && cells[3].textContent.toLowerCase().includes(hewanFilter);
+                }
+
+                // Dokter filter
+                if (dokterFilter && cells[4]) {
+                    showRow = showRow && cells[4].textContent.toLowerCase().includes(dokterFilter);
+                }
+
+                row.style.display = showRow ? '' : 'none';
+            }
         }
     </script>
 </body>

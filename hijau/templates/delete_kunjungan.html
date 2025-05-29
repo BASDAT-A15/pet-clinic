@@ -3,46 +3,228 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Delete Kunjungan</title>
+    <title>Delete Kunjungan - Pet Clinic</title>
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <style>
+        .delete-container {
+            max-width: 500px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            text-align: center;
+        }
+
+        .delete-header {
+            margin-bottom: 2rem;
+        }
+
+        .delete-header h1 {
+            color: #e74c3c;
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .delete-header .warning-icon {
+            font-size: 3rem;
+            color: #f39c12;
+            margin-bottom: 1rem;
+        }
+
+        .delete-content {
+            margin-bottom: 2rem;
+        }
+
+        .delete-content p {
+            color: #7f8c8d;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        .kunjungan-details {
+            background-color: #f8f9fa;
+            border-left: 4px solid #e74c3c;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 8px;
+            text-align: left;
+        }
+
+        .kunjungan-details h3 {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            padding: 0.25rem 0;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: #34495e;
+        }
+
+        .detail-value {
+            color: #7f8c8d;
+        }
+
+        .delete-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+
+        .btn {
+            padding: 0.75rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 120px;
+        }
+
+        .btn-cancel {
+            background-color: #95a5a6;
+            color: white;
+        }
+
+        .btn-cancel:hover {
+            background-color: #7f8c8d;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-delete {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background-color: #c0392b;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .alert {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-weight: 500;
+        }
+
+        .alert-error {
+            background-color: #fdf2f2;
+            color: #e74c3c;
+            border: 1px solid #f8d7da;
+        }
+
+        @media (max-width: 768px) {
+            .delete-container {
+                margin: 1rem;
+                padding: 1.5rem;
+            }
+
+            .delete-actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            .detail-row {
+                flex-direction: column;
+                gap: 0.25rem;
+            }
+        }
+    </style>
 </head>
 <body>
-    <!-- Main Content (can be a button or another trigger for the modal) -->
-    <button id="deleteButton" class="delete-btn">Delete Kunjungan</button>
+    <div class="delete-container">
+        <div class="delete-header">
+            <div class="warning-icon">⚠️</div>
+            <h1>Hapus Kunjungan</h1>
+        </div>
 
-    <!-- Modal -->
-    <div id="deleteModal" class="modal">
-        <div class="modal-content">
-            <h2>Delete Kunjungan</h2>
-            <p>Apakah kamu yakin untuk menghapus KUNJUNGAN dengan ID <strong>KJN001</strong>?</p>
-            <div class="modal-actions">
-                <button class="cancel-btn" onclick="closeModal()">Cancel</button>
-                <button class="confirm-btn" onclick="confirmDeletion()">Confirm Deletion</button>
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="delete-content">
+            <p>Apakah Anda yakin ingin menghapus kunjungan ini?</p>
+            <p><strong>Tindakan ini tidak dapat dibatalkan!</strong></p>
+
+            {% if kunjungan %}
+            <div class="kunjungan-details">
+                <h3>Detail Kunjungan</h3>
+                <div class="detail-row">
+                    <span class="detail-label">ID Kunjungan:</span>
+                    <span class="detail-value">{{ kunjungan.id }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Klien:</span>
+                    <span class="detail-value">{{ kunjungan.id_klien.nama }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Hewan:</span>
+                    <span class="detail-value">{{ kunjungan.id_hewan.nama }} ({{ kunjungan.id_hewan.jenis_hewan }})</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Dokter:</span>
+                    <span class="detail-value">{{ kunjungan.id_dokter.nama }}</span>
+                </div>
+                {% if kunjungan.id_perawat %}
+                <div class="detail-row">
+                    <span class="detail-label">Perawat:</span>
+                    <span class="detail-value">{{ kunjungan.id_perawat.nama }}</span>
+                </div>
+                {% endif %}
+                <div class="detail-row">
+                    <span class="detail-label">Metode:</span>
+                    <span class="detail-value">{{ kunjungan.metode_kunjungan }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Waktu Mulai:</span>
+                    <span class="detail-value">{{ kunjungan.waktu_mulai|date:"d M Y H:i" }}</span>
+                </div>
+                {% if kunjungan.waktu_akhir %}
+                <div class="detail-row">
+                    <span class="detail-label">Waktu Akhir:</span>
+                    <span class="detail-value">{{ kunjungan.waktu_akhir|date:"d M Y H:i" }}</span>
+                </div>
+                {% endif %}
             </div>
+            {% endif %}
+        </div>
+
+        <div class="delete-actions">
+            <a href="{% url 'list_kunjungan' %}" class="btn btn-cancel">Batal</a>
+            <form method="POST" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-delete" onclick="return confirm('Apakah Anda benar-benar yakin?')">
+                    Hapus Kunjungan
+                </button>
+            </form>
         </div>
     </div>
-
-    <script>
-        // Get modal and delete button
-        const modal = document.getElementById("deleteModal");
-        const deleteButton = document.getElementById("deleteButton");
-
-        // Show modal when Delete button is clicked
-        deleteButton.onclick = function() {
-            modal.style.display = "block";
-        };
-
-        // Close modal
-        function closeModal() {
-            modal.style.display = "none";
-        }
-
-        // Confirm deletion logic (you can replace this with actual deletion logic)
-        function confirmDeletion() {
-            alert("Kunjungan deleted!");
-            modal.style.display = "none";
-        }
-    </script>
 </body>
 </html>

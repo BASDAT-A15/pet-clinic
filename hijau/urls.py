@@ -15,8 +15,7 @@ urlpatterns = [
     path('api/treatment/<str:id_kunjungan>/', views.get_treatment_details, name='get_treatment_details'),
     path('api/update-treatment/', views.update_treatment_ajax, name='update_treatment_ajax'),
     path('api/delete-treatment/', views.delete_treatment_ajax, name='delete_treatment_ajax'),
-    
-    # Other URLs
+      # Other URLs
     path('list_kunjungan/', views.list_kunjungan, name='list_kunjungan'),
     path('create_kunjungan/', views.create_kunjungan, name='create_kunjungan'),
     path('update_kunjungan/', views.update_kunjungan, name='update_kunjungan'),
@@ -24,4 +23,5 @@ urlpatterns = [
     path('create_rekam_medis/', views.create_rekam_medis, name='create_rekam_medis'),
     path('list_rekam_medis/', views.list_medis, name='list_rekam_medis'),
     path('update_rekam_medis/', views.update_rekam_medis, name='update_rekam_medis'),
+    path('view_rekam_medis/', views.view_rekam_medis, name='view_rekam_medis'),
 ]

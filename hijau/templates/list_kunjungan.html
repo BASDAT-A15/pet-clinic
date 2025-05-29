@@ -1,139 +1,250 @@
 <!DOCTYPE html>
-<nav class="fixed top-0 left-0 right-0 bg-[#0B1120] shadow-md z-50">
-    <div class="container mx-auto px-4">
-        <div class="flex justify-between items-center h-16">
-            <!-- Logo/Brand on left -->
-            <div class="flex-shrink-0">
-                <a href="/" class="font-bold text-xl text-white">Pet Clinic</a>
-            </div>
-            
-            <!-- Desktop Navigation Links -->
-            <div class="hidden md:flex flex-1 items-center justify-between ml-8">
-                <div class="flex items-center space-x-6">
-                <a href="{% url 'main:profile_klien' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm font-medium transition duration-200 flex items-center">
-                    Dashboard
-                </a>
-                
-                <a href="{% url 'kuning:list_hewan' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm font-medium transition duration-200 flex items-center">
-                    Kelola Hewan Peliharaan
-                </a>
-                
-                <a href="{% url 'kuning:list_hewan' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm font-medium transition duration-200 flex items-center">
-                    Daftar Kunjungan
-                </a>
-                </div>
-                
-                <div class="flex items-center">
-                    <div class="border-l border-gray-600 h-6 mx-4"></div>
-                <form method="post" action="{% url 'main:logout' %}" class="inline">
-                    {% csrf_token %}
-                    <button type="submit" class="text-white hover:text-gray-300 px-3 py-2 text-sm font-medium transition duration-200 flex items-center">
-                        Logout
-                    </button>
-                </form>
-                </div>
-            </div>
-            
-            <!-- Mobile menu button -->
-            <div class="md:hidden">
-                <button id="mobile-menu-button" class="text-gray-300 hover:text-white focus:outline-none">
-                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>
-                    </svg>
-                </button>
-            </div>
-        </div>
-        
-        <!-- Mobile menu -->
-        <div id="mobile-menu" class="hidden md:hidden pb-4 bg-[#0B1120]">
-            <div class="flex flex-col space-y-3 pt-2">
-                <a href="{% url 'main:profile_klien' %}" class="text-white hover:bg-gray-800 px-3 py-2 rounded-md text-base font-medium flex items-center">
-                    Dashboard
-                </a>
-                
-                <a href="{% url 'kuning:list_hewan' %}" class="text-white hover:bg-gray-800 px-3 py-2 rounded-md text-base font-medium flex items-center">
-                    Kelola Hewan Peliharaan
-                </a>
-                
-                <a href="{% url 'kuning:list_hewan' %}" class="text-white hover:bg-gray-800 px-3 py-2 rounded-md text-base font-medium flex items-center">
-                    Daftar Kunjungan
-                </a>
-                
-                <form method="post" action="{% url 'main:logout' %}" class="inline">
-                    {% csrf_token %}
-                    <button type="submit" class="text-white hover:bg-gray-800 w-full px-3 py-2 rounded-md text-base font-medium flex items-center">
-                        Logout
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
-</nav>
-
-<!-- Mobile menu toggle script -->
-<script>
-    document.getElementById('mobile-menu-button').addEventListener('click', function() {
-        const menu = document.getElementById('mobile-menu');
-        menu.classList.toggle('hidden');
-    });
-</script>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>List Kunjungan</title>
-    
     {% load static %}
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        h1 {
+            color: #2c3e50;
+            font-size: 32px;
+            font-weight: 700;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-create {
+            background-color: #1a1a1a;
+            color: white;
+        }
+
+        .btn-create:hover {
+            background-color: #333;
+        }
+
+        .btn-update {
+            background-color: #007bff;
+            color: white;
+            padding: 8px 16px;
+            font-size: 12px;
+        }
+
+        .btn-update:hover {
+            background-color: #0056b3;
+        }
+
+        .btn-delete {
+            background-color: #dc3545;
+            color: white;
+            padding: 8px 16px;
+            font-size: 12px;
+        }
+
+        .btn-delete:hover {
+            background-color: #c82333;
+        }
+
+        .btn-view {
+            background-color: #17a2b8;
+            color: white;
+            padding: 8px 16px;
+            font-size: 12px;
+        }
+
+        .btn-view:hover {
+            background-color: #138496;
+        }
+
+        .table-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background-color: #f8f9fa;
+            color: #495057;
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 20px 16px;
+            border-bottom: 2px solid #e9ecef;
+            text-align: left;
+        }
+
+        th:first-child {
+            width: 80px;
+            text-align: center;
+        }
+
+        th:last-child {
+            width: 160px;
+            text-align: center;
+        }
+
+        td {
+            padding: 16px;
+            border-bottom: 1px solid #f1f3f4;
+            font-size: 14px;
+            vertical-align: middle;
+        }
+
+        td:first-child {
+            text-align: center;
+            font-weight: 500;
+            color: #6c757d;
+        }
+
+        td:last-child {
+            text-align: center;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 80px 20px;
+            color: #6c757d;
+        }
+
+        .no-data h3 {
+            margin-bottom: 12px;
+            font-size: 24px;
+        }
+
+        .no-data p {
+            font-size: 16px;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
-        <h2>List Kunjungan</h2>
+        <!-- Header -->
+        <div class="header">
+            <h1>List Kunjungan</h1>
+            
+            <!-- Create button only visible for front_desk -->
+            {% if request.session.role == 'front_desk' %}
+            <a href="{% url 'hijau:create_kunjungan' %}" class="btn btn-create">
+                Create New Visit
+            </a>
+            {% endif %}
+        </div>
 
-        <!-- Tabel Daftar Kunjungan -->
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>ID Kunjungan</th>
-                    <th>ID Klien</th>
-                    <th>Nama Hewan</th>
-                    <th>Metode Kunjungan</th>
-                    <th>Waktu Mulai Penanganan</th>
-                    <th>Waktu Akhir Penanganan</th>
-                    <th>Rekam Medis</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Data hardcoded, contoh kunjungan -->
-                <tr>
-                    <td>KJN001</td>
-                    <td>FD123</td>
-                    <td>Snowy</td>
-                    <td>Janji Temu</td>
-                    <td>03-04-2025 14:30:13</td>
-                    <td>03-04-2025 15:30:16</td>
-                    <td><a href="#" class="btn btn-info">Lihat Rekam Medis</a></td>
-                </tr>
-                <tr>
-                    <td>KJN002</td>
-                    <td>KII123</td>
-                    <td>Blacky</td>
-                    <td>Walk-In</td>
-                    <td>05-08-2025 12:30:27</td>
-                    <td>05-08-2025 13:30:19</td>
-                    <td><a href="#" class="btn btn-info">Lihat Rekam Medis</a></td>
-                </tr>
-                <tr>
-                    <td>KJN003</td>
-                    <td>PKE123</td>
-                    <td>Hamseung</td>
-                    <td>Darurat</td>
-                    <td>01-09-2025 16:30:51</td>
-                    <td>01-09-2025 18:00:33</td>
-                    <td><a href="#" class="btn btn-info">Lihat Rekam Medis</a></td>
-                </tr>
-            </tbody>
-        </table>
+        <!-- Table -->
+        <div class="table-container">
+            {% if kunjungan_list %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>ID Kunjungan</th>
+                        <th>ID Klien</th>
+                        <th>Nama Hewan</th>
+                        <th>Metode Kunjungan</th>
+                        <th>Waktu Mulai</th>
+                        <th>Waktu Akhir</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for kunjungan in kunjungan_list %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ kunjungan.id_kunjungan }}</td>
+                        <td>{{ kunjungan.id_klien }}</td>
+                        <td>{{ kunjungan.nama_hewan }}</td>
+                        <td>{{ kunjungan.metode_kunjungan }}</td>
+                        <td>{{ kunjungan.waktu_mulai_penanganan }}</td>
+                        <td>{{ kunjungan.waktu_akhir_penanganan }}</td>
+                        <td>
+                            <div class="action-buttons">
+                                <a href="{% url 'hijau:list_rekam_medis' %}?id={{ kunjungan.id_kunjungan }}" class="btn btn-view">
+                                    Rekam Medis
+                                </a>
+                                {% if request.session.role == 'front_desk' %}
+                                <a href="{% url 'hijau:update_kunjungan' %}?id={{ kunjungan.id_kunjungan }}" class="btn btn-update">
+                                    Update
+                                </a>
+                                <form method="post" action="{% url 'hijau:delete_kunjungan' %}" style="display: inline;" onsubmit="return confirm('Apakah Anda yakin ingin menghapus kunjungan ini?')">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="id_kunjungan" value="{{ kunjungan.id_kunjungan }}">
+                                    <button type="submit" class="btn btn-delete">Delete</button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="no-data">
+                <h3>Tidak ada data kunjungan</h3>
+                <p>Belum ada kunjungan yang terdaftar dalam sistem.</p>
+            </div>
+            {% endif %}
+        </div>
     </div>
 </body>
 </html>

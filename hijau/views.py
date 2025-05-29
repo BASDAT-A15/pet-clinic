@@ -34,15 +34,20 @@ def list_perawatan(request):
                 'SELECT no_identitas FROM KLIEN WHERE email = %s',
                 (email,)
             )
-            client_id = cur.fetchone()[0]
-              # Get treatments for client's animals
+            client_result = cur.fetchone()
+            if not client_result:
+                messages.error(request, "Data klien tidak ditemukan")
+                return redirect('main:login')
+            
+            client_id = client_result[0]
+            # Get treatments for client's animals
             cur.execute('''
                 SELECT kk.id_kunjungan, k.no_identitas_klien, h.nama, 
-                       (SELECT email FROM "USER" u JOIN PEGAWAI p ON u.email = p.email_user 
+                       (SELECT u.email FROM "USER" u JOIN PEGAWAI p ON u.email = p.email_user 
                         WHERE p.no_pegawai = k.no_perawat_hewan LIMIT 1) as perawat,
-                       (SELECT email FROM "USER" u JOIN PEGAWAI p ON u.email = p.email_user 
+                       (SELECT u.email FROM "USER" u JOIN PEGAWAI p ON u.email = p.email_user 
                         WHERE p.no_pegawai = k.no_dokter_hewan LIMIT 1) as dokter,
-                       (SELECT email FROM "USER" u JOIN PEGAWAI p ON u.email = p.email_user 
+                       (SELECT u.email FROM "USER" u JOIN PEGAWAI p ON u.email = p.email_user 
                         WHERE p.no_pegawai = k.no_front_desk LIMIT 1) as front_desk,
                        p.kode_perawatan || ' - ' || p.nama_perawatan as jenis_perawatan,
                        kk.catatan
@@ -50,21 +55,23 @@ def list_perawatan(request):
                 JOIN KUNJUNGAN k ON kk.id_kunjungan = k.id_kunjungan
                                  AND kk.nama_hewan = k.nama_hewan 
                                  AND kk.no_identitas_klien = k.no_identitas_klien
+                                 AND kk.no_front_desk = k.no_front_desk
+                                 AND kk.no_perawat_hewan = k.no_perawat_hewan
+                                 AND kk.no_dokter_hewan = k.no_dokter_hewan
                 JOIN HEWAN h ON h.nama = k.nama_hewan AND h.no_identitas_klien = k.no_identitas_klien
                 JOIN PERAWATAN p ON p.kode_perawatan = kk.kode_perawatan
                 WHERE k.no_identitas_klien = %s
                 ORDER BY k.timestamp_awal DESC
             ''', (client_id,))
-              # If user is a dokter hewan (veterinarian) - they can see all treatments
-        elif role == 'dokter_hewan':
-            # Get all treatments (doctors can see all treatments in the clinic)
+        elif role in ['dokter_hewan', 'perawat_hewan', 'front_desk']:
+            # Get all treatments (staff can see all treatments in the clinic)
             cur.execute('''
                 SELECT kk.id_kunjungan, k.no_identitas_klien, h.nama, 
-                       (SELECT email FROM "USER" u JOIN PEGAWAI p ON u.email = p.email_user 
+                       (SELECT u.email FROM "USER" u JOIN PEGAWAI p ON u.email = p.email_user 
                         WHERE p.no_pegawai = k.no_perawat_hewan LIMIT 1) as perawat,
-                       (SELECT email FROM "USER" u JOIN PEGAWAI p ON u.email = p.email_user 
+                       (SELECT u.email FROM "USER" u JOIN PEGAWAI p ON u.email = p.email_user 
                         WHERE p.no_pegawai = k.no_dokter_hewan LIMIT 1) as dokter,
-                       (SELECT email FROM "USER" u JOIN PEGAWAI p ON u.email = p.email_user 
+                       (SELECT u.email FROM "USER" u JOIN PEGAWAI p ON u.email = p.email_user 
                         WHERE p.no_pegawai = k.no_front_desk LIMIT 1) as front_desk,
                        p.kode_perawatan || ' - ' || p.nama_perawatan as jenis_perawatan,
                        kk.catatan
@@ -72,8 +79,12 @@ def list_perawatan(request):
                 JOIN KUNJUNGAN k ON kk.id_kunjungan = k.id_kunjungan
                                  AND kk.nama_hewan = k.nama_hewan 
                                  AND kk.no_identitas_klien = k.no_identitas_klien
+                                 AND kk.no_front_desk = k.no_front_desk
+                                 AND kk.no_perawat_hewan = k.no_perawat_hewan
+                                 AND kk.no_dokter_hewan = k.no_dokter_hewan
                 JOIN HEWAN h ON h.nama = k.nama_hewan AND h.no_identitas_klien = k.no_identitas_klien
-                JOIN PERAWATAN p ON p.kode_perawatan = kk.kode_perawatan                ORDER BY k.timestamp_awal DESC
+                JOIN PERAWATAN p ON p.kode_perawatan = kk.kode_perawatan
+                ORDER BY k.timestamp_awal DESC
             ''')
         
         rows = cur.fetchall()
@@ -979,7 +990,7 @@ def update_perawatan(request, id_kunjungan=None):
             
             result = cur.fetchone()
             treatment_data['perawat_name'] = result[1] if result else "-"
-            
+        
         except Exception as e:
             print(f"Error fetching additional data: {e}")
             # Continue with available data
@@ -1051,7 +1062,13 @@ def delete_perawatan(request):
 
 # Function to list all visits
 def list_kunjungan(request):
-    # Check if user has authorized role for this operation
+    # Check if user is authenticated and has valid session
+    if not request.session.get('email') or not request.session.get('role'):
+        messages.error(request, "Session tidak valid. Silakan login kembali.")
+        return redirect('main:login')
+    
+    # R (Read) - Kunjungan: All authenticated users can view visits
+    # Allow all authenticated users to view visits
     if request.session.get('role') not in ['individu', 'perusahaan', 'dokter_hewan', 'perawat_hewan', 'front_desk']:
         return HttpResponseForbidden("Anda tidak memiliki akses ke halaman ini.")
     
@@ -1067,60 +1084,14 @@ def list_kunjungan(request):
         role = request.session.get('role')
         email = request.session.get('email')
         
-        # If user is a klien (client), only show their visits
-        if role == 'individu' or role == 'perusahaan':
-            # Get the client's ID
-            cur.execute(
-                'SELECT no_identitas FROM KLIEN WHERE email = %s',
-                (email,)
-            )
-            client_id = cur.fetchone()[0]
-            
-            # Get visits for this client
-            cur.execute('''
-                SELECT k.id_kunjungan, k.no_identitas_klien, k.nama_hewan, 
-                       k.tipe_kunjungan, k.timestamp_awal, k.timestamp_akhir
-                FROM KUNJUNGAN k
-                WHERE k.no_identitas_klien = %s
-                ORDER BY k.timestamp_awal DESC
-            ''', (client_id,))
-            
-        # If user is a front desk officer
-        elif role == 'front_desk':
-            # Get all visits
-            cur.execute('''
-                SELECT k.id_kunjungan, k.no_identitas_klien, k.nama_hewan, 
-                       k.tipe_kunjungan, k.timestamp_awal, k.timestamp_akhir
-                FROM KUNJUNGAN k
-                ORDER BY k.timestamp_awal DESC
-            ''')
-            
-        # If user is medical staff (doctor or nurse)
-        else:
-            # Get staff ID
-            cur.execute(
-                'SELECT no_pegawai FROM PEGAWAI WHERE email_user = %s',
-                (email,)
-            )
-            staff_id = cur.fetchone()[0]
-            
-            # Get visits for this staff member
-            if role == 'dokter_hewan':
-                cur.execute('''
-                    SELECT k.id_kunjungan, k.no_identitas_klien, k.nama_hewan, 
-                           k.tipe_kunjungan, k.timestamp_awal, k.timestamp_akhir
-                    FROM KUNJUNGAN k
-                    WHERE k.no_dokter_hewan = %s
-                    ORDER BY k.timestamp_awal DESC
-                ''', (staff_id,))
-            else:
-                cur.execute('''
-                    SELECT k.id_kunjungan, k.no_identitas_klien, k.nama_hewan, 
-                           k.tipe_kunjungan, k.timestamp_awal, k.timestamp_akhir
-                    FROM KUNJUNGAN k
-                    WHERE k.no_perawat_hewan = %s
-                    ORDER BY k.timestamp_awal DESC
-                ''', (staff_id,))
+        # R (Read) - Kunjungan Semua: All authenticated users can view all visits
+        # Get all visits for all roles
+        cur.execute('''
+            SELECT k.id_kunjungan, k.no_identitas_klien, k.nama_hewan, 
+                   k.tipe_kunjungan, k.timestamp_awal, k.timestamp_akhir
+            FROM KUNJUNGAN k
+            ORDER BY k.timestamp_awal DESC
+        ''')
         
         rows = cur.fetchall()
         for row in rows:
@@ -1151,6 +1122,12 @@ def list_kunjungan(request):
 
 # Function to create a new visit
 def create_kunjungan(request):
+    # Check if user is authenticated and has valid session
+    if not request.session.get('email') or not request.session.get('role'):
+        messages.error(request, "Session tidak valid. Silakan login kembali.")
+        return redirect('main:login')
+    
+    # CUD (Create, Update, Delete) - Kunjungan Front-Desk Officer only
     # Check if user has authorized role for this operation (only front desk can create visits)
     if request.session.get('role') not in ['front_desk']:
         return HttpResponseForbidden("Anda tidak memiliki akses ke halaman ini.")
@@ -1326,6 +1303,12 @@ def create_kunjungan(request):
 
 # Function to update a visit
 def update_kunjungan(request):
+    # Check if user is authenticated and has valid session
+    if not request.session.get('email') or not request.session.get('role'):
+        messages.error(request, "Session tidak valid. Silakan login kembali.")
+        return redirect('main:login')
+    
+    # CUD (Create, Update, Delete) - Kunjungan Front-Desk Officer only
     # Check if user has authorized role for this operation (only front desk can update visits)
     if request.session.get('role') not in ['front_desk']:
         return HttpResponseForbidden("Anda tidak memiliki akses ke halaman ini.")
@@ -1339,6 +1322,8 @@ def update_kunjungan(request):
     
     # If POST request (form submission)
     if request.method == 'POST':
+        conn = None
+        cur = None
         try:
             conn = get_db_connection()
             cur = conn.cursor()
@@ -1351,6 +1336,23 @@ def update_kunjungan(request):
             tipe_kunjungan = request.POST.get('visitMethod')
             timestamp_awal = request.POST.get('startTime')
             timestamp_akhir = request.POST.get('endTime') or None
+            
+            # Get current visit data to check what's changing
+            cur.execute('''
+                SELECT nama_hewan, no_identitas_klien, no_front_desk, 
+                       no_perawat_hewan, no_dokter_hewan, tipe_kunjungan,
+                       timestamp_awal, timestamp_akhir
+                FROM KUNJUNGAN 
+                WHERE id_kunjungan = %s
+                LIMIT 1
+            ''', (id_kunjungan,))
+            
+            current_visit = cur.fetchone()
+            if not current_visit:
+                messages.error(request, f"Kunjungan dengan ID {id_kunjungan} tidak ditemukan")
+                return redirect('hijau:list_kunjungan')
+            
+            current_nama_hewan, current_client_id, current_front_desk, current_nurse, current_doctor, current_tipe, current_start, current_end = current_visit
             
             # Get doctor ID from email
             cur.execute(
@@ -1374,27 +1376,86 @@ def update_kunjungan(request):
                 return redirect(f'hijau:update_kunjungan?id={id_kunjungan}')
             nurse_id = nurse_result[0]
             
-            # Update the visit record
-            cur.execute('''
-                UPDATE KUNJUNGAN
-                SET nama_hewan = %s, 
-                    no_identitas_klien = %s,
-                    no_dokter_hewan = %s,
-                    no_perawat_hewan = %s,
-                    tipe_kunjungan = %s,
-                    timestamp_awal = %s,
-                    timestamp_akhir = %s
-                WHERE id_kunjungan = %s
-            ''', (
-                nama_hewan,
-                client_id,
-                doctor_id,
-                nurse_id,
-                tipe_kunjungan,
-                timestamp_awal,
-                timestamp_akhir,
-                id_kunjungan
-            ))
+            # Check if any of the composite key fields are changing
+            composite_key_changing = (
+                nama_hewan != current_nama_hewan or
+                str(client_id) != str(current_client_id) or
+                str(current_front_desk) != str(current_front_desk) or  # front_desk stays the same
+                str(nurse_id) != str(current_nurse) or
+                str(doctor_id) != str(current_doctor)
+            )
+            
+            if composite_key_changing:
+                # Get all existing treatments for this visit
+                cur.execute('''
+                    SELECT kode_perawatan, catatan
+                    FROM KUNJUNGAN_KEPERAWATAN
+                    WHERE id_kunjungan = %s
+                ''', (id_kunjungan,))
+                
+                existing_treatments = cur.fetchall()
+                
+                # Delete all existing treatment records first
+                cur.execute('''
+                    DELETE FROM KUNJUNGAN_KEPERAWATAN
+                    WHERE id_kunjungan = %s
+                ''', (id_kunjungan,))
+                
+                # Update the visit record
+                cur.execute('''
+                    UPDATE KUNJUNGAN
+                    SET nama_hewan = %s, 
+                        no_identitas_klien = %s,
+                        no_dokter_hewan = %s,
+                        no_perawat_hewan = %s,
+                        tipe_kunjungan = %s,
+                        timestamp_awal = %s,
+                        timestamp_akhir = %s
+                    WHERE id_kunjungan = %s
+                ''', (
+                    nama_hewan,
+                    client_id,
+                    doctor_id,
+                    nurse_id,
+                    tipe_kunjungan,
+                    timestamp_awal,
+                    timestamp_akhir,
+                    id_kunjungan
+                ))
+                
+                # Recreate treatment records with new composite key values
+                for treatment in existing_treatments:
+                    kode_perawatan, catatan = treatment
+                    cur.execute('''
+                        INSERT INTO KUNJUNGAN_KEPERAWATAN(
+                            id_kunjungan, nama_hewan, no_identitas_klien, 
+                            no_front_desk, no_perawat_hewan, no_dokter_hewan,
+                            kode_perawatan, catatan)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                    ''', (
+                        id_kunjungan,
+                        nama_hewan,
+                        client_id,
+                        current_front_desk,  # Keep the same front desk
+                        nurse_id,
+                        doctor_id,
+                        kode_perawatan,
+                        catatan
+                    ))
+            else:
+                # No composite key changes, safe to update normally
+                cur.execute('''
+                    UPDATE KUNJUNGAN
+                    SET tipe_kunjungan = %s,
+                        timestamp_awal = %s,
+                        timestamp_akhir = %s
+                    WHERE id_kunjungan = %s
+                ''', (
+                    tipe_kunjungan,
+                    timestamp_awal,
+                    timestamp_akhir,
+                    id_kunjungan
+                ))
             
             if cur.rowcount == 0:
                 messages.error(request, f"Kunjungan dengan ID {id_kunjungan} tidak ditemukan")
@@ -1425,6 +1486,8 @@ def update_kunjungan(request):
         nurse_list = []
         animal_list = []
         
+        conn = None
+        cur = None
         try:
             conn = get_db_connection()
             cur = conn.cursor()
@@ -1558,6 +1621,7 @@ def delete_kunjungan(request):
         messages.error(request, "Session tidak valid. Silakan login kembali.")
         return redirect('main:login')
     
+    # CUD (Create, Update, Delete) - Kunjungan Front-Desk Officer only
     # Check if user has authorized role for this operation (only front desk can delete visits)
     if request.session.get('role') not in ['front_desk']:
         return HttpResponseForbidden("Anda tidak memiliki akses ke halaman ini.")
@@ -1627,7 +1691,9 @@ def list_medis(request):
     if not request.session.get('email') or not request.session.get('role'):
         messages.error(request, "Session tidak valid. Silakan login kembali.")
         return redirect('main:login')
-      # Check if user has authorized role for this operation
+    
+    # R (Read) - Rekam Medis: All authenticated users can view medical records
+    # Check if user has authorized role for this operation
     if request.session.get('role') not in ['individu', 'perusahaan', 'dokter_hewan', 'perawat_hewan', 'front_desk']:
         return HttpResponseForbidden("Anda tidak memiliki akses ke halaman ini.")
     
@@ -1671,37 +1737,26 @@ def list_medis(request):
             
             if not cur.fetchone():
                 return HttpResponseForbidden("Anda tidak memiliki akses ke rekam medis ini.")
-          # Check if medical record exists
+                
+        # Get the medical record for this visit
         cur.execute('''
-            SELECT suhu, berat_badan, catatan, timestamp_awal
-            FROM KUNJUNGAN
+            SELECT * FROM REKAM_MEDIS 
             WHERE id_kunjungan = %s
         ''', (id_kunjungan,))
         
-        row = cur.fetchone()
-        if not row:
-            messages.error(request, f"Kunjungan dengan ID {id_kunjungan} tidak ditemukan")
-            return redirect('hijau:list_kunjungan')
-        
-        # If both suhu and berat_badan have values, consider it as having a medical record
-        has_medical_record = row[0] is not None and row[1] is not None
-        
-        if has_medical_record:
-            # Format the date for display
-            tanggal_pemeriksaan = row[3].strftime("%d %B %Y") if row[3] else "-"
-            
+        record = cur.fetchone()
+        if record:
+            has_medical_record = True
             medical_record = {
-                'id_kunjungan': id_kunjungan,
-                'suhu': row[0],
-                'berat_badan': row[1],
-                'catatan': row[2] or "",
-                'tanggal_pemeriksaan': tanggal_pemeriksaan
+                'id_kunjungan': record[0],
+                'diagnosis': record[1],
+                'treatment_plan': record[2]
             }
-        
+            
     except psycopg2.Error as error:
         print(f"Error in list_medis: {error}")
         messages.error(request, f"Terjadi kesalahan: {error}")
-    
+        
     finally:
         if cur:
             cur.close()
@@ -1709,14 +1764,14 @@ def list_medis(request):
             conn.close()
     
     context = {
-        'id_kunjungan': id_kunjungan,
         'has_medical_record': has_medical_record,
-        'medical_record': medical_record
+        'medical_record': medical_record,
+        'id_kunjungan': id_kunjungan
     }
     
     return render(request, 'list_rekam_medis.html', context)
 
-# Function to create a medical record
+# Function to create a new medical record
 def create_rekam_medis(request):
     # Check if user is authenticated and has valid session
     if not request.session.get('email') or not request.session.get('role'):
@@ -1727,49 +1782,74 @@ def create_rekam_medis(request):
     if request.session.get('role') not in ['dokter_hewan']:
         return HttpResponseForbidden("Anda tidak memiliki akses ke halaman ini.")
     
-    id_kunjungan = request.GET.get('id')
-    
-    if not id_kunjungan:
-        messages.error(request, "ID Kunjungan diperlukan")
-        return redirect('hijau:list_kunjungan')
-    
     # If POST request (form submission)
     if request.method == 'POST':
+        conn = None
+        cur = None
         try:
             conn = get_db_connection()
             cur = conn.cursor()
             
             # Get form data
-            suhu = request.POST.get('temperature')
-            berat_badan = request.POST.get('weight')
-            catatan = request.POST.get('notes', '')
+            id_kunjungan = request.POST.get('kunjungan_id')
+            diagnosis = request.POST.get('diagnosa')
+            treatment_plan = request.POST.get('treatment_plan')
+            catatan_medis = request.POST.get('catatan_medis', '')
+            
+            # Additional fields for vital signs and medical details
+            suhu_tubuh = request.POST.get('suhu_tubuh')
+            berat_badan = request.POST.get('berat_badan')
+            tinggi_badan = request.POST.get('tinggi_badan')
+            detak_jantung = request.POST.get('detak_jantung')
+            keluhan_utama = request.POST.get('keluhan_utama')
+            pemeriksaan_fisik = request.POST.get('pemeriksaan_fisik')
             
             # Input validation
-            if not suhu or not berat_badan:
-                messages.error(request, "Suhu dan berat badan harus diisi")
-                return redirect(f'hijau:create_rekam_medis?id={id_kunjungan}')
+            if not id_kunjungan or not diagnosis or not treatment_plan:
+                messages.error(request, "ID Kunjungan, diagnosa, dan rencana perawatan harus diisi")
+                return redirect('hijau:create_rekam_medis')
             
-            # Update the kunjungan record with medical data
+            # Check if medical record already exists for this visit
             cur.execute('''
-                UPDATE KUNJUNGAN
-                SET suhu = %s, berat_badan = %s, catatan = %s
-                WHERE id_kunjungan = %s
-            ''', (suhu, berat_badan, catatan, id_kunjungan))
+                SELECT id_kunjungan FROM REKAM_MEDIS WHERE id_kunjungan = %s
+            ''', (id_kunjungan,))
             
-            if cur.rowcount == 0:
-                messages.error(request, f"Kunjungan dengan ID {id_kunjungan} tidak ditemukan")
-                return redirect('hijau:list_kunjungan')
+            if cur.fetchone():
+                messages.error(request, "Rekam medis untuk kunjungan ini sudah ada")
+                return redirect('hijau:create_rekam_medis')
+            
+            # Verify that the doctor is authenticated
+            email = request.session.get('email')
+            cur.execute(
+                'SELECT no_pegawai FROM PEGAWAI WHERE email_user = %s',
+                (email,)
+            )
+            doctor_result = cur.fetchone()
+            if not doctor_result:
+                messages.error(request, "Data dokter tidak ditemukan")
+                return redirect('hijau:create_rekam_medis')
+            
+            # Create the medical record
+            cur.execute('''
+                INSERT INTO REKAM_MEDIS(
+                    id_kunjungan, diagnosis, treatment_plan)
+                VALUES (%s, %s, %s)
+            ''', (
+                id_kunjungan, 
+                diagnosis,
+                treatment_plan
+            ))
             
             conn.commit()
             messages.success(request, "Rekam medis berhasil dibuat")
-            return redirect(f'hijau:list_rekam_medis?id={id_kunjungan}')
+            return redirect('hijau:list_medis') + f'?id={id_kunjungan}'
             
         except psycopg2.Error as error:
             if conn:
                 conn.rollback()
             print(f"Error in create_rekam_medis: {error}")
             messages.error(request, f"Terjadi kesalahan: {error}")
-            return redirect(f'hijau:create_rekam_medis?id={id_kunjungan}')
+            return redirect('hijau:create_rekam_medis')
             
         finally:
             if cur:
@@ -1779,40 +1859,55 @@ def create_rekam_medis(request):
     
     # If GET request (display form)
     else:
-        # Get kunjungan details for context
-        kunjungan_details = {}
+        kunjungan_list = []
         
         try:
             conn = get_db_connection()
             cur = conn.cursor()
             
+            # Get doctor's ID
+            email = request.session.get('email')
+            cur.execute(
+                'SELECT no_pegawai FROM PEGAWAI WHERE email_user = %s',
+                (email,)
+            )
+            doctor_id = cur.fetchone()[0]
+            
+            # Get visits that don't have medical records yet and are assigned to this doctor
             cur.execute('''
-                SELECT k.nama_hewan, 
-                       CASE 
-                           WHEN i.no_identitas_klien IS NOT NULL THEN i.nama_depan || ' ' || i.nama_belakang
-                           ELSE p.nama_perusahaan
-                       END as nama_klien
+                SELECT k.id_kunjungan, k.nama_hewan, k.no_identitas_klien,
+                       k.timestamp_awal, k.no_dokter_hewan
                 FROM KUNJUNGAN k
-                LEFT JOIN INDIVIDU i ON k.no_identitas_klien = i.no_identitas_klien
-                LEFT JOIN PERUSAHAAN p ON k.no_identitas_klien = p.no_identitas_klien
-                WHERE k.id_kunjungan = %s
-            ''', (id_kunjungan,))
+                LEFT JOIN REKAM_MEDIS rm ON k.id_kunjungan = rm.id_kunjungan
+                WHERE rm.id_kunjungan IS NULL AND k.no_dokter_hewan = %s
+                ORDER BY k.timestamp_awal DESC
+            ''', (doctor_id,))
             
-            row = cur.fetchone()
-            if not row:
-                messages.error(request, f"Kunjungan dengan ID {id_kunjungan} tidak ditemukan")
-                return redirect('hijau:list_kunjungan')
-            
-            kunjungan_details = {
-                'id_kunjungan': id_kunjungan,
-                'nama_hewan': row[0],
-                'nama_klien': row[1]
-            }
+            for row in cur.fetchall():
+                # Get client name
+                cur.execute('''
+                    SELECT i.nama_depan || ' ' || i.nama_belakang as nama
+                    FROM INDIVIDU i
+                    WHERE i.no_identitas_klien = %s
+                    UNION
+                    SELECT p.nama_perusahaan as nama
+                    FROM PERUSAHAAN p
+                    WHERE p.no_identitas_klien = %s
+                ''', (row[2], row[2]))
+                
+                client_result = cur.fetchone()
+                client_name = client_result[0] if client_result else "Unknown"
+                
+                kunjungan_list.append({
+                    'id': row[0],
+                    'nama_hewan': row[1],
+                    'nama_klien': client_name,
+                    'timestamp_awal': row[3]
+                })
                 
         except psycopg2.Error as error:
             print(f"Error fetching data for create_rekam_medis form: {error}")
             messages.error(request, f"Terjadi kesalahan: {error}")
-            return redirect('hijau:list_kunjungan')
             
         finally:
             if cur:
@@ -1821,7 +1916,7 @@ def create_rekam_medis(request):
                 conn.close()
         
         context = {
-            'kunjungan': kunjungan_details
+            'kunjungan_list': kunjungan_list
         }
         
         return render(request, 'create_rekam_medis.html', context)
@@ -1837,6 +1932,7 @@ def update_rekam_medis(request):
     if request.session.get('role') not in ['dokter_hewan']:
         return HttpResponseForbidden("Anda tidak memiliki akses ke halaman ini.")
     
+    # Get the visit ID from query parameters
     id_kunjungan = request.GET.get('id')
     
     if not id_kunjungan:
@@ -1845,34 +1941,59 @@ def update_rekam_medis(request):
     
     # If POST request (form submission)
     if request.method == 'POST':
+        conn = None
+        cur = None
         try:
             conn = get_db_connection()
             cur = conn.cursor()
             
             # Get form data
-            suhu = request.POST.get('bodyTemp')
-            berat_badan = request.POST.get('weight')
-            catatan = request.POST.get('notes', '')
+            diagnosis = request.POST.get('diagnosa')
+            treatment_plan = request.POST.get('treatment_plan')
+            catatan_medis = request.POST.get('catatan_medis', '')
+            
+            # Additional fields for vital signs and medical details
+            suhu_tubuh = request.POST.get('suhu_tubuh')
+            berat_badan = request.POST.get('berat_badan')
+            tinggi_badan = request.POST.get('tinggi_badan')
+            detak_jantung = request.POST.get('detak_jantung')
+            keluhan_utama = request.POST.get('keluhan_utama')
+            pemeriksaan_fisik = request.POST.get('pemeriksaan_fisik')
             
             # Input validation
-            if not suhu or not berat_badan:
-                messages.error(request, "Suhu dan berat badan harus diisi")
+            if not diagnosis or not treatment_plan:
+                messages.error(request, "Diagnosa dan rencana perawatan harus diisi")
                 return redirect(f'hijau:update_rekam_medis?id={id_kunjungan}')
             
-            # Update the kunjungan record with medical data
+            # Verify that the doctor is authenticated
+            email = request.session.get('email')
+            cur.execute(
+                'SELECT no_pegawai FROM PEGAWAI WHERE email_user = %s',
+                (email,)
+            )
+            doctor_result = cur.fetchone()
+            if not doctor_result:
+                messages.error(request, "Data dokter tidak ditemukan")
+                return redirect(f'hijau:update_rekam_medis?id={id_kunjungan}')
+            
+            # Update the medical record
             cur.execute('''
-                UPDATE KUNJUNGAN
-                SET suhu = %s, berat_badan = %s, catatan = %s
+                UPDATE REKAM_MEDIS
+                SET diagnosis = %s, treatment_plan = %s
                 WHERE id_kunjungan = %s
-            ''', (suhu, berat_badan, catatan, id_kunjungan))
+            ''', (
+                diagnosis,
+                treatment_plan,
+                id_kunjungan
+            ))
             
             if cur.rowcount == 0:
-                messages.error(request, f"Kunjungan dengan ID {id_kunjungan} tidak ditemukan")
+                messages.error(request, f"Rekam medis untuk kunjungan {id_kunjungan} tidak ditemukan")
                 return redirect('hijau:list_kunjungan')
             
             conn.commit()
             messages.success(request, "Rekam medis berhasil diperbarui")
-            return redirect(f'hijau:list_rekam_medis?id={id_kunjungan}')
+            return redirect('hijau:list_medis') + f'?id={id_kunjungan}'
             
         except psycopg2.Error as error:
             if conn:
@@ -1889,46 +2010,49 @@ def update_rekam_medis(request):
     
     # If GET request (display form)
     else:
-        # Get kunjungan details and medical record data for the form
-        medical_record = {}
-        kunjungan_details = {}
+        rekam_medis = {}
         
+        conn = None
+        cur = None
         try:
             conn = get_db_connection()
             cur = conn.cursor()
             
             # Get medical record data
             cur.execute('''
-                SELECT k.suhu, k.berat_badan, k.catatan, k.nama_hewan, 
-                       CASE 
-                           WHEN i.no_identitas_klien IS NOT NULL THEN i.nama_depan || ' ' || i.nama_belakang
-                           ELSE p.nama_perusahaan
-                       END as nama_klien
-                FROM KUNJUNGAN k
-                LEFT JOIN INDIVIDU i ON k.no_identitas_klien = i.no_identitas_klien
-                LEFT JOIN PERUSAHAAN p ON k.no_identitas_klien = p.no_identitas_klien
-                WHERE k.id_kunjungan = %s
+                SELECT rm.diagnosis, rm.treatment_plan, k.nama_hewan, k.no_identitas_klien,
+                       k.timestamp_awal
+                FROM REKAM_MEDIS rm
+                JOIN KUNJUNGAN k ON rm.id_kunjungan = k.id_kunjungan
+                WHERE rm.id_kunjungan = %s
             ''', (id_kunjungan,))
             
             row = cur.fetchone()
             if not row:
-                messages.error(request, f"Kunjungan dengan ID {id_kunjungan} tidak ditemukan")
+                messages.error(request, f"Rekam medis untuk kunjungan {id_kunjungan} tidak ditemukan")
                 return redirect('hijau:list_kunjungan')
             
-            if row[0] is None or row[1] is None:
-                messages.error(request, "Rekam medis belum dibuat untuk kunjungan ini")
-                return redirect(f'hijau:create_rekam_medis?id={id_kunjungan}')
+            # Get client name
+            cur.execute('''
+                SELECT i.nama_depan || ' ' || i.nama_belakang as nama
+                FROM INDIVIDU i
+                WHERE i.no_identitas_klien = %s
+                UNION
+                SELECT p.nama_perusahaan as nama
+                FROM PERUSAHAAN p
+                WHERE p.no_identitas_klien = %s
+            ''', (row[3], row[3]))
             
-            medical_record = {
-                'suhu': row[0],
-                'berat_badan': row[1],
-                'catatan': row[2] or ""
-            }
+            client_result = cur.fetchone()
+            client_name = client_result[0] if client_result else "Unknown"
             
-            kunjungan_details = {
+            rekam_medis = {
                 'id_kunjungan': id_kunjungan,
-                'nama_hewan': row[3],
-                'nama_klien': row[4]
+                'diagnosis': row[0],
+                'treatment_plan': row[1],
+                'nama_hewan': row[2],
+                'nama_klien': client_name,
+                'timestamp_awal': row[4]
             }
                 
         except psycopg2.Error as error:
@@ -1943,8 +2067,151 @@ def update_rekam_medis(request):
                 conn.close()
         
         context = {
-            'kunjungan': kunjungan_details,
-            'medical_record': medical_record
+            'rekam_medis': rekam_medis
         }
         
         return render(request, 'update_rekam_medis.html', context)
+
+# Function to view a medical record
+def view_rekam_medis(request):
+    # Check if user is authenticated and has valid session
+    if not request.session.get('email') or not request.session.get('role'):
+        messages.error(request, "Session tidak valid. Silakan login kembali.")
+        return redirect('main:login')
+    
+    # Check if user has authorized role for this operation
+    if request.session.get('role') not in ['individu', 'perusahaan', 'dokter_hewan', 'perawat_hewan', 'front_desk']:
+        return HttpResponseForbidden("Anda tidak memiliki akses ke halaman ini.")
+    
+    # Get the visit ID from query parameters
+    id_kunjungan = request.GET.get('id')
+    
+    if not id_kunjungan:
+        messages.error(request, "ID Kunjungan diperlukan")
+        return redirect('hijau:list_kunjungan')
+    
+    conn = None
+    cur = None
+    medical_record = {}
+    kunjungan = {}
+    treatments = []
+    
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        # Get user role and email from session
+        role = request.session.get('role')
+        email = request.session.get('email')
+        
+        # If user is a client, check if they own this visit
+        if role in ['individu', 'perusahaan']:
+            # Get the client's ID
+            cur.execute(
+                'SELECT no_identitas FROM KLIEN WHERE email = %s',
+                (email,)
+            )
+            client_result = cur.fetchone()
+            if not client_result:
+                return HttpResponseForbidden("Anda tidak memiliki akses ke halaman ini.")
+            
+            client_id = client_result[0]
+            
+            # Check if this visit belongs to the client
+            cur.execute('''
+                SELECT 1 FROM KUNJUNGAN 
+                WHERE id_kunjungan = %s AND no_identitas_klien = %s
+            ''', (id_kunjungan, client_id))
+            
+            if not cur.fetchone():
+                return HttpResponseForbidden("Anda tidak memiliki akses ke rekam medis ini.")
+        cur.execute('''
+            SELECT rm.diagnosis, rm.treatment_plan, k.nama_hewan, k.no_identitas_klien,
+                   k.timestamp_awal, k.timestamp_akhir, k.tipe_kunjungan
+            FROM REKAM_MEDIS rm
+            JOIN KUNJUNGAN k ON rm.id_kunjungan = k.id_kunjungan
+            WHERE rm.id_kunjungan = %s
+        ''', (id_kunjungan,))
+        
+        record = cur.fetchone()
+        if not record:
+            messages.error(request, "Rekam medis tidak ditemukan untuk kunjungan ini")
+            return redirect('hijau:list_kunjungan')
+        # Get client name
+        cur.execute('''
+            SELECT i.nama_depan || ' ' || i.nama_belakang as nama
+            FROM INDIVIDU i
+            WHERE i.no_identitas_klien = %s
+            UNION
+            SELECT p.nama_perusahaan as nama
+            FROM PERUSAHAAN p
+            WHERE p.no_identitas_klien = %s
+        ''', (record[3], record[3]))
+        
+        client_result = cur.fetchone()
+        client_name = client_result[0] if client_result else "Unknown"
+        
+        # Get doctor and nurse emails
+        cur.execute('''
+            SELECT 
+                (SELECT u.email FROM "USER" u JOIN PEGAWAI p ON u.email = p.email_user 
+                 WHERE p.no_pegawai = k.no_dokter_hewan) as dokter_email,
+                (SELECT u.email FROM "USER" u JOIN PEGAWAI p ON u.email = p.email_user 
+                 WHERE p.no_pegawai = k.no_perawat_hewan) as perawat_email
+            FROM KUNJUNGAN k
+            WHERE k.id_kunjungan = %s
+        ''', (id_kunjungan,))
+        
+        staff_emails = cur.fetchone()
+        
+        medical_record = {
+            'id_kunjungan': id_kunjungan,
+            'diagnosis': record[0],
+            'treatment_plan': record[1]
+        }
+        
+        kunjungan = {
+            'id_kunjungan': id_kunjungan,
+            'nama_hewan': record[2],
+            'nama_klien': client_name,
+            'timestamp_awal': record[4],
+            'timestamp_akhir': record[5],
+            'tipe_kunjungan': record[6],
+            'dokter_email': staff_emails[0] if staff_emails else None,
+            'perawat_email': staff_emails[1] if staff_emails else None
+        }
+        
+        # Get treatments for this visit
+        cur.execute('''
+            SELECT kk.kode_perawatan, p.nama_perawatan, kk.catatan
+            FROM KUNJUNGAN_KEPERAWATAN kk
+            JOIN PERAWATAN p ON kk.kode_perawatan = p.kode_perawatan
+            WHERE kk.id_kunjungan = %s
+            ORDER BY kk.kode_perawatan
+        ''', (id_kunjungan,))
+        
+        for row in cur.fetchall():
+            treatments.append({
+                'kode_perawatan': row[0],
+                'nama_perawatan': row[1],
+                'catatan': row[2]
+            })
+            
+    except psycopg2.Error as error:
+        print(f"Error in view_rekam_medis: {error}")
+        messages.error(request, f"Terjadi kesalahan: {error}")
+        return redirect('hijau:list_kunjungan')
+        
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+    
+    context = {
+        'medical_record': medical_record,
+        'kunjungan': kunjungan,
+        'treatments': treatments
+    }
+    
+    return render(request, 'view_rekam_medis.html', context)
