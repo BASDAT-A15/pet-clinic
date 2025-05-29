@@ -192,15 +192,32 @@ def create_perawatan(request):
                 id_kunjungan, 
                 nama_hewan, 
                 no_identitas_klien, 
-                no_front_desk, 
-                no_perawat_hewan, 
-                no_dokter_hewan,  # Gunakan dokter yang ada di data kunjungan, bukan dokter yang login
-                jenis_perawatan,
+                no_front_desk,                no_perawat_hewan,                no_dokter_hewan,  # Gunakan dokter yang ada di data kunjungan, bukan dokter yang login                jenis_perawatan,
                 catatan_medis  # Store catatan in KUNJUNGAN_KEPERAWATAN
             ))
             
             conn.commit()
             messages.success(request, "Perawatan berhasil dibuat")
+            
+            # Session preservation to prevent session reset during operations
+            email = request.session.get('email')
+            role = request.session.get('role')
+            email_val = email
+            role_val = role
+            pegawai_val = request.session.get('no_pegawai') if 'no_pegawai' in request.session else None
+            
+            try:
+                request.session.cycle_key()
+                
+                request.session['email'] = email_val
+                request.session['role'] = role_val
+                if pegawai_val:
+                    request.session['no_pegawai'] = pegawai_val
+                
+                request.session.save()
+            except Exception as e:
+                print(f"Session management error: {e}")
+                
             return redirect('hijau:list_perawatan')
             
         except psycopg2.Error as error:
@@ -528,13 +545,31 @@ def update_treatment_ajax(request):
                 no_identitas_klien, 
                 no_front_desk, 
                 no_perawat_hewan, 
-                no_dokter_hewan,                    
-                jenis_perawatan_new,
+                no_dokter_hewan,                      jenis_perawatan_new,
                 catatan_medis
             ))
         
         # Commit transaction
         conn.commit()
+        
+        # Session preservation to prevent session reset during AJAX operations
+        email = request.session.get('email')
+        role = request.session.get('role')
+        email_val = email
+        role_val = role
+        pegawai_val = request.session.get('no_pegawai') if 'no_pegawai' in request.session else None
+
+        try:
+            request.session.cycle_key()
+            
+            request.session['email'] = email_val
+            request.session['role'] = role_val
+            if pegawai_val:
+                request.session['no_pegawai'] = pegawai_val
+            
+            request.session.save()
+        except Exception as e:
+            print(f"Session management error: {e}")
         
         return JsonResponse({
             'success': True,
@@ -620,11 +655,28 @@ def delete_treatment_ajax(request):
         # Delete the treatment record
         cur.execute('''
             DELETE FROM KUNJUNGAN_KEPERAWATAN
-            WHERE id_kunjungan = %s AND kode_perawatan = %s
-        ''', (id_kunjungan, kode_perawatan))
-        
-        # Commit the transaction
+            WHERE id_kunjungan = %s AND kode_perawatan = %s        ''', (id_kunjungan, kode_perawatan))
+          # Commit the transaction
         conn.commit()
+        
+        # Session preservation to prevent session reset during AJAX operations
+        email = request.session.get('email')
+        role = request.session.get('role')
+        email_val = email
+        role_val = role
+        pegawai_val = request.session.get('no_pegawai') if 'no_pegawai' in request.session else None
+
+        try:
+            request.session.cycle_key()
+            
+            request.session['email'] = email_val
+            request.session['role'] = role_val
+            if pegawai_val:
+                request.session['no_pegawai'] = pegawai_val
+            
+            request.session.save()
+        except Exception as e:
+            print(f"Session management error: {e}")
         
         print(f"DEBUG: Successfully deleted treatment. Rows affected: {cur.rowcount}")
         
@@ -880,15 +932,32 @@ def create_kunjungan(request):
                 nama_hewan, 
                 client_id, 
                 front_desk_id, 
-                nurse_id, 
-                doctor_id, 
+                nurse_id,                doctor_id, 
                 None,  
                 tipe_kunjungan,
                 timestamp_awal,
                 timestamp_akhir
             ))
-            
             conn.commit()
+              # Session preservation to prevent session reset during operations
+            email = request.session.get('email')
+            role = request.session.get('role')
+            email_val = email
+            role_val = role
+            pegawai_val = request.session.get('no_pegawai') if 'no_pegawai' in request.session else None
+
+            try:
+                request.session.cycle_key()
+                
+                request.session['email'] = email_val
+                request.session['role'] = role_val
+                if pegawai_val:
+                    request.session['no_pegawai'] = pegawai_val
+                
+                request.session.save()
+            except Exception as e:
+                print(f"Session management error: {e}")
+            
             messages.success(request, "Kunjungan berhasil dibuat")
             return redirect('hijau:list_kunjungan')
         except psycopg2.Error as error:
@@ -1243,14 +1312,33 @@ def update_kunjungan(request):
                 ''', (
                     tipe_kunjungan,
                     timestamp_awal,
-                    timestamp_akhir,
-                    id_kunjungan                ))
-            
+                    timestamp_akhir,                    id_kunjungan
+                ))
             if cur.rowcount == 0:
                 messages.error(request, f"Kunjungan dengan ID {id_kunjungan} tidak ditemukan")
                 return redirect('hijau:list_kunjungan')
             
             conn.commit()
+            
+            # Session preservation to prevent session reset during operations
+            email = request.session.get('email')
+            role = request.session.get('role')
+            email_val = email
+            role_val = role
+            pegawai_val = request.session.get('no_pegawai') if 'no_pegawai' in request.session else None
+            
+            try:
+                request.session.cycle_key()
+                
+                request.session['email'] = email_val
+                request.session['role'] = role_val
+                if pegawai_val:
+                    request.session['no_pegawai'] = pegawai_val
+                
+                request.session.save()
+            except Exception as e:
+                print(f"Session management error: {e}")
+            
             messages.success(request, "Kunjungan berhasil diperbarui")
             return redirect('hijau:list_kunjungan')
         except psycopg2.Error as error:
@@ -1581,14 +1669,32 @@ def delete_kunjungan(request):
             # Delete the visit record
             cur.execute('''
                 DELETE FROM KUNJUNGAN
-                WHERE id_kunjungan = %s
-            ''', (id_kunjungan,))
+                WHERE id_kunjungan = %s            ''', (id_kunjungan,))
             
             if cur.rowcount == 0:
                 messages.error(request, "Kunjungan tidak ditemukan")
                 return redirect('hijau:list_kunjungan')
             
             conn.commit()
+            
+            # Session preservation to prevent session reset during operations
+            email = request.session.get('email')
+            email_val = email
+            role_val = request.session.get('role')
+            pegawai_val = request.session.get('no_pegawai') if 'no_pegawai' in request.session else None
+
+            try:
+                request.session.cycle_key()
+                
+                request.session['email'] = email_val
+                request.session['role'] = role_val
+                if pegawai_val:
+                    request.session['no_pegawai'] = pegawai_val
+                
+                request.session.save()
+            except Exception as e:
+                print(f"Session management error: {e}")
+            
             messages.success(request, "Kunjungan berhasil dihapus")
             
         except psycopg2.Error as error:
@@ -1752,12 +1858,30 @@ def create_rekam_medis(request):
                 # Create new record
                 cur.execute('''
                     INSERT INTO KUNJUNGAN_KEPERAWATAN(id_kunjungan, catatan, no_pegawai)
-                    VALUES (%s, %s, %s)
-                ''', (id_kunjungan, catatan_medis, doctor_no))
-            
+                    VALUES (%s, %s, %s)                ''', (id_kunjungan, catatan_medis, doctor_no))
             conn.commit()
+            
+            # Session preservation to prevent session reset during operations
+            email = request.session.get('email')
+            role = request.session.get('role')
+            email_val = email
+            role_val = role
+            pegawai_val = request.session.get('no_pegawai') if 'no_pegawai' in request.session else None
+
+            try:
+                request.session.cycle_key()
+                
+                request.session['email'] = email_val
+                request.session['role'] = role_val
+                if pegawai_val:
+                    request.session['no_pegawai'] = pegawai_val
+                
+                request.session.save()
+            except Exception as e:
+                print(f"Session management error: {e}")
+            
             messages.success(request, "Rekam medis berhasil disimpan")
-            return redirect('hijau:list_kunjungan')            
+            return redirect('hijau:list_kunjungan')
         except psycopg2.Error as error:
             if conn:
                 conn.rollback()
@@ -1926,11 +2050,29 @@ def update_rekam_medis(request):
                     kunjungan_data[2],  # no_identitas_klien
                     kunjungan_data[3],  # no_front_desk
                     kunjungan_data[4],  # no_perawat_hewan
-                    kunjungan_data[5],  # no_dokter_hewan (use existing doctor from KUNJUNGAN)
-                    full_catatan        # catatan
+                    kunjungan_data[5],  # no_dokter_hewan (use existing doctor from KUNJUNGAN)                    full_catatan        # catatan
                 ))
-            
             conn.commit()
+            
+            # Session preservation to prevent session reset during operations
+            email = request.session.get('email')
+            role = request.session.get('role')
+            email_val = email
+            role_val = role
+            pegawai_val = request.session.get('no_pegawai') if 'no_pegawai' in request.session else None
+
+            try:
+                request.session.cycle_key()
+                
+                request.session['email'] = email_val
+                request.session['role'] = role_val
+                if pegawai_val:
+                    request.session['no_pegawai'] = pegawai_val
+                
+                request.session.save()
+            except Exception as e:
+                print(f"Session management error: {e}")
+            
             messages.success(request, "Rekam medis berhasil diperbarui")
             return redirect('hijau:list_kunjungan')
             
