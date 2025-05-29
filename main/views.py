@@ -224,10 +224,13 @@ def register(request):
         
         if conn:
             conn.rollback()
-            print("DEBUG: Transaction rolled back")
             
         # Tampilkan error yang lebih spesifik untuk debugging
-        context['non_field'] = f'Terjadi kesalahan saat menyimpan data: {str(e)}'
+        
+        full_msg  = str(e)
+        clean_msg = full_msg.split('CONTEXT')[0].strip()
+        context['non_field'] = clean_msg
+
         return render(request, tpl, context)
 
     finally:
