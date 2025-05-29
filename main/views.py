@@ -725,6 +725,7 @@ def update_profile(request):
                           'SELECT no_izin_praktik FROM TENAGA_MEDIS WHERE no_tenaga_medis=%s',
                           (no_peg,)
                         )
+                        
                         izin_data = cur.fetchone()
                         if izin_data:
                             data['no_izin_praktik'] = izin_data[0]
@@ -817,6 +818,9 @@ def update_profile(request):
         # lakukan update ke database
         try:
             # Update USER table
+            if hasattr(conn, 'notices'):
+                conn.notices.clear()
+                
             cur.execute(
                 'UPDATE "USER" SET alamat=%s, nomor_telepon=%s WHERE email=%s',
                 (alamat, telepon, email)
@@ -854,11 +858,21 @@ def update_profile(request):
 
                 if no_pegawai:
                     # Update tanggal akhir kerja
-                    tanggal_akhir = post.get('tanggal_akhir_kerja')
+                    tanggal_akhir = post.get('tanggal_akhir_kerja') or None
                     cur.execute(
                       'UPDATE PEGAWAI SET tanggal_akhir_kerja=%s WHERE no_pegawai=%s',
                       (tanggal_akhir if tanggal_akhir else None, no_pegawai)
                     )
+                    
+                    # Tangkap NOTICE dari trigger & masukkan ke messages
+                    # setelah: buang prefix "NOTICE:"
+                    for notice in conn.notices:
+                        text = notice.strip()
+                        # Hapus kata "NOTICE:" di depan, kalau ada
+                        if text.upper().startswith('NOTICE:'):
+                            text = text[len('NOTICE:'):].strip()
+                        messages.info(request, text)
+                    conn.notices.clear()
 
                     if role in ('dokter_hewan','perawat_hewan'):
                         # Handle sertifikat kompetensi - replace all
@@ -874,21 +888,36 @@ def update_profile(request):
                                   (no_s.strip(), no_pegawai, nm_s.strip())
                                 )
 
-                        if role=='dokter_hewan':
-                            # Handle jadwal praktik - replace all
-                            cur.execute('DELETE FROM JADWAL_PRAKTIK WHERE no_dokter_hewan=%s', (no_pegawai,))
-                            
-                            hari_list = post.getlist('hari')
-                            jam_list = post.getlist('jam')
-                            
-                            for h, j in zip(hari_list, jam_list):
-                                if h.strip() and j.strip():
-                                    cur.execute(
-                                      'INSERT INTO JADWAL_PRAKTIK(no_dokter_hewan,hari,jam) VALUES(%s,%s,%s)',
-                                      (no_pegawai, h.strip(), j.strip())
-                                    )
+                         # jadwal hanya untuk dokter dan hanya jika masih aktif
+            if role == 'dokter_hewan' and not tanggal_akhir:
+                cur.execute(
+                    'DELETE FROM jadwal_praktik WHERE no_dokter_hewan=%s',
+                    (no_pegawai,)
+                )
+                for hari, jam in zip(
+                        post.getlist('hari'),
+                        post.getlist('jam')
+                    ):
+                    if hari.strip() and jam.strip():
+                        cur.execute(
+                            'INSERT INTO jadwal_praktik(no_dokter_hewan, hari, jam)'
+                            ' VALUES(%s,%s,%s)',
+                            (no_pegawai, hari.strip(), jam.strip())
+                        )
 
             conn.commit()
+            # IMPORTANT: Process PostgreSQL notices AFTER commit
+            if hasattr(conn, 'notices') and conn.notices:
+                for notice in conn.notices:
+                    notice_text = notice.strip()
+                    if 'INFO:' in notice_text:
+                        # Extract the message after 'INFO:'
+                        info_message = notice_text.split('INFO:', 1)[1].strip()
+                        messages.info(request, info_message)
+                    else:
+                        messages.info(request, notice_text)
+                # Clear notices after processing them
+                conn.notices.clear()
             messages.success(request, 'Profil berhasil diperbarui!')
             
             # Redirect to appropriate profile page
