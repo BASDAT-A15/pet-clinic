@@ -1,11 +1,12 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Update Rekam Medis - Pet Clinic</title>
-    {% load static %}
-    <style>
+{% extends 'base.html' %}
+{% load static %}
+
+{% block meta %}
+<title>Update Rekam Medis - Pet Clinic</title>
+{% endblock meta %}
+
+{% block content %}
+<style>
         * {
             margin: 0;
             padding: 0;
@@ -173,8 +174,7 @@
             }            .btn {
                 width: 100%;
             }
-        }
-    </style>
+        }    </style>
 </head>
 <body>
     <div class="container">        <div class="header">
@@ -257,5 +257,4 @@
                 return false;
             }
         });    </script>
-</body>
-</html>
+{% endblock content %}

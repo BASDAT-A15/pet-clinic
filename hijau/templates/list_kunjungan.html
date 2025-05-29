@@ -1,11 +1,12 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>List Kunjungan</title>
-    {% load static %}
-    <style>
+{% extends 'base.html' %}
+{% load static %}
+
+{% block meta %}
+<title>List Kunjungan - Pet Clinic</title>
+{% endblock meta %}
+
+{% block content %}
+<style>
         * {
             margin: 0;
             padding: 0;
@@ -701,7 +702,5 @@
             if (event.target == modal) {
                 closeMedicalRecordModal();
             }
-        }
-    </script>
-</body>
-</html>
+        }    </script>
+{% endblock content %}

@@ -1,12 +1,12 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Buat Rekam Medis - Pet Clinic</title>
-    {% load static %}
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
-    <style>
+{% extends 'base.html' %}
+{% load static %}
+
+{% block meta %}
+<title>Buat Rekam Medis - Pet Clinic</title>
+{% endblock meta %}
+
+{% block content %}
+<style>
         .form-container {
             max-width: 900px;
             margin: 0 auto;
@@ -487,7 +487,5 @@
                 this.style.height = 'auto';
                 this.style.height = this.scrollHeight + 'px';
             });
-        });
-    </script>
-</body>
-</html>
+        });    </script>
+{% endblock content %}

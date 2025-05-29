@@ -1,12 +1,12 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rekam Medis - Pet Clinic</title>
-    {% load static %}
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
-    <style>
+{% extends 'base.html' %}
+{% load static %}
+
+{% block meta %}
+<title>Rekam Medis - Pet Clinic</title>
+{% endblock meta %}
+
+{% block content %}
+<style>
         .header-section {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -475,7 +475,5 @@
 
                 row.style.display = showRow ? '' : 'none';
             }
-        }
-    </script>
-</body>
-</html>
+        }    </script>
+{% endblock content %}

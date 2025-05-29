@@ -1,12 +1,12 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Delete Kunjungan - Pet Clinic</title>
-    {% load static %}
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
-    <style>
+{% extends 'base.html' %}
+{% load static %}
+
+{% block meta %}
+<title>Delete Kunjungan - Pet Clinic</title>
+{% endblock meta %}
+
+{% block content %}
+<style>
         .delete-container {
             max-width: 500px;
             margin: 2rem auto;
@@ -224,7 +224,5 @@
                     Hapus Kunjungan
                 </button>
             </form>
-        </div>
-    </div>
-</body>
-</html>
+        </div>    </div>
+{% endblock content %}

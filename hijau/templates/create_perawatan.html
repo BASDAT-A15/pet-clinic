@@ -1,21 +1,24 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create New Treatment - Pet Clinic</title>
-    <style>
+{% extends 'base.html' %}
+{% load static %}
+
+{% block meta %}
+<title>Create New Treatment - Pet Clinic</title>
+{% endblock meta %}
+
+{% block content %}
+<style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
-        body {
+        .treatment-container {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background-color: #f8f9fa;
             padding: 40px 20px;
             line-height: 1.5;
+            min-height: 100vh;
         }
 
         .container {
@@ -163,12 +166,11 @@
         .alert-error {
             background-color: #f8d7da;
             color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
+            border: 1px solid #f5c6cb;        }
     </style>
-</head>
-<body>
-    <div class="container">
+
+    <div class="treatment-container">
+        <div class="container">
         <div class="header">
             <h1>Create New Treatment</h1>
         </div>        <!-- Alert messages -->
@@ -234,10 +236,10 @@
                 <textarea id="catatan_medis" name="catatan_medis" class="form-control" rows="4" placeholder="Masukkan catatan medis jika diperlukan..."></textarea>
             </div>            <div class="form-actions">
                 <a href="{% url 'hijau:list_perawatan' %}" class="btn btn-secondary">Cancel</a>
-                <button type="submit" class="btn btn-primary">Create Treatment</button>
-            </div>
+                <button type="submit" class="btn btn-primary">Create Treatment</button>            </div>
         </form>
     </div>
+</div>
 
     <script>
         function loadKunjunganDetails() {
@@ -305,7 +307,5 @@
             }
             
             // Form will be submitted to Django backend
-        });
-    </script>
-</body>
-</html>
+        });    </script>
+{% endblock content %}
