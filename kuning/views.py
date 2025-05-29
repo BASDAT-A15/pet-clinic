@@ -1,9 +1,13 @@
+from django.http import HttpResponseForbidden
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from utils.db_utils import get_db_connection
 import uuid
 
 def list_jenis_hewan(request):
+    if request.session.get('role') not in ['dokter_hewan', 'front_desk']:
+        return HttpResponseForbidden("Anda tidak memiliki akses ke halaman ini.")
+    
     role = request.session.get('role', '')  
     
     if request.method == 'POST' and 'namaJenis' in request.POST and role == 'front_desk':
@@ -112,6 +116,9 @@ def list_jenis_hewan(request):
         conn.close()
 
 def list_hewan(request):
+    if request.session.get('role') not in ['individu', 'perusahaan', 'front_desk']:
+        return HttpResponseForbidden("Anda tidak memiliki akses ke halaman ini.")
+    
     role = request.session.get('role', '')
     user_id = request.session.get('no_identitas', '')
     
