@@ -123,7 +123,7 @@
                                     >
                                         Update
                                     </button>
-                                    {% if role == 'front_desk' and not hewan.has_active_visits %}
+                                    {% if role == 'front_desk' and  hewan.can_delete %}
                                         <button 
                                             class="bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded text-sm delete-btn"
                                             data-id="{{ hewan.id }}"
