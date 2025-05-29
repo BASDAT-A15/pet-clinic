@@ -1,76 +1,740 @@
-<!DOCTYPE html>
+{% extends 'base.html' %}
+{% load static %}
 
+{% block meta %}
+<title>List Treatments - Pet Clinic</title>
+{% endblock meta %}
+
+{% block content %}
+<style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #ffffff;
+            color: #333;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 10px;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            font-weight: 600;
+            color: #333;
+            margin: 0;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 14px;
+        }
+
+        .btn-create {
+            background-color: #1a1a1a;
+            color: white;
+            font-size: 14px;
+        }
+
+        .btn-create:hover {
+            background-color: #333;
+        }
+
+        .btn-create::before {
+            content: '+';
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .btn-update {
+            background-color: #6c757d;
+            color: white;
+            font-size: 12px;
+            padding: 6px 12px;
+            border-radius: 4px;
+        }
+
+        .btn-update:hover {
+            background-color: #5a6268;
+        }
+
+        .btn-delete {
+            background-color: #dc3545;
+            color: white;
+            font-size: 12px;
+            padding: 6px 12px;
+            border-radius: 4px;
+        }
+
+        .btn-delete:hover {
+            background-color: #c82333;
+        }
+
+        .table-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            overflow: hidden;
+            border: 1px solid #e9ecef;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background-color: #f8f9fa;
+            color: #495057;
+            padding: 18px 16px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        th:first-child {
+            width: 60px;
+            text-align: center;
+        }
+
+        th:last-child {
+            width: 160px;
+            text-align: center;
+        }
+
+        td {
+            padding: 16px;
+            border-bottom: 1px solid #f1f3f4;
+            font-size: 14px;
+            vertical-align: middle;
+        }
+
+        td:first-child {
+            text-align: center;
+            font-weight: 500;
+            color: #6c757d;
+        }
+
+        td:last-child {
+            text-align: center;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background-color: #ffffff;
+            margin: 5% auto;
+            padding: 0;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { 
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to { 
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 32px;
+            border-bottom: 1px solid #e9ecef;
+            background-color: #f8f9fa;
+            border-radius: 12px 12px 0 0;
+        }
+
+        .modal-header h2 {
+            color: #2c3e50;
+            font-size: 24px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.2s;
+            background: none;
+            border: none;
+            padding: 0;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .modal-body {
+            padding: 32px;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 16px;
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .form-select, .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            font-size: 16px;
+            background-color: white;
+            transition: border-color 0.2s ease;
+            font-family: inherit;
+        }
+
+        .form-control[rows] {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-select:focus, .form-control:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+
+        .form-select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 12px center;
+            background-repeat: no-repeat;
+            background-size: 16px;
+            padding-right: 40px;
+        }
+
+        .kunjungan-details {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 24px;
+            font-size: 14px;
+            line-height: 1.8;
+            color: #495057;
+        }
+
+        .kunjungan-details .detail-item {
+            margin-bottom: 8px;
+        }
+
+        .kunjungan-details .detail-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .kunjungan-details .detail-label {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            padding: 24px 32px;
+            border-top: 1px solid #e9ecef;
+            background-color: #f8f9fa;
+            border-radius: 0 0 12px 12px;
+        }
+
+        .btn-primary {
+            background-color: #1a1a1a;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #333;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #545b62;
+        }
+
+        /* Alert/Toast Styles */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 16px 24px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            z-index: 2000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast-success {
+            background-color: #28a745;
+        }
+
+        .toast-error {
+            background-color: #dc3545;
+        }
+
+        /* Loading Spinner */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #007bff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
     <div class="container">
-        <h2>List Perawatan Hewan</h2>
+        <!-- Header -->
+        <div class="header">
+            <h1>List Treatments</h1>
+            
+            <!-- Create button only visible for dokter_hewan -->
+            {% if request.session.role == 'dokter_hewan' %}
+            <a href="{% url 'hijau:create_perawatan' %}" class="btn btn-create">
+                Create New Treatment
+            </a>
+            {% endif %}
+        </div>
 
-        <!-- Tombol untuk membuat perawatan baru -->
-        <a href="#" class="btn btn-success">Create New Treatment</a>
-
-        <!-- Tabel Daftar Perawatan -->
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>No</th>
-                    <th>ID Kunjungan</th>
-                    <th>ID Klien</th>
-                    <th>Nama Hewan</th>
-                    <th>Perawat Hewan</th>
-                    <th>Dokter Hewan</th>
-                    <th>Front Desk Officer</th>
-                    <th>Jenis Perawatan</th>
-                    <th>Catatan Medis</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Data statis, contoh perawatan -->
-                <tr>
-                    <td>1</td>
-                    <td>KJN001</td>
-                    <td>FD123</td>
-                    <td>Snowy</td>
-                    <td>Joko</td>
-                    <td>Dr. Rizki</td>
-                    <td>Tina</td>
-                    <td>TRM001 - Dental Care</td>
-                    <td>Oke</td>
-                    <td>
-                        <a href="#" class="btn btn-primary">Update</a>
-                        <a href="#" class="btn btn-danger">Delete</a>
-                    </td>
-                </tr>
-                <tr>
-                    <td>2</td>
-                    <td>KJN002</td>
-                    <td>KII123</td>
-                    <td>Blacky</td>
-                    <td>Agus</td>
-                    <td>Dr. Safira</td>
-                    <td>Tini</td>
-                    <td>TRM002 - Parasite Control</td>
-                    <td>Sudah Baik</td>
-                    <td>
-                        <a href="#" class="btn btn-primary">Update</a>
-                        <a href="#" class="btn btn-danger">Delete</a>
-                    </td>
-                </tr>
-                <tr>
-                    <td>3</td>
-                    <td>KJN003</td>
-                    <td>PKE123</td>
-                    <td>Hamseung</td>
-                    <td>Budi</td>
-                    <td>Dr. Nanu</td>
-                    <td>Tono</td>
-                    <td>TRM003 - Flea Treatment</td>
-                    <td>Sehat</td>
-                    <td>
-                        <a href="#" class="btn btn-primary">Update</a>
-                        <a href="#" class="btn btn-danger">Delete</a>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+        <!-- Table -->
+        <div class="table-container">
+            {% if treatments %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>Kunjungan</th>
+                        <th>ID Klien</th>
+                        <th>Nama Hewan</th>
+                        <th>Perawat Hewan</th>
+                        <th>Dokter Hewan</th>
+                        <th>Front Desk Officer</th>
+                        <th>Jenis Perawatan</th>
+                        <th>Catatan Medis</th>
+                        {% if request.session.role == 'dokter_hewan' %}
+                        <th>Action</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for treatment in treatments %}
+                    <tr>
+                        <td>{{ treatment.no }}</td>
+                        <td>{{ treatment.id_kunjungan }}</td>
+                        <td>{{ treatment.id_klien }}</td>
+                        <td>{{ treatment.nama_hewan }}</td>
+                        <td>{{ treatment.perawat_hewan }}</td>
+                        <td>{{ treatment.dokter_hewan }}</td>
+                        <td>{{ treatment.front_desk_officer }}</td>
+                        <td>{{ treatment.jenis_perawatan }}</td>
+                        <td>{{ treatment.catatan_medis }}</td>
+                        {% if request.session.role == 'dokter_hewan' %}
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn btn-update" onclick="openUpdateModal('{{ treatment.id_kunjungan }}')">
+                                    Update
+                                </button>
+                                <button class="btn btn-delete" onclick="openDeleteModal('{{ treatment.id_kunjungan }}', '{{ treatment.jenis_perawatan }}')">
+                                    Delete
+                                </button>
+                            </div>
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div style="text-align: center; padding: 80px 20px; color: #6c757d;">
+                <h3>Tidak ada data perawatan</h3>
+                <p>Belum ada perawatan yang terdaftar dalam sistem.</p>
+            </div>
+            {% endif %}
+        </div>
     </div>
-</body>
-</html>
+
+    <!-- Update Modal -->
+    <div id="updateModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Update Treatment</h2>
+                <button class="close" onclick="closeUpdateModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="loading" id="updateLoading">
+                    <div class="spinner"></div>
+                    <p>Loading treatment data...</p>
+                </div>
+                
+                <form id="updateForm" style="display: none;">
+                    <input type="hidden" id="updateKunjunganId" name="kunjungan">
+                    <input type="hidden" id="updateKodePerawatanOld" name="kode_perawatan_old">
+                    
+                    <div class="kunjungan-details" id="updateKunjunganDetails">
+                        <!-- Details will be populated by JavaScript -->
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="updateJenisPerawatan">Jenis Perawatan</label>
+                        <select id="updateJenisPerawatan" name="jenis_perawatan" class="form-select" required>
+                            <option value="">-- Pilih Jenis Perawatan --</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="updateCatatanMedis">Catatan Medis (Opsional)</label>
+                        <textarea id="updateCatatanMedis" name="catatan_medis" class="form-control" rows="4" placeholder="Masukkan catatan medis jika diperlukan..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeUpdateModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="submitUpdate()" id="submitUpdateBtn">Update Treatment</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Modal -->
+    <div id="deleteModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Konfirmasi Penghapusan</h2>
+                <button class="close" onclick="closeDeleteModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Apakah Anda yakin ingin menghapus perawatan ini?</p>
+                <p><strong>ID Kunjungan:</strong> <span id="deleteKunjunganId"></span></p>
+                <p><strong>Kode Perawatan:</strong> <span id="deleteKodePerawatan"></span></p>
+                <input type="hidden" id="deleteIdKunjungan">
+                <input type="hidden" id="deleteKodePerawatanInput">
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeDeleteModal()">Batal</button>
+                <button class="btn btn-delete" onclick="submitDelete()">Hapus</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // CSRF Token for Django
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        const csrftoken = getCookie('csrftoken');
+
+        // Toast notification
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => toast.classList.add('show'), 100);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => document.body.removeChild(toast), 300);
+            }, 3000);
+        }
+
+        // Open Update Modal
+        async function openUpdateModal(idKunjungan) {
+            const modal = document.getElementById('updateModal');
+            const loading = document.getElementById('updateLoading');
+            const form = document.getElementById('updateForm');
+            
+            modal.style.display = 'block';
+            loading.style.display = 'block';
+            form.style.display = 'none';
+            
+            try {
+                // Fetch treatment data
+                const response = await fetch(`/hijau/api/treatment/${idKunjungan}/`, {
+                    method: 'GET',
+                    headers: {
+                        'X-CSRFToken': csrftoken,
+                        'Content-Type': 'application/json',
+                    },
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Populate form with data
+                    document.getElementById('updateKunjunganId').value = data.treatment.id_kunjungan;
+                    document.getElementById('updateKodePerawatanOld').value = data.treatment.kode_perawatan;
+                    document.getElementById('updateCatatanMedis').value = data.treatment.catatan_medis || '';
+                    
+                    // Update kunjungan details
+                    const detailsDiv = document.getElementById('updateKunjunganDetails');
+                    detailsDiv.innerHTML = `
+                        <div class="detail-item">
+                            <span class="detail-label">ID Kunjungan:</span> <span>${data.treatment.id_kunjungan}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Nama Hewan:</span> <span>${data.treatment.nama_hewan}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Nama Klien:</span> <span>${data.treatment.nama_klien}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Front Desk:</span> <span>${data.treatment.front_desk_name}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Dokter Hewan:</span> <span>${data.treatment.dokter_name}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Perawat Hewan:</span> <span>${data.treatment.perawat_name}</span>
+                        </div>
+                    `;
+                    
+                    // Populate jenis perawatan options
+                    const jenisSelect = document.getElementById('updateJenisPerawatan');
+                    jenisSelect.innerHTML = '<option value="">-- Pilih Jenis Perawatan --</option>';
+                    
+                    data.jenis_perawatan_list.forEach(perawatan => {
+                        const option = document.createElement('option');
+                        option.value = perawatan.kode;
+                        option.textContent = perawatan.display;
+                        if (perawatan.selected) {
+                            option.selected = true;
+                        }
+                        jenisSelect.appendChild(option);
+                    });
+                    
+                    loading.style.display = 'none';
+                    form.style.display = 'block';
+                } else {
+                    showToast(data.message || 'Failed to load treatment data', 'error');
+                    closeUpdateModal();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('Failed to load treatment data', 'error');
+                closeUpdateModal();
+            }
+        }
+
+        // Submit Update
+        async function submitUpdate() {
+            const submitBtn = document.getElementById('submitUpdateBtn');
+            const form = document.getElementById('updateForm');
+            const formData = new FormData(form);
+            
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Updating...';
+            
+            try {
+                const response = await fetch(`/hijau/api/update-treatment/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrftoken,
+                    },
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast(data.message || 'Treatment updated successfully!', 'success');
+                    closeUpdateModal();
+                    // Refresh the page to show updated data
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    showToast(data.message || 'Failed to update treatment', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('Failed to update treatment', 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Update Treatment';
+            }
+        }
+
+        // Close Update Modal
+        function closeUpdateModal() {
+            document.getElementById('updateModal').style.display = 'none';
+            document.getElementById('updateForm').reset();
+        }
+
+        // Delete Modal Functions
+        function openDeleteModal(idKunjungan, jenisPerawatan) {
+            const kodePerawatan = jenisPerawatan.split(' - ')[0];
+            
+            document.getElementById('deleteKunjunganId').textContent = idKunjungan;
+            document.getElementById('deleteKodePerawatan').textContent = kodePerawatan;
+            document.getElementById('deleteIdKunjungan').value = idKunjungan;
+            document.getElementById('deleteKodePerawatanInput').value = kodePerawatan;
+            document.getElementById('deleteModal').style.display = 'block';
+        }
+
+        async function submitDelete() {
+            const idKunjungan = document.getElementById('deleteIdKunjungan').value;
+            const kodePerawatan = document.getElementById('deleteKodePerawatanInput').value;
+            
+            try {
+                const response = await fetch('/hijau/api/delete-treatment/', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrftoken,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        id_kunjungan: idKunjungan,
+                        kode_perawatan: kodePerawatan
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast(data.message || 'Treatment deleted successfully!', 'success');
+                    closeDeleteModal();
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    showToast(data.message || 'Failed to delete treatment', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('Failed to delete treatment', 'error');
+            }
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').style.display = 'none';
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const updateModal = document.getElementById('updateModal');
+            const deleteModal = document.getElementById('deleteModal');
+            
+            if (event.target === updateModal) {
+                closeUpdateModal();
+            }
+            if (event.target === deleteModal) {
+                closeDeleteModal();
+            }
+        }
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeUpdateModal();
+                closeDeleteModal();
+            }
+        });    </script>
+{% endblock content %}

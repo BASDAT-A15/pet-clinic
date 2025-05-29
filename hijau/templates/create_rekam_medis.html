@@ -1,33 +1,491 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create Rekam Medis</title>
-    {% load static %}
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+{% extends 'base.html' %}
+{% load static %}
+
+{% block meta %}
+<title>Buat Rekam Medis - Pet Clinic</title>
+{% endblock meta %}
+
+{% block content %}
+<style>
+        .form-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .form-header {
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .form-header h1 {
+            color: #2c3e50;
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-header p {
+            color: #7f8c8d;
+            font-size: 1rem;
+        }
+
+        .kunjungan-info {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+
+        .kunjungan-info h3 {
+            margin: 0 0 1rem 0;
+            font-size: 1.2rem;
+        }
+
+        .kunjungan-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .detail-label {
+            font-size: 0.8rem;
+            opacity: 0.9;
+            margin-bottom: 0.25rem;
+        }
+
+        .detail-value {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            color: #34495e;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 0.75rem;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background-color: #ffffff;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .form-group input:hover,
+        .form-group select:hover,
+        .form-group textarea:hover {
+            border-color: #bdc3c7;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-group .help-text {
+            font-size: 0.8rem;
+            color: #7f8c8d;
+            margin-top: 0.25rem;
+        }
+
+        .vital-signs {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
+
+        .vital-signs h3 {
+            grid-column: 1 / -1;
+            margin: 0 0 1rem 0;
+            color: #2c3e50;
+            font-size: 1.1rem;
+        }
+
+        .vital-input {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .vital-input label {
+            font-weight: 600;
+            color: #34495e;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .vital-input input {
+            padding: 0.6rem;
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            font-size: 1rem;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .vital-input .unit {
+            font-size: 0.8rem;
+            color: #7f8c8d;
+            margin-top: 0.25rem;
+            text-align: center;
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid #ecf0f1;
+        }
+
+        .btn {
+            padding: 0.75rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 120px;
+        }
+
+        .btn-cancel {
+            background-color: #95a5a6;
+            color: white;
+        }
+
+        .btn-cancel:hover {
+            background-color: #7f8c8d;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-create {
+            background-color: #27ae60;
+            color: white;
+        }
+
+        .btn-create:hover {
+            background-color: #229954;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .alert {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-weight: 500;
+        }
+
+        .alert-error {
+            background-color: #fdf2f2;
+            color: #e74c3c;
+            border: 1px solid #f8d7da;
+        }
+
+        .alert-success {
+            background-color: #f0f9f0;
+            color: #27ae60;
+            border: 1px solid #d4edda;
+        }
+
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .vital-signs {
+                grid-template-columns: 1fr;
+            }
+
+            .form-container {
+                margin: 1rem;
+                padding: 1.5rem;
+            }
+
+            .form-actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            .kunjungan-details {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Create Rekam Medis</h1>
-        <form action="/create_rekam_medis" method="POST">
-            <!-- Suhu Tubuh -->
-            <label for="temperature">Suhu Tubuh Pasien (°C)</label>
-            <input type="number" id="temperature" name="temperature" step="0.1" required>
+    <div class="form-container">
+        <div class="form-header">
+            <h1>Buat Rekam Medis</h1>
+            <p>Catat informasi medis untuk kunjungan pasien</p>
+        </div>
 
-            <!-- Berat Badan -->
-            <label for="weight">Berat Badan Pasien (kg)</label>
-            <input type="number" id="weight" name="weight" step="0.1" required>
+        {% if kunjungan %}
+        <div class="kunjungan-info">
+            <h3>📋 Informasi Kunjungan</h3>
+            <div class="kunjungan-details">
+                <div class="detail-item">
+                    <span class="detail-label">ID Kunjungan</span>
+                    <span class="detail-value">{{ kunjungan.id }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Klien</span>
+                    <span class="detail-value">{{ kunjungan.id_klien.nama }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Hewan</span>
+                    <span class="detail-value">{{ kunjungan.id_hewan.nama }} ({{ kunjungan.id_hewan.jenis_hewan }})</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Dokter</span>
+                    <span class="detail-value">{{ kunjungan.id_dokter.nama }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Waktu Kunjungan</span>
+                    <span class="detail-value">{{ kunjungan.waktu_mulai|date:"d M Y H:i" }}</span>
+                </div>
+            </div>
+        </div>
+        {% endif %}
 
-            <!-- Catatan -->
-            <label for="notes">Catatan Medis</label>
-            <textarea id="notes" name="notes" rows="4" required></textarea>
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
 
-            <div>
-                <button type="button" onclick="window.history.back();">Cancel</button>
-                <button type="submit">Create</button>
+        <form method="POST">
+            {% csrf_token %}
+            
+            {% if not kunjungan %}
+            <div class="form-group">
+                <label for="kunjungan_id">Pilih Kunjungan</label>
+                <select id="kunjungan_id" name="kunjungan_id" required>
+                    <option value="">Pilih Kunjungan</option>
+                    {% for visit in kunjungan_list %}
+                        <option value="{{ visit.id }}">
+                            {{ visit.id }} - {{ visit.id_klien.nama }} ({{ visit.id_hewan.nama }}) - {{ visit.waktu_mulai|date:"d M Y H:i" }}
+                        </option>
+                    {% endfor %}
+                </select>
+                <span class="help-text">Pilih kunjungan yang akan dibuatkan rekam medisnya</span>
+            </div>
+            {% else %}
+            <input type="hidden" name="kunjungan_id" value="{{ kunjungan.id }}">
+            {% endif %}
+
+            <div class="vital-signs">
+                <h3>🌡️ Tanda-tanda Vital</h3>
+                
+                <div class="vital-input">
+                    <label for="suhu_tubuh">Suhu Tubuh</label>
+                    <input type="number" 
+                           id="suhu_tubuh" 
+                           name="suhu_tubuh" 
+                           step="0.1" 
+                           min="35" 
+                           max="45" 
+                           placeholder="38.5"
+                           required>
+                    <div class="unit">°C (Normal: 38.0-39.0)</div>
+                </div>
+
+                <div class="vital-input">
+                    <label for="berat_badan">Berat Badan</label>
+                    <input type="number" 
+                           id="berat_badan" 
+                           name="berat_badan" 
+                           step="0.1" 
+                           min="0.1" 
+                           max="100" 
+                           placeholder="5.2"
+                           required>
+                    <div class="unit">kg</div>
+                </div>
+
+                <div class="vital-input">
+                    <label for="tinggi_badan">Tinggi Badan</label>
+                    <input type="number" 
+                           id="tinggi_badan" 
+                           name="tinggi_badan" 
+                           step="0.1" 
+                           min="1" 
+                           max="200" 
+                           placeholder="25.0">
+                    <div class="unit">cm (Opsional)</div>
+                </div>
+
+                <div class="vital-input">
+                    <label for="detak_jantung">Detak Jantung</label>
+                    <input type="number" 
+                           id="detak_jantung" 
+                           name="detak_jantung" 
+                           min="50" 
+                           max="300" 
+                           placeholder="120">
+                    <div class="unit">bpm (Opsional)</div>
+                </div>
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group full-width">
+                    <label for="keluhan_utama">Keluhan Utama</label>
+                    <textarea id="keluhan_utama" 
+                              name="keluhan_utama" 
+                              placeholder="Deskripsikan keluhan atau gejala yang dialami hewan..."
+                              required></textarea>
+                    <span class="help-text">Jelaskan keluhan atau gejala yang disampaikan pemilik</span>
+                </div>
+
+                <div class="form-group full-width">
+                    <label for="pemeriksaan_fisik">Hasil Pemeriksaan Fisik</label>
+                    <textarea id="pemeriksaan_fisik" 
+                              name="pemeriksaan_fisik" 
+                              placeholder="Catat hasil pemeriksaan fisik..."
+                              required></textarea>
+                    <span class="help-text">Hasil pemeriksaan fisik yang dilakukan dokter</span>
+                </div>
+
+                <div class="form-group full-width">
+                    <label for="diagnosa">Diagnosa</label>
+                    <textarea id="diagnosa" 
+                              name="diagnosa" 
+                              placeholder="Diagnosa berdasarkan pemeriksaan..."
+                              required></textarea>
+                    <span class="help-text">Diagnosa medis berdasarkan pemeriksaan</span>
+                </div>
+
+                <div class="form-group full-width">
+                    <label for="treatment_plan">Rencana Perawatan</label>
+                    <textarea id="treatment_plan" 
+                              name="treatment_plan" 
+                              placeholder="Rencana perawatan dan tindakan yang akan dilakukan..."
+                              required></textarea>
+                    <span class="help-text">Rencana perawatan dan pengobatan</span>
+                </div>
+
+                <div class="form-group full-width">
+                    <label for="catatan_medis">Catatan Tambahan</label>
+                    <textarea id="catatan_medis" 
+                              name="catatan_medis" 
+                              placeholder="Catatan medis tambahan..."></textarea>
+                    <span class="help-text">Catatan tambahan atau observasi lainnya</span>
+                </div>
+            </div>            <div class="form-actions">
+                <a href="{% url 'hijau:list_kunjungan' %}" class="btn btn-cancel">Batal</a>
+                <button type="submit" class="btn btn-create">Simpan Rekam Medis</button>
             </div>
         </form>
     </div>
-</body>
-</html>
+
+    <script>
+        // Auto-focus on first input
+        document.addEventListener('DOMContentLoaded', function() {
+            const firstInput = document.querySelector('input[type="number"], textarea');
+            if (firstInput) {
+                firstInput.focus();
+            }
+        });
+
+        // Real-time validation for vital signs
+        document.getElementById('suhu_tubuh').addEventListener('input', function() {
+            const value = parseFloat(this.value);
+            const unit = this.parentElement.querySelector('.unit');
+            
+            if (value >= 39.5) {
+                unit.style.color = '#e74c3c';
+                unit.textContent = '°C (DEMAM - Perlu perhatian!)';
+            } else if (value >= 39.0) {
+                unit.style.color = '#f39c12';
+                unit.textContent = '°C (Sedikit tinggi)';
+            } else if (value >= 38.0) {
+                unit.style.color = '#27ae60';
+                unit.textContent = '°C (Normal)';
+            } else if (value < 38.0 && value > 0) {
+                unit.style.color = '#3498db';
+                unit.textContent = '°C (Rendah)';
+            } else {
+                unit.style.color = '#7f8c8d';
+                unit.textContent = '°C (Normal: 38.0-39.0)';
+            }
+        });
+
+        document.getElementById('berat_badan').addEventListener('input', function() {
+            const value = parseFloat(this.value);
+            const unit = this.parentElement.querySelector('.unit');
+            
+            if (value <= 1.0 && value > 0) {
+                unit.style.color = '#e74c3c';
+                unit.textContent = 'kg (Sangat kurus - Perlu perhatian!)';
+            } else if (value <= 2.0) {
+                unit.style.color = '#f39c12';
+                unit.textContent = 'kg (Kurus)';
+            } else {
+                unit.style.color = '#7f8c8d';
+                unit.textContent = 'kg';
+            }
+        });
+
+        // Auto-resize textareas
+        document.querySelectorAll('textarea').forEach(textarea => {
+            textarea.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = this.scrollHeight + 'px';
+            });
+        });    </script>
+{% endblock content %}

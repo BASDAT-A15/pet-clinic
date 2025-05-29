@@ -946,3 +946,34 @@ def update_profile(request):
 def logout_view(request):
     request.session.flush()
     return redirect('main:login')
+
+def debug_session(request):
+    """Debug view to check current session information"""
+    from django.http import HttpResponse
+    
+    email = request.session.get('email', 'Not set')
+    role = request.session.get('role', 'Not set')
+    no_pegawai = request.session.get('no_pegawai', 'Not set')
+    
+    html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Debug Session</title>
+        <style>
+            body {{ font-family: Arial, sans-serif; margin: 20px; }}
+            .info {{ background: #f0f0f0; padding: 10px; margin: 10px 0; }}
+        </style>
+    </head>
+    <body>
+        <h1>Current Session Information</h1>
+        <div class="info"><strong>Email:</strong> {email}</div>
+        <div class="info"><strong>Role:</strong> {role}</div>
+        <div class="info"><strong>No Pegawai:</strong> {no_pegawai}</div>
+        <div class="info"><strong>All session data:</strong> {dict(request.session)}</div>
+        <a href="/login/">Go to Login</a>
+    </body>
+    </html>
+    """
+    
+    return HttpResponse(html)

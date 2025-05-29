@@ -1,0 +1,468 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block meta %}
+<title>Detail Rekam Medis - Pet Clinic</title>
+{% endblock meta %}
+
+{% block content %}
+<style>
+        .view-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .header-section {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .header-section h1 {
+            font-size: 2rem;
+            font-weight: 600;
+            margin: 0 0 0.5rem 0;
+        }
+
+        .header-section p {
+            margin: 0;
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .record-id {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+            margin-top: 1rem;
+            display: inline-block;
+        }
+
+        .content-grid {
+            display: grid;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .info-card {
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+
+        .card-header {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .card-header h3 {
+            margin: 0;
+            color: #2c3e50;
+            font-size: 1.2rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card-content {
+            padding: 1.5rem;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .detail-value {
+            color: #2c3e50;
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .vital-signs {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+        }
+
+        .vital-item {
+            text-align: center;
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .vital-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 0.25rem;
+        }
+
+        .vital-label {
+            font-size: 0.8rem;
+            color: #7f8c8d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .vital-unit {
+            font-size: 0.9rem;
+            color: #95a5a6;
+            margin-top: 0.25rem;
+        }
+
+        .status-normal {
+            color: #27ae60;
+        }
+
+        .status-warning {
+            color: #f39c12;
+        }
+
+        .status-critical {
+            color: #e74c3c;
+        }
+
+        .text-content {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+            line-height: 1.6;
+            color: #2c3e50;
+        }
+
+        .text-content h4 {
+            margin: 0 0 1rem 0;
+            color: #2c3e50;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .text-content p {
+            margin: 0;
+            white-space: pre-wrap;
+        }
+
+        .timestamps {
+            background: #ecf0f1;
+            padding: 1rem;
+            border-radius: 8px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .timestamp-item {
+            text-align: center;
+        }
+
+        .timestamp-label {
+            color: #7f8c8d;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .timestamp-value {
+            color: #2c3e50;
+            font-weight: 500;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid #ecf0f1;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-back {
+            background-color: #95a5a6;
+            color: white;
+        }
+
+        .btn-back:hover {
+            background-color: #7f8c8d;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-edit {
+            background-color: #f39c12;
+            color: white;
+        }
+
+        .btn-edit:hover {
+            background-color: #e67e22;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-print {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .btn-print:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .empty-value {
+            color: #bdc3c7;
+            font-style: italic;
+        }
+
+        @media (max-width: 768px) {
+            .view-container {
+                margin: 1rem;
+                padding: 1rem;
+            }
+
+            .detail-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .vital-signs {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        @media print {
+            .action-buttons {
+                display: none;
+            }
+            
+            .view-container {
+                margin: 0;
+                padding: 1rem;
+            }
+            
+            .header-section {
+                background: #3498db !important;
+                -webkit-print-color-adjust: exact;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="view-container">
+        <div class="header-section">
+            <h1>📋 Detail Rekam Medis</h1>
+            <p>Informasi lengkap rekam medis pasien</p>
+            {% if medical_record %}
+            <div class="record-id">ID: {{ medical_record.id_kunjungan }}</div>
+            {% endif %}
+        </div>
+
+        {% if medical_record %}
+        <div class="content-grid">
+            <!-- Informasi Kunjungan -->
+            <div class="info-card">
+                <div class="card-header">
+                    <h3>🏥 Informasi Kunjungan</h3>
+                </div>
+                <div class="card-content">
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <span class="detail-label">ID Kunjungan</span>
+                            <span class="detail-value">{{ kunjungan.id_kunjungan }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Klien</span>
+                            <span class="detail-value">{{ kunjungan.nama_klien }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Hewan</span>
+                            <span class="detail-value">{{ kunjungan.nama_hewan }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Jenis Hewan</span>
+                            <span class="detail-value">{{ kunjungan.jenis_hewan|default:"Tidak tersedia" }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Ras Hewan</span>
+                            <span class="detail-value">{{ kunjungan.ras_hewan|default:"Tidak tersedia" }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Jenis Kelamin</span>
+                            <span class="detail-value">{{ kunjungan.jenis_kelamin|default:"Tidak tersedia" }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Umur</span>
+                            <span class="detail-value">{{ kunjungan.umur|default:"Tidak tersedia" }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Dokter</span>
+                            <span class="detail-value">{{ kunjungan.dokter_email|default:"Tidak tersedia" }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Perawat</span>
+                            <span class="detail-value">{{ kunjungan.perawat_email|default:"Tidak tersedia" }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Tanggal Pemeriksaan</span>
+                            <span class="detail-value">{{ medical_record.tanggal_pemeriksaan }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tanda-tanda Vital -->
+            <div class="info-card">
+                <div class="card-header">
+                    <h3>🌡️ Tanda-tanda Vital & Status Kesehatan</h3>
+                </div>
+                <div class="card-content">
+                    <div class="vital-signs">
+                        <div class="vital-item">
+                            <div class="vital-value {% if medical_record.suhu >= 40 %}status-critical{% elif medical_record.suhu >= 39.5 %}status-warning{% elif medical_record.suhu >= 37.5 %}status-normal{% else %}status-warning{% endif %}">
+                                {{ medical_record.suhu|default:"--" }}
+                            </div>
+                            <div class="vital-label">Suhu Tubuh</div>
+                            <div class="vital-unit">°C</div>
+                        </div>
+                        <div class="vital-item">
+                            <div class="vital-value status-normal">
+                                {{ medical_record.berat_badan|default:"--" }}
+                            </div>
+                            <div class="vital-label">Berat Badan</div>
+                            <div class="vital-unit">kg</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Status Kesehatan -->
+                    <div style="margin-top: 1.5rem; text-align: center;">
+                        <div class="detail-item">
+                            <span class="detail-label">Status Kesehatan</span>
+                            <span class="detail-value {{ medical_record.health_status_class }}">
+                                {{ medical_record.health_status }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Catatan Medis -->
+            {% if medical_record.catatan %}
+            <div class="info-card">
+                <div class="card-header">
+                    <h3>📝 Catatan Medis</h3>
+                </div>
+                <div class="card-content">
+                    <div class="text-content">
+                        <p>{{ medical_record.catatan|linebreaks }}</p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Riwayat Perawatan -->
+            {% if treatments %}
+            <div class="info-card">
+                <div class="card-header">
+                    <h3>💊 Riwayat Perawatan</h3>
+                </div>
+                <div class="card-content">
+                    {% for treatment in treatments %}
+                    <div class="text-content" style="margin-bottom: 1rem; border-left-color: #27ae60;">
+                        <h4>{{ treatment.nama_perawatan }} ({{ treatment.kode_perawatan }})</h4>
+                        <p>{{ treatment.catatan|default:"Tidak ada catatan khusus" }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% else %}
+            <div class="info-card">
+                <div class="card-header">
+                    <h3>💊 Riwayat Perawatan</h3>
+                </div>
+                <div class="card-content">
+                    <div class="text-content" style="text-align: center; color: #7f8c8d;">
+                        <p>Belum ada perawatan yang dilakukan pada kunjungan ini.</p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="action-buttons">
+            <a href="{% url 'hijau:list_kunjungan' %}" class="btn btn-back">
+                ← Kembali ke Daftar Kunjungan
+            </a>
+            <button onclick="window.print()" class="btn btn-print">
+                🖨️ Cetak
+            </button>
+            {% if request.session.role == 'dokter_hewan' %}
+            <a href="{% url 'hijau:update_rekam_medis' %}?id={{ kunjungan.id_kunjungan }}" class="btn btn-edit">
+                ✏️ Edit Rekam Medis
+            </a>
+            {% endif %}
+        </div>
+
+        {% else %}
+        <div class="info-card">
+            <div class="card-content" style="text-align: center; padding: 3rem;">
+                <h3 style="color: #bdc3c7; margin-bottom: 1rem;">📋 Rekam Medis Tidak Ditemukan</h3>
+                <p style="color: #7f8c8d; margin-bottom: 2rem;">Rekam medis yang Anda cari tidak dapat ditemukan atau belum dibuat.</p>
+                <a href="{% url 'hijau:list_kunjungan' %}" class="btn btn-back">
+                    ← Kembali ke Daftar Kunjungan
+                </a>
+            </div>
+        </div>        {% endif %}
+    </div>
+{% endblock content %}

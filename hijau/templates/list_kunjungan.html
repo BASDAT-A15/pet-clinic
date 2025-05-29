@@ -1,139 +1,714 @@
-<!DOCTYPE html>
-<nav class="fixed top-0 left-0 right-0 bg-[#0B1120] shadow-md z-50">
-    <div class="container mx-auto px-4">
-        <div class="flex justify-between items-center h-16">
-            <!-- Logo/Brand on left -->
-            <div class="flex-shrink-0">
-                <a href="/" class="font-bold text-xl text-white">Pet Clinic</a>
-            </div>
-            
-            <!-- Desktop Navigation Links -->
-            <div class="hidden md:flex flex-1 items-center justify-between ml-8">
-                <div class="flex items-center space-x-6">
-                <a href="{% url 'main:profile_klien' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm font-medium transition duration-200 flex items-center">
-                    Dashboard
-                </a>
-                
-                <a href="{% url 'kuning:list_hewan' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm font-medium transition duration-200 flex items-center">
-                    Kelola Hewan Peliharaan
-                </a>
-                
-                <a href="{% url 'kuning:list_hewan' %}" class="text-white hover:text-gray-300 px-3 py-2 text-sm font-medium transition duration-200 flex items-center">
-                    Daftar Kunjungan
-                </a>
-                </div>
-                
-                <div class="flex items-center">
-                    <div class="border-l border-gray-600 h-6 mx-4"></div>
-                <form method="post" action="{% url 'main:logout' %}" class="inline">
-                    {% csrf_token %}
-                    <button type="submit" class="text-white hover:text-gray-300 px-3 py-2 text-sm font-medium transition duration-200 flex items-center">
-                        Logout
-                    </button>
-                </form>
-                </div>
-            </div>
-            
-            <!-- Mobile menu button -->
-            <div class="md:hidden">
-                <button id="mobile-menu-button" class="text-gray-300 hover:text-white focus:outline-none">
-                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>
-                    </svg>
-                </button>
-            </div>
-        </div>
-        
-        <!-- Mobile menu -->
-        <div id="mobile-menu" class="hidden md:hidden pb-4 bg-[#0B1120]">
-            <div class="flex flex-col space-y-3 pt-2">
-                <a href="{% url 'main:profile_klien' %}" class="text-white hover:bg-gray-800 px-3 py-2 rounded-md text-base font-medium flex items-center">
-                    Dashboard
-                </a>
-                
-                <a href="{% url 'kuning:list_hewan' %}" class="text-white hover:bg-gray-800 px-3 py-2 rounded-md text-base font-medium flex items-center">
-                    Kelola Hewan Peliharaan
-                </a>
-                
-                <a href="{% url 'kuning:list_hewan' %}" class="text-white hover:bg-gray-800 px-3 py-2 rounded-md text-base font-medium flex items-center">
-                    Daftar Kunjungan
-                </a>
-                
-                <form method="post" action="{% url 'main:logout' %}" class="inline">
-                    {% csrf_token %}
-                    <button type="submit" class="text-white hover:bg-gray-800 w-full px-3 py-2 rounded-md text-base font-medium flex items-center">
-                        Logout
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
-</nav>
+{% extends 'base.html' %}
+{% load static %}
 
-<!-- Mobile menu toggle script -->
-<script>
-    document.getElementById('mobile-menu-button').addEventListener('click', function() {
-        const menu = document.getElementById('mobile-menu');
-        menu.classList.toggle('hidden');
-    });
-</script>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>List Kunjungan</title>
-    
-    {% load static %}
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+{% block meta %}
+<title>List Kunjungan - Pet Clinic</title>
+{% endblock meta %}
+
+{% block content %}
+<style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        h1 {
+            color: #2c3e50;
+            font-size: 32px;
+            font-weight: 700;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-create {
+            background-color: #1a1a1a;
+            color: white;
+        }
+
+        .btn-create:hover {
+            background-color: #333;
+        }
+
+        .btn-update {
+            background-color: #007bff;
+            color: white;
+            padding: 8px 16px;
+            font-size: 12px;
+        }
+
+        .btn-update:hover {
+            background-color: #0056b3;
+        }
+
+        .btn-delete {
+            background-color: #dc3545;
+            color: white;
+            padding: 8px 16px;
+            font-size: 12px;
+        }
+
+        .btn-delete:hover {
+            background-color: #c82333;
+        }
+
+        .btn-view {
+            background-color: #17a2b8;
+            color: white;
+            padding: 8px 16px;
+            font-size: 12px;
+        }
+
+        .btn-view:hover {
+            background-color: #138496;
+        }
+
+        .table-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background-color: #f8f9fa;
+            color: #495057;
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 20px 16px;
+            border-bottom: 2px solid #e9ecef;
+            text-align: left;
+        }
+
+        th:first-child {
+            width: 80px;
+            text-align: center;
+        }
+
+        th:last-child {
+            width: 160px;
+            text-align: center;
+        }
+
+        td {
+            padding: 16px;
+            border-bottom: 1px solid #f1f3f4;
+            font-size: 14px;
+            vertical-align: middle;
+        }
+
+        td:first-child {
+            text-align: center;
+            font-weight: 500;
+            color: #6c757d;
+        }
+
+        td:last-child {
+            text-align: center;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 80px 20px;
+            color: #6c757d;
+        }
+
+        .no-data h3 {
+            margin-bottom: 12px;
+            font-size: 24px;
+        }        .no-data p {
+            font-size: 16px;
+        }
+
+        /* Medical Record Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 0;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            animation: modalAppear 0.3s ease;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        @keyframes modalAppear {
+            from {
+                opacity: 0;
+                transform: translateY(-50px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .modal-header {
+            padding: 25px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px 12px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background-color 0.3s ease;
+        }
+
+        .close:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-body {
+            padding: 30px;
+        }
+
+        .visit-info {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 25px;
+            border-left: 4px solid #667eea;
+        }
+
+        .visit-info h3 {
+            margin: 0 0 15px 0;
+            color: #2c3e50;
+            font-size: 18px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #6c757d;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            color: #2c3e50;
+            font-size: 14px;
+        }
+
+        .treatment-status {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 25px;
+            border: 1px solid #e9ecef;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .status-dot.has-treatment {
+            background: #28a745;
+        }
+
+        .status-dot.no-treatment {
+            background: #ffc107;
+        }
+
+        .status-text {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .treatment-notes {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            border-left: 3px solid #28a745;
+        }        .treatment-notes p {
+            margin: 0;
+            color: #6c757d;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .vital-signs {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 25px;
+            border-left: 4px solid #28a745;
+        }
+
+        .vital-signs h3 {
+            margin: 0 0 15px 0;
+            color: #2c3e50;
+            font-size: 18px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .btn-modal {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0056b3;
+            color: white;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #1e7e34;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #545b62;
+            color: white;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px 20px;
+            color: #6c757d;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
 </head>
 <body>
+    {% csrf_token %}
     <div class="container">
-        <h2>List Kunjungan</h2>
+        <!-- Header -->
+        <div class="header">
+            <h1>List Kunjungan</h1>
+            
+            <!-- Create button only visible for front_desk -->
+            {% if request.session.role == 'front_desk' %}
+            <a href="{% url 'hijau:create_kunjungan' %}" class="btn btn-create">
+                Create New Visit
+            </a>
+            {% endif %}
+        </div>
 
-        <!-- Tabel Daftar Kunjungan -->
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>ID Kunjungan</th>
-                    <th>ID Klien</th>
-                    <th>Nama Hewan</th>
-                    <th>Metode Kunjungan</th>
-                    <th>Waktu Mulai Penanganan</th>
-                    <th>Waktu Akhir Penanganan</th>
-                    <th>Rekam Medis</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Data hardcoded, contoh kunjungan -->
-                <tr>
-                    <td>KJN001</td>
-                    <td>FD123</td>
-                    <td>Snowy</td>
-                    <td>Janji Temu</td>
-                    <td>03-04-2025 14:30:13</td>
-                    <td>03-04-2025 15:30:16</td>
-                    <td><a href="#" class="btn btn-info">Lihat Rekam Medis</a></td>
-                </tr>
-                <tr>
-                    <td>KJN002</td>
-                    <td>KII123</td>
-                    <td>Blacky</td>
-                    <td>Walk-In</td>
-                    <td>05-08-2025 12:30:27</td>
-                    <td>05-08-2025 13:30:19</td>
-                    <td><a href="#" class="btn btn-info">Lihat Rekam Medis</a></td>
-                </tr>
-                <tr>
-                    <td>KJN003</td>
-                    <td>PKE123</td>
-                    <td>Hamseung</td>
-                    <td>Darurat</td>
-                    <td>01-09-2025 16:30:51</td>
-                    <td>01-09-2025 18:00:33</td>
-                    <td><a href="#" class="btn btn-info">Lihat Rekam Medis</a></td>
-                </tr>
-            </tbody>
-        </table>
+        <!-- Table -->
+        <div class="table-container">
+            {% if kunjungan_list %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>ID Kunjungan</th>
+                        <th>ID Klien</th>
+                        <th>Nama Hewan</th>
+                        <th>Metode Kunjungan</th>
+                        <th>Waktu Mulai</th>
+                        <th>Waktu Akhir</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for kunjungan in kunjungan_list %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ kunjungan.id_kunjungan }}</td>
+                        <td>{{ kunjungan.id_klien }}</td>
+                        <td>{{ kunjungan.nama_hewan }}</td>
+                        <td>{{ kunjungan.metode_kunjungan }}</td>
+                        <td>{{ kunjungan.waktu_mulai_penanganan }}</td>
+                        <td>{{ kunjungan.waktu_akhir_penanganan }}</td>                        <td>
+                            <div class="action-buttons">
+                                {% if request.session.role == 'dokter_hewan' %}
+                                <button class="btn btn-view" onclick="openMedicalRecordModal('{{ kunjungan.id_kunjungan }}')">
+                                    Medical Record
+                                </button>
+                                {% elif request.session.role == 'individu' or request.session.role == 'perusahaan' %}
+                                <a href="{% url 'hijau:list_rekam_medis' %}?id={{ kunjungan.id_kunjungan }}" class="btn btn-view">
+                                    Lihat Rekam Medis
+                                </a>
+                                {% else %}
+                                <a href="{% url 'hijau:list_rekam_medis' %}?id={{ kunjungan.id_kunjungan }}" class="btn btn-view">
+                                    Rekam Medis
+                                </a>
+                                {% endif %}
+                                {% if request.session.role == 'front_desk' %}
+                                <a href="{% url 'hijau:update_kunjungan' %}?id={{ kunjungan.id_kunjungan }}" class="btn btn-update">
+                                    Update
+                                </a>
+                                <form method="post" action="{% url 'hijau:delete_kunjungan' %}" style="display: inline;" onsubmit="return confirm('Apakah Anda yakin ingin menghapus kunjungan ini?')">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="id_kunjungan" value="{{ kunjungan.id_kunjungan }}">
+                                    <button type="submit" class="btn btn-delete">Delete</button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>            {% else %}
+            <div class="no-data">
+                {% if request.session.role == 'individu' or request.session.role == 'perusahaan' %}
+                <h3>Tidak ada data kunjungan</h3>
+                <p>Anda belum memiliki kunjungan yang terdaftar dalam sistem.</p>
+                {% else %}
+                <h3>Tidak ada data kunjungan</h3>
+                <p>Belum ada kunjungan yang terdaftar dalam sistem.</p>
+                {% endif %}
+            </div>{% endif %}
+        </div>
     </div>
-</body>
-</html>
+
+    <!-- Medical Record Modal -->
+    <div id="medicalRecordModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Medical Record Options</h2>
+                <button class="close" onclick="closeMedicalRecordModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="loading" id="modalLoading">
+                    <div class="spinner"></div>
+                    <p>Loading visit information...</p>
+                </div>
+                
+                <div id="modalContent" style="display: none;">
+                    <div class="visit-info">
+                        <h3>Visit Information</h3>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <span class="info-label">Visit ID</span>
+                                <span class="info-value" id="visitId">-</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Animal Name</span>
+                                <span class="info-value" id="animalName">-</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Client Name</span>
+                                <span class="info-value" id="clientName">-</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Visit Date</span>
+                                <span class="info-value" id="visitDate">-</span>
+                            </div>
+                        </div>
+                    </div>                    <div class="treatment-status">
+                        <div class="status-indicator">
+                            <div class="status-dot" id="statusDot"></div>
+                            <span class="status-text" id="statusText">Checking medical notes...</span>
+                        </div>
+                        <div id="treatmentNotes" class="treatment-notes" style="display: none;">
+                            <p id="notesText"></p>
+                        </div>
+                    </div>
+
+                    <div class="vital-signs" id="vitalSigns" style="display: none;">
+                        <h3>🌡️ Vital Signs</h3>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <span class="info-label">Temperature</span>
+                                <span class="info-value" id="temperature">-</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Weight</span>
+                                <span class="info-value" id="weight">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-actions">
+                        <a href="#" id="updateRecordBtn" class="btn-modal btn-success" style="display: none;">
+                            Update Medical Record
+                        </a>
+                        <a href="#" id="createRecordBtn" class="btn-modal btn-primary" style="display: none;">
+                            Create Medical Record
+                        </a>
+                        <button class="btn-modal btn-secondary" onclick="closeMedicalRecordModal()">
+                            Close
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function openMedicalRecordModal(visitId) {
+            const modal = document.getElementById('medicalRecordModal');
+            const loading = document.getElementById('modalLoading');
+            const content = document.getElementById('modalContent');
+            
+            // Show modal and loading state
+            modal.style.display = 'block';
+            loading.style.display = 'block';
+            content.style.display = 'none';            try {
+                // Get CSRF token from cookies (more reliable method)
+                function getCookie(name) {
+                    let cookieValue = null;
+                    if (document.cookie && document.cookie !== '') {
+                        const cookies = document.cookie.split(';');
+                        for (let i = 0; i < cookies.length; i++) {
+                            const cookie = cookies[i].trim();
+                            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                break;
+                            }
+                        }
+                    }
+                    return cookieValue;
+                }
+                
+                // Try multiple methods to get CSRF token
+                let csrftoken = getCookie('csrftoken');
+                if (!csrftoken) {
+                    const csrfElement = document.querySelector('[name=csrfmiddlewaretoken]');
+                    if (csrfElement) {
+                        csrftoken = csrfElement.value;
+                    }
+                }
+                
+                console.log('Fetching URL:', `/hijau/api/visit-medical-info/${visitId}/`);
+                console.log('CSRF Token:', csrftoken ? 'Found' : 'Not found');
+                
+                // Fetch visit and treatment information
+                const response = await fetch(`/hijau/api/visit-medical-info/${visitId}/`, {
+                    method: 'GET',
+                    headers: {
+                        'X-CSRFToken': csrftoken || '',
+                        'Content-Type': 'application/json',
+                    },
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Populate visit information
+                    document.getElementById('visitId').textContent = data.visit.id_kunjungan;
+                    document.getElementById('animalName').textContent = data.visit.nama_hewan;
+                    document.getElementById('clientName').textContent = data.visit.nama_klien;
+                    document.getElementById('visitDate').textContent = new Date(data.visit.timestamp_awal).toLocaleDateString();
+                      // Update treatment status
+                    const statusDot = document.getElementById('statusDot');
+                    const statusText = document.getElementById('statusText');
+                    const treatmentNotes = document.getElementById('treatmentNotes');
+                    const notesText = document.getElementById('notesText');
+                    const vitalSigns = document.getElementById('vitalSigns');
+                    
+                    const updateBtn = document.getElementById('updateRecordBtn');
+                    const createBtn = document.getElementById('createRecordBtn');
+                    
+                    // Set button URLs
+                    updateBtn.href = `/hijau/update_rekam_medis/?id=${visitId}`;
+                    createBtn.href = `/hijau/create_rekam_medis/?id=${visitId}`;
+                    
+                    // Always show vital signs section
+                    vitalSigns.style.display = 'block';
+                    
+                    // Update vital signs (show - if not available)
+                    document.getElementById('temperature').textContent = data.suhu_tubuh || '-';
+                    document.getElementById('weight').textContent = data.berat_badan || '-';
+                    
+                    if (data.has_medical_record) {
+                        statusDot.className = 'status-dot has-treatment';
+                        statusText.textContent = 'Medical notes available';
+                        
+                        if (data.medical_notes) {
+                            treatmentNotes.style.display = 'block';
+                            notesText.textContent = data.medical_notes;
+                        }
+                        
+                        // Show update option only
+                        updateBtn.style.display = 'block';
+                        createBtn.style.display = 'none';
+                    } else {
+                        statusDot.className = 'status-dot no-treatment';
+                        statusText.textContent = 'No medical notes available';
+                        treatmentNotes.style.display = 'none';
+                        
+                        // Show create option only
+                        updateBtn.style.display = 'none';
+                        createBtn.style.display = 'block';
+                        createBtn.textContent = 'Create Medical Record';
+                    }
+                    
+                    loading.style.display = 'none';
+                    content.style.display = 'block';
+                } else {
+                    throw new Error(data.message || 'Failed to load visit information');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                loading.innerHTML = `
+                    <div style="color: #dc3545;">
+                        <p>Error loading visit information</p>
+                        <p style="font-size: 12px;">${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        function closeMedicalRecordModal() {
+            document.getElementById('medicalRecordModal').style.display = 'none';
+        }
+        
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('medicalRecordModal');
+            if (event.target == modal) {
+                closeMedicalRecordModal();
+            }
+        }    </script>
+{% endblock content %}
